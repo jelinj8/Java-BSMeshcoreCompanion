@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"/c/Users/jakub/work/Bliksoft/Java/GIT/BSMeshcoreCompanion/src/main/java/cz/bliksoft/meshcorecompanion/actions\")",
+      "Bash(mkdir -p \"/c/Users/jakub/work/Bliksoft/Java/GIT/BSMeshcoreCompanion/src/main/java/cz/bliksoft/meshcorecompanion/connection\")",
+      "Bash(mkdir -p \"/c/Users/jakub/work/Bliksoft/Java/GIT/BSMeshcoreCompanion/src/main/java/cz/bliksoft/meshcorecompanion/chat\")",
+      "Bash(mkdir -p \"/c/Users/jakub/work/Bliksoft/Java/GIT/BSMeshcoreCompanion/src/main/java/cz/bliksoft/meshcorecompanion/model\")",
+      "Bash(mkdir -p \"/c/Users/jakub/work/Bliksoft/Java/GIT/BSMeshcoreCompanion/src/main/java/cz/bliksoft/meshcorecompanion/events/meshcore\")",
+      "Bash(xargs grep *)",
+      "Bash(xargs cat *)",
+      "Bash(xargs head *)",
+      "Bash(mvn compile *)",
+      "Bash(xargs ls *)",
+      "Bash(grep -E \"\\\\.java$\")",
+      "Bash(awk *)",
+      "PowerShell(jar tf *)",
+      "PowerShell(javap *)",
+      "PowerShell(New-Item *)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\jakub\\\\.m2\\\\repository\\\\cz\\\\bliksoft\" -Recurse | Where-Object {$_.Extension -eq \".jar\"} | ForEach-Object { $_.FullName })",
+      "Bash(mvn package *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+<root xmlns="http://bliksoft.cz/XmlFilesystem"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://bliksoft.cz/XmlFilesystem https://bliksoft.cz/schemas/XmlFilesystem.xsd">
+
+	<file name="singletons">
+		<!-- Meshcore connection is managed at runtime via ConnectAction -->
+	</file>
+
+	<file name="services">
+	</file>
+
+</root>

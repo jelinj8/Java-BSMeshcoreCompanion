@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36}:%L - %msg%n" />
+		</Console>
+		<File name="AppFile" fileName="log/app.log">
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36}:%L - %msg%n" />
+		</File>
+		<File name="MeshFile" fileName="log/mesh.log">
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %msg%n" />
+		</File>
+	</Appenders>
+	<Loggers>
+		<!-- Meshcore device traffic -->
+		<Logger name="cz.bliksoft.meshcore.companion.MeshcoreCompanion.DEV" level="debug" additivity="false">
+			<AppenderRef ref="MeshFile" />
+		</Logger>
+
+		<Logger name="cz.bliksoft.meshcorecompanion" level="debug" additivity="false">
+			<AppenderRef ref="AppFile" />
+			<AppenderRef ref="Console" />
+		</Logger>
+
+		<Logger name="cz.bliksoft.meshcore" level="debug" additivity="false">
+			<AppenderRef ref="AppFile" />
+			<AppenderRef ref="Console" />
+		</Logger>
+
+		<Logger name="cz.bliksoft.javautils" level="info" additivity="false">
+			<AppenderRef ref="AppFile" />
+			<AppenderRef ref="Console" />
+		</Logger>
+
+		<Root level="info">
+			<AppenderRef ref="Console" />
+			<AppenderRef ref="AppFile" />
+		</Root>
+	</Loggers>
+</Configuration>

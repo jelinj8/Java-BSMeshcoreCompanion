@@ -1,0 +1,461 @@
+2026-04-21 17:29:58.461 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 17:29:58.476 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @23a5fd2
+2026-04-21 17:29:58.863 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:47 - BSMeshcoreCompanion started
+2026-04-21 17:29:58.875 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 17:29:58.883 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:95 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 17:29:58.888 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:95 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:bed681d].
+2026-04-21 17:29:58.896 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:159 - Načítání modulů vvvvvvvvvvvvvvvv
+2026-04-21 17:29:58.896 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:182 - Načítání modulů dokončeno ^^^^^^^
+2026-04-21 17:29:58.896 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:422 - Inicializace dokončena ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-04-21 17:29:59.009 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:79 - BSMeshcoreCompanion terminated
+2026-04-21 17:52:44.091 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 17:52:44.105 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @23a5fd2
+2026-04-21 17:52:44.442 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:47 - BSMeshcoreCompanion started
+2026-04-21 17:52:44.455 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 17:52:44.462 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:95 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 17:52:44.467 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:95 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:bed681d].
+2026-04-21 17:52:44.473 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:95 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:bed681d].
+2026-04-21 17:52:44.484 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:159 - Načítání modulů vvvvvvvvvvvvvvvv
+2026-04-21 17:52:44.524 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:182 - Načítání modulů dokončeno ^^^^^^^
+2026-04-21 17:52:44.524 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:422 - Inicializace dokončena ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-04-21 18:19:15.607 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 18:19:15.624 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @3527942a
+2026-04-21 18:19:16.027 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:47 - BSMeshcoreCompanion started
+2026-04-21 18:19:16.051 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 18:20:08.758 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 18:20:08.775 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @3527942a
+2026-04-21 18:20:09.172 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:47 - BSMeshcoreCompanion started
+2026-04-21 18:20:09.195 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 18:20:40.127 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:131 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 18:20:40.145 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:131 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:20:40.156 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:131 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:20:57.839 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:195 - Načítání modulů vvvvvvvvvvvvvvvv
+2026-04-21 18:20:57.875 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:218 - Načítání modulů dokončeno ^^^^^^^
+2026-04-21 18:20:57.875 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:422 - Inicializace dokončena ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-04-21 18:22:51.912 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 18:22:51.927 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @3527942a
+2026-04-21 18:22:52.310 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:47 - BSMeshcoreCompanion started
+2026-04-21 18:22:52.330 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 18:24:14.503 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:131 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 18:24:14.525 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:131 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:24:14.536 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:131 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:24:14.560 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:195 - Načítání modulů vvvvvvvvvvvvvvvv
+2026-04-21 18:24:14.594 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:218 - Načítání modulů dokončeno ^^^^^^^
+2026-04-21 18:24:14.594 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:422 - Inicializace dokončena ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-04-21 18:24:40.430 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 18:24:40.446 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @3527942a
+2026-04-21 18:24:40.849 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:47 - BSMeshcoreCompanion started
+2026-04-21 18:24:40.873 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 18:25:45.807 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:131 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 18:25:45.831 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:131 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:25:45.842 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:131 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:25:45.867 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:195 - Načítání modulů vvvvvvvvvvvvvvvv
+2026-04-21 18:25:45.898 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:218 - Načítání modulů dokončeno ^^^^^^^
+2026-04-21 18:25:45.898 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:422 - Inicializace dokončena ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-04-21 18:37:23.440 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 18:37:23.452 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @23a5fd2
+2026-04-21 18:37:23.790 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:47 - BSMeshcoreCompanion started
+2026-04-21 18:37:23.801 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 18:37:23.808 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 18:37:23.813 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:37:23.818 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:37:23.828 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:184 - Načítání modulů vvvvvvvvvvvvvvvv
+2026-04-21 18:37:23.862 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:207 - Načítání modulů dokončeno ^^^^^^^
+2026-04-21 18:37:23.863 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:422 - Inicializace dokončena ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-04-21 18:38:19.276 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 18:38:19.290 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @23a5fd2
+2026-04-21 18:38:19.625 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:48 - BSMeshcoreCompanion started
+2026-04-21 18:38:19.638 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 18:38:19.644 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 18:38:19.649 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:38:19.654 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSMeshcoreCompanion' Failed to read version info: C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\target\classes\git.properties.
+2026-04-21 18:38:19.658 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.xmlfilesystem.FileSystem:121 - Importing XML file config/settings.xml for module:BSMeshcoreCompanion
+2026-04-21 18:38:19.659 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:38:19.801 [JavaFX Application Thread] ERROR cz.bliksoft.javautils.modules.Modules:169 - Modules initialization crashed: BSAppUI
+cz.bliksoft.javautils.exceptions.InitializationException: Failed to build UI, failed on [module:BSMeshcoreCompanion]AppUI/main/topbar/toolbar/right/Save
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.buildUI(UIComposer.java:135)
+	at cz.bliksoft.javautils.app.ui.BSAppUI.init(BSAppUI.java:132)
+	at cz.bliksoft.javautils.modules.Modules.initModules(Modules.java:159)
+	at cz.bliksoft.javautils.app.BSApp.init(BSApp.java:412)
+	at cz.bliksoft.javautils.app.ui.BSAppUI.init(BSAppUI.java:78)
+	at cz.bliksoft.meshcorecompanion.Main.start(Main.java:50)
+	at com.sun.javafx.application.LauncherImpl.lambda$launchApplication1$9(LauncherImpl.java:839)
+	at com.sun.javafx.application.PlatformImpl.lambda$runAndWait$12(PlatformImpl.java:483)
+	at com.sun.javafx.application.PlatformImpl.lambda$runLater$10(PlatformImpl.java:456)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at com.sun.javafx.application.PlatformImpl.lambda$runLater$11(PlatformImpl.java:455)
+	at com.sun.glass.ui.InvokeLaterDispatcher$Future.run(InvokeLaterDispatcher.java:95)
+	at com.sun.glass.ui.win.WinApplication._runLoop(Native Method)
+	at com.sun.glass.ui.win.WinApplication.lambda$runLoop$3(WinApplication.java:185)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: cz.bliksoft.javautils.exceptions.InitializationException: Action not found: SaveAction for Save (module:BSMeshcoreCompanion)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.bindActionIfPresent(UIComposer.java:789)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.applyNodeAttribs(UIComposer.java:371)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:264)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.buildUI(UIComposer.java:129)
+	... 14 more
+2026-04-21 18:38:19.802 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:447 - xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+2026-04-21 18:38:19.802 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:448 - Starting modules cleanup before closing.
+2026-04-21 18:38:19.802 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSAppUI
+2026-04-21 18:38:19.803 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSMeshcoreCompanion
+2026-04-21 18:38:19.803 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Base app module
+2026-04-21 18:38:19.803 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Filesystem
+2026-04-21 18:38:19.830 [JavaFX Application Thread] ERROR cz.bliksoft.javautils.app.ui.BSAppUI:380 - Failed to get UI stacked context from switched context PUSH operation.
+2026-04-21 18:38:19.831 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:81 - BSMeshcoreCompanion terminated
+2026-04-21 18:42:19.936 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 18:42:19.949 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @23a5fd2
+2026-04-21 18:42:20.284 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:48 - BSMeshcoreCompanion started
+2026-04-21 18:42:20.296 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 18:42:20.303 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 18:42:20.308 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:42:20.314 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSMeshcoreCompanion' Failed to read version info: C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\target\classes\git.properties.
+2026-04-21 18:42:20.318 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.xmlfilesystem.FileSystem:121 - Importing XML file config/settings.xml for module:BSMeshcoreCompanion
+2026-04-21 18:42:20.320 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:42:20.492 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:184 - Načítání modulů vvvvvvvvvvvvvvvv
+2026-04-21 18:42:20.619 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:207 - Načítání modulů dokončeno ^^^^^^^
+2026-04-21 18:42:20.619 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:422 - Inicializace dokončena ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-04-21 18:42:49.132 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:447 - xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+2026-04-21 18:42:49.132 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:448 - Starting modules cleanup before closing.
+2026-04-21 18:42:49.132 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSAppUI
+2026-04-21 18:42:49.132 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSMeshcoreCompanion
+2026-04-21 18:42:49.132 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Base app module
+2026-04-21 18:42:49.132 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Filesystem
+2026-04-21 18:42:49.133 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:81 - BSMeshcoreCompanion terminated
+2026-04-21 18:42:54.213 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 18:42:54.225 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @23a5fd2
+2026-04-21 18:42:54.555 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:48 - BSMeshcoreCompanion started
+2026-04-21 18:42:54.571 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 18:42:54.578 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 18:42:54.583 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:42:54.587 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSMeshcoreCompanion' Failed to read version info: C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\target\classes\git.properties.
+2026-04-21 18:42:54.589 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.xmlfilesystem.FileSystem:121 - Importing XML file config/settings.xml for module:BSMeshcoreCompanion
+2026-04-21 18:42:54.589 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:42:54.760 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:184 - Načítání modulů vvvvvvvvvvvvvvvv
+2026-04-21 18:42:54.883 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:207 - Načítání modulů dokončeno ^^^^^^^
+2026-04-21 18:42:54.883 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:422 - Inicializace dokončena ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-04-21 18:43:22.408 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:447 - xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+2026-04-21 18:43:22.410 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:448 - Starting modules cleanup before closing.
+2026-04-21 18:43:22.410 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSAppUI
+2026-04-21 18:43:22.410 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSMeshcoreCompanion
+2026-04-21 18:43:22.411 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Base app module
+2026-04-21 18:43:22.411 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Filesystem
+2026-04-21 18:43:22.412 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:81 - BSMeshcoreCompanion terminated
+2026-04-21 18:43:43.987 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 18:43:43.999 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @23a5fd2
+2026-04-21 18:43:44.337 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:48 - BSMeshcoreCompanion started
+2026-04-21 18:43:44.351 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 18:43:44.359 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 18:43:44.363 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:43:44.369 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSMeshcoreCompanion' Failed to read version info: C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\target\classes\git.properties.
+2026-04-21 18:43:44.373 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.xmlfilesystem.FileSystem:121 - Importing XML file config/settings.xml for module:BSMeshcoreCompanion
+2026-04-21 18:43:44.374 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:43:44.518 [JavaFX Application Thread] ERROR cz.bliksoft.javautils.modules.Modules:169 - Modules initialization crashed: BSAppUI
+cz.bliksoft.javautils.exceptions.InitializationException: Failed to build UI, failed on [module:BSMeshcoreCompanion]AppUI/main/topbar/toolbar/right/Close
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.buildUI(UIComposer.java:135)
+	at cz.bliksoft.javautils.app.ui.BSAppUI.init(BSAppUI.java:132)
+	at cz.bliksoft.javautils.modules.Modules.initModules(Modules.java:159)
+	at cz.bliksoft.javautils.app.BSApp.init(BSApp.java:412)
+	at cz.bliksoft.javautils.app.ui.BSAppUI.init(BSAppUI.java:78)
+	at cz.bliksoft.meshcorecompanion.Main.start(Main.java:50)
+	at com.sun.javafx.application.LauncherImpl.lambda$launchApplication1$9(LauncherImpl.java:839)
+	at com.sun.javafx.application.PlatformImpl.lambda$runAndWait$12(PlatformImpl.java:483)
+	at com.sun.javafx.application.PlatformImpl.lambda$runLater$10(PlatformImpl.java:456)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at com.sun.javafx.application.PlatformImpl.lambda$runLater$11(PlatformImpl.java:455)
+	at com.sun.glass.ui.InvokeLaterDispatcher$Future.run(InvokeLaterDispatcher.java:95)
+	at com.sun.glass.ui.win.WinApplication._runLoop(Native Method)
+	at com.sun.glass.ui.win.WinApplication.lambda$runLoop$3(WinApplication.java:185)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: cz.bliksoft.javautils.exceptions.InitializationException: Action not found: CloseAction for Close (module:BSMeshcoreCompanion)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.bindActionIfPresent(UIComposer.java:789)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.applyNodeAttribs(UIComposer.java:371)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:264)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.buildUI(UIComposer.java:129)
+	... 14 more
+2026-04-21 18:43:44.519 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:447 - xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+2026-04-21 18:43:44.519 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:448 - Starting modules cleanup before closing.
+2026-04-21 18:43:44.520 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSAppUI
+2026-04-21 18:43:44.520 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSMeshcoreCompanion
+2026-04-21 18:43:44.520 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Base app module
+2026-04-21 18:43:44.520 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Filesystem
+2026-04-21 18:43:44.547 [JavaFX Application Thread] ERROR cz.bliksoft.javautils.app.ui.BSAppUI:380 - Failed to get UI stacked context from switched context PUSH operation.
+2026-04-21 18:43:44.548 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:81 - BSMeshcoreCompanion terminated
+2026-04-21 18:43:54.493 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 18:43:54.506 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @23a5fd2
+2026-04-21 18:43:54.844 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:48 - BSMeshcoreCompanion started
+2026-04-21 18:43:54.857 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 18:43:54.863 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 18:43:54.868 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:43:54.871 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSMeshcoreCompanion' Failed to read version info: C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\target\classes\git.properties.
+2026-04-21 18:43:54.875 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.xmlfilesystem.FileSystem:121 - Importing XML file config/settings.xml for module:BSMeshcoreCompanion
+2026-04-21 18:43:54.875 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 18:43:55.058 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:184 - Načítání modulů vvvvvvvvvvvvvvvv
+2026-04-21 18:43:55.192 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:207 - Načítání modulů dokončeno ^^^^^^^
+2026-04-21 18:43:55.192 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:422 - Inicializace dokončena ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-04-21 18:44:30.588 [JavaFX Application Thread] DEBUG cz.bliksoft.meshcorecompanion.events.meshcore.MeshcorePushBridge:61 - MeshcorePushBridge detached
+2026-04-21 18:44:30.589 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.ui.components.MessageStatusProvider:45 - Connected to COM7
+2026-04-21 18:44:30.589 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.connection.ConnectionManager:89 - Connected to COM7
+2026-04-21 18:44:30.590 [MeshcoreMessageReader] INFO  cz.bliksoft.meshcore.companion.SerialMeshcoreCompanion:83 - Connected to COM7
+2026-04-21 18:44:40.383 [JavaFX Application Thread] INFO  cz.bliksoft.meshcore.companion.MeshcoreCompanionBase:350 - Meshcore close
+2026-04-21 18:44:40.385 [MeshcoreEvents-1] ERROR cz.bliksoft.meshcore.companion.MeshcoreCompanionBase:244 - Failed to initialize Mesh companion device
+2026-04-21 18:44:40.385 [JavaFX Application Thread] DEBUG cz.bliksoft.meshcorecompanion.events.meshcore.MeshcorePushBridge:61 - MeshcorePushBridge detached
+2026-04-21 18:44:40.385 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.ui.components.MessageStatusProvider:45 - Disconnected
+2026-04-21 18:44:40.386 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.connection.ConnectionManager:117 - Disconnected
+2026-04-21 18:45:05.700 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:447 - xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+2026-04-21 18:45:05.701 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:448 - Starting modules cleanup before closing.
+2026-04-21 18:45:05.701 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSAppUI
+2026-04-21 18:45:05.701 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSMeshcoreCompanion
+2026-04-21 18:45:05.701 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Base app module
+2026-04-21 18:45:05.701 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Filesystem
+2026-04-21 18:45:05.702 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:81 - BSMeshcoreCompanion terminated
+2026-04-21 19:49:22.239 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 19:49:22.253 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @6e38921c
+2026-04-21 19:49:22.616 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:37 - BSMeshcoreCompanion started
+2026-04-21 19:49:22.629 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 19:49:22.638 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 19:49:22.644 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 19:49:22.648 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSMeshcoreCompanion' Failed to read version info: C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\target\classes\git.properties.
+2026-04-21 19:49:22.651 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.xmlfilesystem.FileSystem:121 - Importing XML file config/settings.xml for module:BSMeshcoreCompanion
+2026-04-21 19:49:22.652 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 19:49:22.841 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:184 - Načítání modulů vvvvvvvvvvvvvvvv
+2026-04-21 19:49:23.202 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:207 - Načítání modulů dokončeno ^^^^^^^
+2026-04-21 19:49:23.203 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:422 - Inicializace dokončena ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-04-21 19:49:28.301 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:447 - xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+2026-04-21 19:49:28.301 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:448 - Starting modules cleanup before closing.
+2026-04-21 19:49:28.301 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSAppUI
+2026-04-21 19:49:28.302 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSMeshcoreCompanion
+2026-04-21 19:49:28.302 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Base app module
+2026-04-21 19:49:28.302 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Filesystem
+2026-04-21 19:49:28.303 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:45 - BSMeshcoreCompanion terminated
+2026-04-21 19:51:52.458 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 19:51:52.470 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @6e38921c
+2026-04-21 19:51:52.809 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:37 - BSMeshcoreCompanion started
+2026-04-21 19:51:52.825 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 19:51:52.834 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 19:51:52.838 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 19:51:52.845 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSMeshcoreCompanion' Failed to read version info: C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\target\classes\git.properties.
+2026-04-21 19:51:52.849 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.xmlfilesystem.FileSystem:121 - Importing XML file config/settings.xml for module:BSMeshcoreCompanion
+2026-04-21 19:51:52.850 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 19:51:52.999 [JavaFX Application Thread] ERROR cz.bliksoft.javautils.modules.Modules:169 - Modules initialization crashed: BSAppUI
+cz.bliksoft.javautils.exceptions.InitializationException: Failed to build UI, failed on [module:BSMeshcoreCompanion]AppUI/main/topbar/toolbar/right/Close
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.buildUI(UIComposer.java:135)
+	at cz.bliksoft.javautils.app.ui.BSAppUI.init(BSAppUI.java:132)
+	at cz.bliksoft.javautils.modules.Modules.initModules(Modules.java:159)
+	at cz.bliksoft.javautils.app.BSApp.init(BSApp.java:412)
+	at cz.bliksoft.javautils.app.ui.BSAppUI.init(BSAppUI.java:78)
+	at cz.bliksoft.meshcorecompanion.Main.start(Main.java:39)
+	at com.sun.javafx.application.LauncherImpl.lambda$launchApplication1$9(LauncherImpl.java:839)
+	at com.sun.javafx.application.PlatformImpl.lambda$runAndWait$12(PlatformImpl.java:483)
+	at com.sun.javafx.application.PlatformImpl.lambda$runLater$10(PlatformImpl.java:456)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at com.sun.javafx.application.PlatformImpl.lambda$runLater$11(PlatformImpl.java:455)
+	at com.sun.glass.ui.InvokeLaterDispatcher$Future.run(InvokeLaterDispatcher.java:95)
+	at com.sun.glass.ui.win.WinApplication._runLoop(Native Method)
+	at com.sun.glass.ui.win.WinApplication.lambda$runLoop$3(WinApplication.java:185)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: cz.bliksoft.javautils.exceptions.InitializationException: Action not found: 2Close for Close (module:BSMeshcoreCompanion)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.bindActionIfPresent(UIComposer.java:789)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.applyNodeAttribs(UIComposer.java:371)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:264)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.buildUI(UIComposer.java:129)
+	... 14 more
+2026-04-21 19:51:53.001 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:447 - xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+2026-04-21 19:51:53.001 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:448 - Starting modules cleanup before closing.
+2026-04-21 19:51:53.001 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSAppUI
+2026-04-21 19:51:53.001 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSMeshcoreCompanion
+2026-04-21 19:51:53.002 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Base app module
+2026-04-21 19:51:53.002 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Filesystem
+2026-04-21 19:51:53.003 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:45 - BSMeshcoreCompanion terminated
+2026-04-21 19:57:18.630 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 19:57:18.643 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @6e38921c
+2026-04-21 19:57:18.986 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:37 - BSMeshcoreCompanion started
+2026-04-21 19:57:18.999 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 19:57:19.008 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 19:57:19.014 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:bed681d].
+2026-04-21 19:57:19.017 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSMeshcoreCompanion' Failed to read version info: C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\target\classes\git.properties.
+2026-04-21 19:57:19.020 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.xmlfilesystem.FileSystem:121 - Importing XML file config/settings.xml for module:BSMeshcoreCompanion
+2026-04-21 19:57:19.021 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:bed681d].
+2026-04-21 19:57:19.167 [JavaFX Application Thread] ERROR cz.bliksoft.javautils.modules.Modules:169 - Modules initialization crashed: BSAppUI
+cz.bliksoft.javautils.exceptions.InitializationException: Failed to build UI, failed on [module:BSMeshcoreCompanion]AppUI/main/topbar/toolbar/right/Close
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.buildUI(UIComposer.java:134)
+	at cz.bliksoft.javautils.app.ui.BSAppUI.init(BSAppUI.java:132)
+	at cz.bliksoft.javautils.modules.Modules.initModules(Modules.java:159)
+	at cz.bliksoft.javautils.app.BSApp.init(BSApp.java:412)
+	at cz.bliksoft.javautils.app.ui.BSAppUI.init(BSAppUI.java:78)
+	at cz.bliksoft.meshcorecompanion.Main.start(Main.java:39)
+	at com.sun.javafx.application.LauncherImpl.lambda$launchApplication1$9(LauncherImpl.java:839)
+	at com.sun.javafx.application.PlatformImpl.lambda$runAndWait$12(PlatformImpl.java:483)
+	at com.sun.javafx.application.PlatformImpl.lambda$runLater$10(PlatformImpl.java:456)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at com.sun.javafx.application.PlatformImpl.lambda$runLater$11(PlatformImpl.java:455)
+	at com.sun.glass.ui.InvokeLaterDispatcher$Future.run(InvokeLaterDispatcher.java:95)
+	at com.sun.glass.ui.win.WinApplication._runLoop(Native Method)
+	at com.sun.glass.ui.win.WinApplication.lambda$runLoop$3(WinApplication.java:185)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: cz.bliksoft.javautils.exceptions.InitializationException: Action not found: 2Close for Close (module:BSMeshcoreCompanion). Available actions:
+
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.bindActionIfPresent(UIComposer.java:791)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.applyNodeAttribs(UIComposer.java:371)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:264)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.buildUI(UIComposer.java:129)
+	... 14 more
+2026-04-21 19:57:19.168 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:447 - xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+2026-04-21 19:57:19.168 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:448 - Starting modules cleanup before closing.
+2026-04-21 19:57:19.168 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSAppUI
+2026-04-21 19:57:19.169 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSMeshcoreCompanion
+2026-04-21 19:57:19.169 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Base app module
+2026-04-21 19:57:19.169 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Filesystem
+2026-04-21 19:57:19.169 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:45 - BSMeshcoreCompanion terminated
+2026-04-21 19:57:47.728 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 19:57:47.740 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @6e38921c
+2026-04-21 19:57:48.076 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:37 - BSMeshcoreCompanion started
+2026-04-21 19:57:48.090 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 19:57:48.100 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 19:57:48.105 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:bed681d].
+2026-04-21 19:57:48.109 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSMeshcoreCompanion' Failed to read version info: C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\target\classes\git.properties.
+2026-04-21 19:57:48.112 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.xmlfilesystem.FileSystem:121 - Importing XML file config/settings.xml for module:BSMeshcoreCompanion
+2026-04-21 19:57:48.112 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:bed681d].
+2026-04-21 19:57:48.258 [JavaFX Application Thread] ERROR cz.bliksoft.javautils.modules.Modules:169 - Modules initialization crashed: BSAppUI
+cz.bliksoft.javautils.exceptions.InitializationException: Failed to build UI, failed on [module:BSMeshcoreCompanion]AppUI/main/topbar/toolbar/right/Close
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.buildUI(UIComposer.java:134)
+	at cz.bliksoft.javautils.app.ui.BSAppUI.init(BSAppUI.java:132)
+	at cz.bliksoft.javautils.modules.Modules.initModules(Modules.java:159)
+	at cz.bliksoft.javautils.app.BSApp.init(BSApp.java:412)
+	at cz.bliksoft.javautils.app.ui.BSAppUI.init(BSAppUI.java:78)
+	at cz.bliksoft.meshcorecompanion.Main.start(Main.java:39)
+	at com.sun.javafx.application.LauncherImpl.lambda$launchApplication1$9(LauncherImpl.java:839)
+	at com.sun.javafx.application.PlatformImpl.lambda$runAndWait$12(PlatformImpl.java:483)
+	at com.sun.javafx.application.PlatformImpl.lambda$runLater$10(PlatformImpl.java:456)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at com.sun.javafx.application.PlatformImpl.lambda$runLater$11(PlatformImpl.java:455)
+	at com.sun.glass.ui.InvokeLaterDispatcher$Future.run(InvokeLaterDispatcher.java:95)
+	at com.sun.glass.ui.win.WinApplication._runLoop(Native Method)
+	at com.sun.glass.ui.win.WinApplication.lambda$runLoop$3(WinApplication.java:185)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: cz.bliksoft.javautils.exceptions.InitializationException: Action not found: 2Close for Close (module:BSMeshcoreCompanion). Available actions:
+AppClose
+Close
+ConnectAction
+DisconnectAction
+OpenSettingsAction
+Save
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.bindActionIfPresent(UIComposer.java:791)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.applyNodeAttribs(UIComposer.java:371)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:264)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.build(UIComposer.java:285)
+	at cz.bliksoft.javautils.app.ui.builder.UIComposer.buildUI(UIComposer.java:129)
+	... 14 more
+2026-04-21 19:57:48.259 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:447 - xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+2026-04-21 19:57:48.260 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:448 - Starting modules cleanup before closing.
+2026-04-21 19:57:48.260 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSAppUI
+2026-04-21 19:57:48.260 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSMeshcoreCompanion
+2026-04-21 19:57:48.260 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Base app module
+2026-04-21 19:57:48.260 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Filesystem
+2026-04-21 19:57:48.261 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:45 - BSMeshcoreCompanion terminated
+2026-04-21 22:01:18.921 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 22:01:18.934 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @6e38921c
+2026-04-21 22:01:19.192 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:37 - BSMeshcoreCompanion started
+2026-04-21 22:01:19.206 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 22:01:19.215 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 22:01:19.219 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 22:01:19.224 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSMeshcoreCompanion' Failed to read version info: C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\target\classes\git.properties.
+2026-04-21 22:01:19.227 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.xmlfilesystem.FileSystem:121 - Importing XML file config/settings.xml for module:BSMeshcoreCompanion
+2026-04-21 22:01:19.228 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 22:01:19.425 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:184 - Načítání modulů vvvvvvvvvvvvvvvv
+2026-04-21 22:01:19.803 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:207 - Načítání modulů dokončeno ^^^^^^^
+2026-04-21 22:01:19.803 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:422 - Inicializace dokončena ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-04-21 22:02:06.664 [meshcore-connect] WARN  cz.bliksoft.meshcorecompanion.connection.ConnectionManager:88 - Device time sync failed
+java.lang.IllegalStateException: Current readerThread or reader loop is not running!
+	at cz.bliksoft.meshcore.companion.MeshcoreCompanionBase.checkBlockingThread(MeshcoreCompanionBase.java:379)
+	at cz.bliksoft.meshcore.companion.MeshcoreCompanionBase.sendFrameWithResult(MeshcoreCompanionBase.java:144)
+	at cz.bliksoft.meshcore.companion.MeshcoreCompanionBase.sendFrameWithResult(MeshcoreCompanionBase.java:128)
+	at cz.bliksoft.meshcore.companion.MeshcoreCompanionConfig.setDeviceTime(MeshcoreCompanionConfig.java:740)
+	at cz.bliksoft.meshcorecompanion.connection.ConnectionManager.lambda$2(ConnectionManager.java:86)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-04-21 22:02:06.666 [JavaFX Application Thread] DEBUG cz.bliksoft.meshcorecompanion.events.meshcore.MeshcorePushBridge:61 - MeshcorePushBridge detached
+2026-04-21 22:02:06.666 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.ui.components.MessageStatusProvider:45 - Connected to COM12
+2026-04-21 22:02:06.667 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.connection.ConnectionManager:95 - Connected to COM12
+2026-04-21 22:02:06.683 [MeshcoreMessageReader] INFO  cz.bliksoft.meshcore.companion.SerialMeshcoreCompanion:83 - Connected to COM12
+2026-04-21 22:02:07.688 [MeshcoreEvents-1] ERROR cz.bliksoft.meshcore.companion.MeshcoreCompanionBase:244 - Failed to initialize Mesh companion device
+2026-04-21 22:04:54.188 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 22:04:54.201 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @6e38921c
+2026-04-21 22:04:54.453 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:37 - BSMeshcoreCompanion started
+2026-04-21 22:04:54.467 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 22:04:54.476 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 22:04:54.481 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 22:04:54.485 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSMeshcoreCompanion' Failed to read version info: C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\target\classes\git.properties.
+2026-04-21 22:04:54.488 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.xmlfilesystem.FileSystem:121 - Importing XML file config/settings.xml for module:BSMeshcoreCompanion
+2026-04-21 22:04:54.489 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 22:04:54.680 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:184 - Načítání modulů vvvvvvvvvvvvvvvv
+2026-04-21 22:04:55.083 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:207 - Načítání modulů dokončeno ^^^^^^^
+2026-04-21 22:04:55.083 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:422 - Inicializace dokončena ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-04-21 22:04:59.502 [JavaFX Application Thread] DEBUG cz.bliksoft.meshcorecompanion.events.meshcore.MeshcorePushBridge:61 - MeshcorePushBridge detached
+2026-04-21 22:04:59.502 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.ui.components.MessageStatusProvider:45 - Connected to COM12
+2026-04-21 22:04:59.503 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.connection.ConnectionManager:90 - Connected to COM12
+2026-04-21 22:04:59.532 [MeshcoreMessageReader] INFO  cz.bliksoft.meshcore.companion.SerialMeshcoreCompanion:83 - Connected to COM12
+2026-04-21 22:05:00.546 [MeshcoreEvents-1] ERROR cz.bliksoft.meshcore.companion.MeshcoreCompanionBase:244 - Failed to initialize Mesh companion device
+2026-04-21 22:05:24.855 [MeshcoreMessageReader] WARN  cz.bliksoft.meshcore.companion.SerialMeshcoreCompanion:90 - Disconnected from COM12: java.io.EOFException: Disconnected
+2026-04-21 22:05:25.358 [MeshcoreMessageReader] WARN  cz.bliksoft.meshcore.companion.SerialMeshcoreCompanion:90 - Disconnected from COM12: java.io.IOException: Cannot open COM12
+2026-04-21 22:05:26.359 [MeshcoreMessageReader] WARN  cz.bliksoft.meshcore.companion.SerialMeshcoreCompanion:90 - Disconnected from COM12: java.io.IOException: Cannot open COM12
+2026-04-21 22:05:28.360 [MeshcoreMessageReader] WARN  cz.bliksoft.meshcore.companion.SerialMeshcoreCompanion:90 - Disconnected from COM12: java.io.IOException: Cannot open COM12
+2026-04-21 22:05:29.349 [JavaFX Application Thread] INFO  cz.bliksoft.meshcore.companion.MeshcoreCompanionBase:350 - Meshcore close
+2026-04-21 22:05:29.349 [JavaFX Application Thread] DEBUG cz.bliksoft.meshcorecompanion.events.meshcore.MeshcorePushBridge:61 - MeshcorePushBridge detached
+2026-04-21 22:05:29.349 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.ui.components.MessageStatusProvider:45 - Disconnected
+2026-04-21 22:05:29.349 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.connection.ConnectionManager:118 - Disconnected
+2026-04-21 22:05:39.905 [JavaFX Application Thread] DEBUG cz.bliksoft.meshcorecompanion.events.meshcore.MeshcorePushBridge:61 - MeshcorePushBridge detached
+2026-04-21 22:05:39.906 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.ui.components.MessageStatusProvider:45 - Connected to COM12
+2026-04-21 22:05:39.906 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.connection.ConnectionManager:90 - Connected to COM12
+2026-04-21 22:05:39.935 [MeshcoreMessageReader] INFO  cz.bliksoft.meshcore.companion.SerialMeshcoreCompanion:83 - Connected to COM12
+2026-04-21 22:05:40.938 [MeshcoreEvents-1] ERROR cz.bliksoft.meshcore.companion.MeshcoreCompanionBase:244 - Failed to initialize Mesh companion device
+2026-04-21 22:05:45.898 [JavaFX Application Thread] INFO  cz.bliksoft.meshcore.companion.MeshcoreCompanionBase:350 - Meshcore close
+2026-04-21 22:05:45.903 [JavaFX Application Thread] DEBUG cz.bliksoft.meshcorecompanion.events.meshcore.MeshcorePushBridge:61 - MeshcorePushBridge detached
+2026-04-21 22:05:45.903 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.ui.components.MessageStatusProvider:45 - Disconnected
+2026-04-21 22:05:45.903 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.connection.ConnectionManager:118 - Disconnected
+2026-04-21 22:05:47.598 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:447 - xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+2026-04-21 22:05:47.598 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:448 - Starting modules cleanup before closing.
+2026-04-21 22:05:47.598 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSAppUI
+2026-04-21 22:05:47.598 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: BSMeshcoreCompanion
+2026-04-21 22:05:47.598 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Base app module
+2026-04-21 22:05:47.598 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:215 - Cleanup: Filesystem
+2026-04-21 22:05:47.600 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:45 - BSMeshcoreCompanion terminated
+2026-04-21 22:16:33.744 [main] INFO  cz.bliksoft.javautils.logging.Log4j2Utils:48 - Log4J2 initialized with C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\config\log4j2.xml
+2026-04-21 22:16:33.759 [JavaFX-Launcher] WARN  javafx:274 - Unsupported JavaFX configuration: classes were loaded from unnamed module @6e38921c
+2026-04-21 22:16:34.030 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.Main:37 - BSMeshcoreCompanion started
+2026-04-21 22:16:34.046 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:379 - Spouštění BSMeshcoreCompanion  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+2026-04-21 22:16:34.056 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Filesystem' 0.6-SNAPSHOT [master:637bea0].
+2026-04-21 22:16:34.061 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'Base app module' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 22:16:34.066 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSMeshcoreCompanion' Failed to read version info: C:\Users\jakub\work\Bliksoft\Java\GIT\BSMeshcoreCompanion\target\classes\git.properties.
+2026-04-21 22:16:34.069 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.xmlfilesystem.FileSystem:121 - Importing XML file config/settings.xml for module:BSMeshcoreCompanion
+2026-04-21 22:16:34.070 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:105 - Nalezen modul 'BSAppUI' common-java-utils-jfx 0.1-SNAPSHOT [master:637bea0].
+2026-04-21 22:16:34.287 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:184 - Načítání modulů vvvvvvvvvvvvvvvv
+2026-04-21 22:16:34.644 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.modules.Modules:207 - Načítání modulů dokončeno ^^^^^^^
+2026-04-21 22:16:34.645 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.BSApp:422 - Inicializace dokončena ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-04-21 22:16:39.257 [MeshcoreMessageReader] INFO  cz.bliksoft.meshcore.companion.SerialMeshcoreCompanion:83 - Connected to COM12
+2026-04-21 22:16:40.275 [MeshcoreEvents-1] ERROR cz.bliksoft.meshcore.companion.MeshcoreCompanionBase:244 - Failed to initialize Mesh companion device
+2026-04-21 22:16:44.231 [meshcore-connect] WARN  cz.bliksoft.meshcorecompanion.connection.ConnectionManager:89 - Device time sync failed
+java.util.concurrent.TimeoutException: Meshcore device not available in time
+	at cz.bliksoft.meshcore.companion.MeshcoreCompanionBase.awaitAvailable(MeshcoreCompanionBase.java:216)
+	at cz.bliksoft.meshcorecompanion.connection.ConnectionManager.lambda$2(ConnectionManager.java:86)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-04-21 22:16:44.233 [JavaFX Application Thread] DEBUG cz.bliksoft.meshcorecompanion.events.meshcore.MeshcorePushBridge:61 - MeshcorePushBridge detached
+2026-04-21 22:16:44.234 [JavaFX Application Thread] INFO  cz.bliksoft.javautils.app.ui.components.MessageStatusProvider:45 - Connected to COM12
+2026-04-21 22:16:44.234 [JavaFX Application Thread] INFO  cz.bliksoft.meshcorecompanion.connection.ConnectionManager:96 - Connected to COM12
