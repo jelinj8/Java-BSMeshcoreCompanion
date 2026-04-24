@@ -1,6 +1,8 @@
 package cz.bliksoft.meshcorecompanion.actions;
 
+import cz.bliksoft.javautils.app.ui.BSAppUI;
 import cz.bliksoft.javautils.app.ui.actions.IUIAction;
+import cz.bliksoft.meshcorecompanion.settings.SettingsPane;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -14,7 +16,7 @@ public class OpenSettingsAction implements IUIAction {
 
     @Override
     public void execute() {
-        // TODO: push settings pane via BSAppUI.pushUI()
+        BSAppUI.pushUI(new SettingsPane());
     }
 
     @Override

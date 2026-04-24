@@ -2,9 +2,12 @@ package cz.bliksoft.meshcorecompanion.chat;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,16 +16,23 @@ import cz.bliksoft.javautils.context.AbstractContextListener;
 import cz.bliksoft.javautils.context.Context;
 import cz.bliksoft.javautils.context.ContextChangedEvent;
 import cz.bliksoft.meshcore.FrameListener;
+import cz.bliksoft.meshcore.Settings;
+import cz.bliksoft.meshcore.companion.ContactListener;
 import cz.bliksoft.meshcore.companion.MeshcoreCompanion;
+import cz.bliksoft.meshcore.frames.FrameConstants.AdvertType;
+import cz.bliksoft.meshcore.frames.FrameConstants.ContactFlags;
+import cz.bliksoft.meshcore.frames.cmd.CmdAddUpdateContact;
 import cz.bliksoft.meshcore.frames.group.MessageFrameGroup;
-import cz.bliksoft.meshcore.frames.push.ContactDeletedPush;
+import cz.bliksoft.meshcore.frames.push.LogRXDataPush;
+import cz.bliksoft.meshcore.frames.push.NewAdvertPush;
 import cz.bliksoft.meshcore.frames.push.SendConfirmedPush;
 import cz.bliksoft.meshcore.frames.resp.ChannelInfo;
 import cz.bliksoft.meshcore.frames.resp.ChannelMsgRecv;
 import cz.bliksoft.meshcore.frames.resp.Contact;
 import cz.bliksoft.meshcore.frames.resp.ContactMsgRecv;
-import cz.bliksoft.meshcore.frames.resp.EndOfContacts;
 import cz.bliksoft.meshcore.frames.resp.Sent;
+import cz.bliksoft.meshcore.otaframe.OtaFrame;
+import cz.bliksoft.meshcore.otaframe.OtaGroupFrame;
 import cz.bliksoft.meshcore.utils.MeshcoreUtils;
 import cz.bliksoft.meshcorecompanion.model.ChatMessage;
 import javafx.application.Platform;
@@ -35,230 +45,598 @@ import static cz.bliksoft.meshcore.frames.FrameConstants.MessageTextType.TXT_TYP
 
 public class ChatManager {
 
-    private static final Logger log = LogManager.getLogger(ChatManager.class);
-    private static final ChatManager INSTANCE = new ChatManager();
+	private static final Logger log = LogManager.getLogger(ChatManager.class);
+	private static final ChatManager INSTANCE = new ChatManager();
 
-    private final ObservableList<Contact> contacts = FXCollections.observableArrayList();
-    private final ObservableList<ChannelInfo> channels = FXCollections.observableArrayList();
-    private final Map<String, ObservableList<ChatMessage>> loadedConversations = new HashMap<>();
-    private final Map<String, IntegerProperty> unreadCounts = new HashMap<>();
+	private final ObservableList<Contact> contacts = FXCollections.observableArrayList();
+	private final ObservableList<NewAdvertPush> discoveredContacts = FXCollections.observableArrayList();
+	private final ObservableList<ChannelInfo> channels = FXCollections.observableArrayList();
+	private final Map<String, ObservableList<ChatMessage>> loadedConversations = new HashMap<>();
+	private final Map<String, IntegerProperty> unreadCounts = new HashMap<>();
+	private final Set<String> authenticatedContacts = new HashSet<>();
 
-    private MeshcoreCompanion currentCompanion;
-    private String deviceHex;
+	private MeshcoreCompanion currentCompanion;
+	private String deviceHex;
+	private Runnable onAuthChanged;
 
-    private FrameListener<MessageFrameGroup> messageListener;
-    private FrameListener<Contact> contactListener;
-    private FrameListener<ContactDeletedPush> contactDeletedListener;
-    private FrameListener<EndOfContacts> endOfContactsListener;
-    private FrameListener<SendConfirmedPush> sendConfirmedListener;
+	private FrameListener<MessageFrameGroup> messageListener;
+	private ContactListener contactListener;
+	private FrameListener<SendConfirmedPush> sendConfirmedListener;
+	private FrameListener<NewAdvertPush> newAdvertListener;
 
-    private ChatManager() {
-    }
+	private ChatManager() {
+	}
 
-    public static ChatManager getInstance() {
-        return INSTANCE;
-    }
+	public static ChatManager getInstance() {
+		return INSTANCE;
+	}
 
-    public void install() {
-        Context.getCurrentContext().addContextListener(
-            new AbstractContextListener<MeshcoreCompanion>(MeshcoreCompanion.class, "ChatManager") {
-                @Override
-                public void fired(ContextChangedEvent<MeshcoreCompanion> event) {
-                    MeshcoreCompanion newVal = event.getNewValue();
-                    if (newVal != null) {
-                        onCompanionConnected(newVal);
-                    } else {
-                        onCompanionDisconnected(currentCompanion);
-                    }
-                }
-            });
-    }
+	public void install() {
+		Context.getCurrentContext().addContextListener(
+				new AbstractContextListener<MeshcoreCompanion>(MeshcoreCompanion.class, "ChatManager") {
+					@Override
+					public void fired(ContextChangedEvent<MeshcoreCompanion> event) {
+						MeshcoreCompanion newVal = event.getNewValue();
+						if (newVal != null)
+							onCompanionConnected(newVal);
+						else
+							onCompanionDisconnected(currentCompanion);
+					}
+				});
+	}
 
-    private void onCompanionConnected(MeshcoreCompanion companion) {
-        this.currentCompanion = companion;
+	public void setOnAuthChanged(Runnable callback) {
+		this.onAuthChanged = callback;
+	}
 
-        messageListener = frame -> {
-            switch (frame.getFrameType()) {
-                case RESP_CONTACT_MSG_RECV:
-                case RESP_CONTACT_MSG_RECV_V3: {
-                    ContactMsgRecv m = (ContactMsgRecv) frame;
-                    List<Contact> found = companion.getConfig().findContacts(m.getFrom6(), null);
-                    Contact contact = found.isEmpty() ? null : found.get(0);
-                    String senderName = contact != null ? contact.getName() : MeshcoreUtils.hex(m.getFrom6());
-                    String key = contact != null ? contactKey(contact) : MeshcoreUtils.hex(m.getFrom6());
-                    ChatMessage msg = new ChatMessage(0, m.getTimestamp(), m.getText(), false, senderName, true, null);
-                    Platform.runLater(() -> appendIncoming(key, msg));
-                    break;
-                }
-                case RESP_CHANNEL_MSG_RECV:
-                case RESP_CHANNEL_MSG_RECV_V3: {
-                    ChannelMsgRecv m = (ChannelMsgRecv) frame;
-                    ChannelInfo ch = companion.getConfig().getChannel(m.getChannelIdx());
-                    if (ch == null) break;
-                    String key = channelKey(ch);
-                    ChatMessage msg = new ChatMessage(0, m.getTimestamp(), m.getText(), false, ch.getName(), true, null);
-                    Platform.runLater(() -> appendIncoming(key, msg));
-                    break;
-                }
-                default:
-                    break;
-            }
-        };
+	// ── Connection lifecycle ─────────────────────────────────────────────────
 
-        contactListener = contact -> {
-            if (!contact.isSaved()) return;
-            Platform.runLater(() -> {
-                for (int i = 0; i < contacts.size(); i++) {
-                    if (MeshcoreUtils.hex(contacts.get(i).getPubkey()).equals(MeshcoreUtils.hex(contact.getPubkey()))) {
-                        contacts.set(i, contact);
-                        return;
-                    }
-                }
-                contacts.add(contact);
-            });
-        };
+	private void onCompanionConnected(MeshcoreCompanion companion) {
+		this.currentCompanion = companion;
+		companion.setLogFramePairing(true);
 
-        contactDeletedListener = push -> {
-            String hex = MeshcoreUtils.hex(push.getPubkey());
-            Platform.runLater(() -> contacts.removeIf(c -> MeshcoreUtils.hex(c.getPubkey()).equals(hex)));
-        };
+//        // Set device clock
+//        new Thread(() -> {
+//            try {
+//                companion.getConfig().setDeviceTime(null);
+//                log.info("Device time set");
+//            } catch (Exception e) {
+//                log.warn("Failed to set device time", e);
+//            }
+//        }, "meshcore-settime").start();
 
-        endOfContactsListener = eoc -> {
-            List<ChannelInfo> chs = new ArrayList<>(companion.getConfig().getChannels());
-            Platform.runLater(() -> {
-                channels.setAll(chs);
-                if (deviceHex == null && companion.getSelfInfo() != null) {
-                    deviceHex = MeshcoreUtils.hex(companion.getSelfInfo().getPubkey());
-                }
-            });
-        };
+		if (companion.getSelfInfo() != null) {
+			deviceHex = MeshcoreUtils.hex(companion.getSelfInfo().getPubkey());
+		}
 
-        sendConfirmedListener = push -> {
-            String tagHex = MeshcoreUtils.hex(push.getTag());
-            Platform.runLater(() -> {
-                for (ObservableList<ChatMessage> msgs : loadedConversations.values()) {
-                    for (ChatMessage msg : msgs) {
-                        if (tagHex.equals(msg.getTag())) {
-                            msg.setConfirmed(true);
-                            int idx = msgs.indexOf(msg);
-                            if (idx >= 0) msgs.set(idx, msg);
-                            return;
-                        }
-                    }
-                }
-            });
-        };
+		messageListener = frame -> {
+			switch (frame.getFrameType()) {
+			case RESP_CONTACT_MSG_RECV, RESP_CONTACT_MSG_RECV_V3 -> {
+				ContactMsgRecv m = (ContactMsgRecv) frame;
+				List<Contact> found = companion.getConfig().findContacts(m.getFrom6(), null);
+				Contact contact = found.isEmpty() ? null : found.get(0);
+				String senderName = contact != null ? contact.getName() : MeshcoreUtils.hex(m.getFrom6());
+				String key = contact != null ? contactKey(contact) : MeshcoreUtils.hex(m.getFrom6());
+				ChatMessage msg = new ChatMessage(0, m.getTimestamp(), m.getText(), false, senderName, true, null);
+				setSignalInfo(msg, frame);
+				Platform.runLater(() -> appendIncoming(key, msg));
+			}
+			case RESP_CHANNEL_MSG_RECV, RESP_CHANNEL_MSG_RECV_V3 -> {
+				ChannelMsgRecv m = (ChannelMsgRecv) frame;
+				ChannelInfo ch = companion.getConfig().getChannel(m.getChannelIdx());
+				if (ch == null)
+					break;
+				String key = channelKey(ch);
+				ChatMessage msg = new ChatMessage(0, m.getTimestamp(), m.getText(), false, ch.getName(), true, null);
+				setSignalInfo(msg, frame);
+				Platform.runLater(() -> appendIncoming(key, msg));
+			}
+			default -> {
+			}
+			}
+		};
 
-        if (companion.getSelfInfo() != null) {
-            deviceHex = MeshcoreUtils.hex(companion.getSelfInfo().getPubkey());
-        }
+		contactListener = new ContactListener() {
+			@Override
+			public void onContactAdded(Contact contact) {
+				String hex = MeshcoreUtils.hex(contact.getPubkey());
+				Platform.runLater(() -> {
+					for (int i = 0; i < contacts.size(); i++) {
+						if (MeshcoreUtils.hex(contacts.get(i).getPubkey()).equals(hex)) {
+							contacts.set(i, contact);
+							return;
+						}
+					}
+					contacts.add(contact);
+					discoveredContacts.removeIf(d -> MeshcoreUtils.hex(d.getPubkey()).equals(hex));
+				});
+			}
 
-        companion.registerFrameListener(MessageFrameGroup.class, messageListener);
-        companion.registerFrameListener(Contact.class, contactListener);
-        companion.registerFrameListener(ContactDeletedPush.class, contactDeletedListener);
-        companion.registerFrameListener(EndOfContacts.class, endOfContactsListener);
-        companion.registerFrameListener(SendConfirmedPush.class, sendConfirmedListener);
-    }
+			@Override
+			public void onContactUpdated(Contact contact) {
+				String hex = MeshcoreUtils.hex(contact.getPubkey());
+				Platform.runLater(() -> {
+					for (int i = 0; i < contacts.size(); i++) {
+						if (MeshcoreUtils.hex(contacts.get(i).getPubkey()).equals(hex)) {
+							contacts.set(i, contact);
+							return;
+						}
+					}
+				});
+			}
 
-    private void onCompanionDisconnected(MeshcoreCompanion companion) {
-        if (companion != this.currentCompanion) return;
-        if (messageListener != null) companion.removeFrameListener(MessageFrameGroup.class, messageListener);
-        if (contactListener != null) companion.removeFrameListener(Contact.class, contactListener);
-        if (contactDeletedListener != null) companion.removeFrameListener(ContactDeletedPush.class, contactDeletedListener);
-        if (endOfContactsListener != null) companion.removeFrameListener(EndOfContacts.class, endOfContactsListener);
-        if (sendConfirmedListener != null) companion.removeFrameListener(SendConfirmedPush.class, sendConfirmedListener);
-        messageListener = null;
-        contactListener = null;
-        contactDeletedListener = null;
-        endOfContactsListener = null;
-        sendConfirmedListener = null;
-        this.currentCompanion = null;
-        Platform.runLater(() -> {
-            contacts.clear();
-            channels.clear();
-        });
-    }
+			@Override
+			public void onContactRemoved(Contact contact) {
+				String hex = MeshcoreUtils.hex(contact.getPubkey());
+				Platform.runLater(() -> contacts.removeIf(c -> MeshcoreUtils.hex(c.getPubkey()).equals(hex)));
+			}
+		};
 
-    private void appendIncoming(String key, ChatMessage msg) {
-        ObservableList<ChatMessage> msgs = getMessages(key);
-        msg.setId(msgs.size());
-        msgs.add(msg);
-        if (deviceHex != null) ChatStore.appendMessage(deviceHex, key, msg);
-        unreadCountProperty(key).set(unreadCountProperty(key).get() + 1);
-    }
+		sendConfirmedListener = push -> {
+			String tagHex = MeshcoreUtils.hex(push.getTag());
+			Platform.runLater(() -> {
+				for (ObservableList<ChatMessage> msgs : loadedConversations.values()) {
+					for (ChatMessage msg : msgs) {
+						if (tagHex.equals(msg.getTag())) {
+							msg.setConfirmed(true);
+							int idx = msgs.indexOf(msg);
+							if (idx >= 0)
+								msgs.set(idx, msg);
+							return;
+						}
+					}
+				}
+			});
+		};
 
-    public ObservableList<Contact> getContacts() {
-        return contacts;
-    }
+		newAdvertListener = push -> {
+			String hex = MeshcoreUtils.hex(push.getPubkey());
+			Platform.runLater(() -> {
+				boolean alreadySaved = contacts.stream().anyMatch(c -> MeshcoreUtils.hex(c.getPubkey()).equals(hex));
+				if (!alreadySaved) {
+					boolean alreadyDiscovered = discoveredContacts.stream()
+							.anyMatch(c -> MeshcoreUtils.hex(c.getPubkey()).equals(hex));
+					if (!alreadyDiscovered) {
+						discoveredContacts.add(push);
+					}
+				}
+			});
+		};
 
-    public ObservableList<ChannelInfo> getChannels() {
-        return channels;
-    }
+		companion.registerFrameListener(MessageFrameGroup.class, messageListener);
+		companion.getConfig().addContactListener(contactListener);
+		companion.registerFrameListener(SendConfirmedPush.class, sendConfirmedListener);
+		companion.registerFrameListener(NewAdvertPush.class, newAdvertListener);
 
-    public ObservableList<ChatMessage> getMessages(String conversationKey) {
-        return loadedConversations.computeIfAbsent(conversationKey, k -> {
-            List<ChatMessage> stored = deviceHex != null ? ChatStore.load(deviceHex, k) : new ArrayList<>();
-            return FXCollections.observableArrayList(stored);
-        });
-    }
+		// Wait for the library to complete its initial contacts sync (which may have
+		// started before our listeners were registered), then load the authoritative
+		// snapshot. awaitContactsSync returns only after the atomic commit of the
+		// contacts map, so getSavedContacts() is always consistent here.
+		new Thread(() -> {
+			try {
+				companion.getConfig().awaitContactsSync(30_000);
+			} catch (Exception e) {
+				log.warn("Contacts sync await failed on connect", e);
+			}
+			if (companion != currentCompanion) return;
+			List<Contact> savedContacts = companion.getConfig().getSavedContacts();
+			List<ChannelInfo> chs = new ArrayList<>(companion.getConfig().getChannels());
+			Platform.runLater(() -> {
+				if (companion != currentCompanion) return;
+				contacts.setAll(savedContacts);
+				channels.setAll(chs);
+				if (deviceHex == null && companion.getSelfInfo() != null) {
+					deviceHex = MeshcoreUtils.hex(companion.getSelfInfo().getPubkey());
+				}
+			});
+		}, "meshcore-initial-load").start();
+	}
 
-    public IntegerProperty unreadCountProperty(String conversationKey) {
-        return unreadCounts.computeIfAbsent(conversationKey, k -> new SimpleIntegerProperty(0));
-    }
+	private void onCompanionDisconnected(MeshcoreCompanion companion) {
+		if (companion != this.currentCompanion)
+			return;
+		if (messageListener != null)
+			companion.removeFrameListener(MessageFrameGroup.class, messageListener);
+		if (contactListener != null)
+			companion.getConfig().removeContactListener(contactListener);
+		if (sendConfirmedListener != null)
+			companion.removeFrameListener(SendConfirmedPush.class, sendConfirmedListener);
+		if (newAdvertListener != null)
+			companion.removeFrameListener(NewAdvertPush.class, newAdvertListener);
+		messageListener = null;
+		contactListener = null;
+		sendConfirmedListener = null;
+		newAdvertListener = null;
+		this.currentCompanion = null;
+		authenticatedContacts.clear();
+		Platform.runLater(() -> {
+			contacts.clear();
+			channels.clear();
+			discoveredContacts.clear();
+			if (onAuthChanged != null)
+				onAuthChanged.run();
+		});
+	}
 
-    public void markRead(String conversationKey) {
-        unreadCountProperty(conversationKey).set(0);
-    }
+	// ── Incoming messages ────────────────────────────────────────────────────
 
-    public void sendToContact(Contact contact, String text) {
-        MeshcoreCompanion c = currentCompanion;
-        if (c == null) return;
-        long now = Instant.now().getEpochSecond();
-        String key = contactKey(contact);
-        ObservableList<ChatMessage> msgs = getMessages(key);
-        ChatMessage msg = new ChatMessage(msgs.size(), now, text, true, "Me", false, null);
-        msgs.add(msg);
-        if (deviceHex != null) ChatStore.appendMessage(deviceHex, key, msg);
-        byte[] prefix6 = MeshcoreUtils.prefix6(contact.getPubkey());
-        new Thread(() -> {
-            try {
-                Sent sent = c.sendTxtMsgAsync(TXT_TYPE_PLAIN, prefix6, 0, now, text);
-                String tagHex = MeshcoreUtils.hex(sent.getAckIdOrTag());
-                Platform.runLater(() -> {
-                    msg.setTag(tagHex);
-                    int idx = msgs.indexOf(msg);
-                    if (idx >= 0) msgs.set(idx, msg);
-                    if (deviceHex != null) ChatStore.save(deviceHex, key, new ArrayList<>(msgs));
-                });
-            } catch (Exception e) {
-                log.error("Failed to send message to {}", contact.getName(), e);
-            }
-        }, "meshcore-send").start();
-    }
+	private static void setSignalInfo(ChatMessage msg, MessageFrameGroup frame) {
+		var rxLog = frame.getPairedLogFrame();
+		if (rxLog == null)
+			return;
+		String snrRssi = String.format("SNR %.1f dB  RSSI %d dBm", rxLog.getSnr4() / 4.0, rxLog.getRssi());
+		OtaFrame ota = rxLog.getOtaFrame();
+		String pathInfo = "";
+		if (ota != null && ota.path != null && ota.path.length > 0) {
+			int sz = Math.max(1, ota.hashSize);
+			int hops = ota.path.length / sz;
+			StringBuilder pathStr = new StringBuilder();
+			for (int i = 0; i < ota.path.length; i += sz) {
+				if (pathStr.length() > 0)
+					pathStr.append(' ');
+				pathStr.append(MeshcoreUtils.hex(Arrays.copyOfRange(ota.path, i, Math.min(i + sz, ota.path.length))));
+			}
+			pathInfo = String.format("  · %dB hash  %d hop  · %s", sz, hops, pathStr);
+		}
+		msg.setSignalInfo(snrRssi + pathInfo);
+	}
 
-    public void sendToChannel(ChannelInfo channel, String text) {
-        MeshcoreCompanion c = currentCompanion;
-        if (c == null) return;
-        long now = Instant.now().getEpochSecond();
-        String key = channelKey(channel);
-        ObservableList<ChatMessage> msgs = getMessages(key);
-        ChatMessage msg = new ChatMessage(msgs.size(), now, text, true, "Me", true, null);
-        msgs.add(msg);
-        if (deviceHex != null) ChatStore.appendMessage(deviceHex, key, msg);
-        new Thread(() -> {
-            try {
-                c.sendChannelTxtMessage(TXT_TYPE_PLAIN, channel.getId(), now, text);
-            } catch (Exception e) {
-                log.error("Failed to send message to channel {}", channel.getName(), e);
-            }
-        }, "meshcore-send").start();
-    }
+	private void appendIncoming(String key, ChatMessage msg) {
+		ObservableList<ChatMessage> msgs = getMessages(key);
+		msg.setId(msgs.size());
+		msgs.add(msg);
+		if (deviceHex != null)
+			ChatStore.appendMessage(deviceHex, key, msg);
+		unreadCountProperty(key).set(unreadCountProperty(key).get() + 1);
+	}
 
-    public String contactKey(Contact c) {
-        return MeshcoreUtils.hex(c.getPubkey());
-    }
+	// ── Accessors ────────────────────────────────────────────────────────────
 
-    public String channelKey(ChannelInfo ch) {
-        return "ch_" + ch.getName();
-    }
+	public ObservableList<Contact> getContacts() {
+		return contacts;
+	}
+
+	public ObservableList<NewAdvertPush> getDiscoveredContacts() {
+		return discoveredContacts;
+	}
+
+	public ObservableList<ChannelInfo> getChannels() {
+		return channels;
+	}
+
+	public ObservableList<ChatMessage> getMessages(String conversationKey) {
+		return loadedConversations.computeIfAbsent(conversationKey, k -> {
+			List<ChatMessage> stored = deviceHex != null ? ChatStore.load(deviceHex, k) : new ArrayList<>();
+			return FXCollections.observableArrayList(stored);
+		});
+	}
+
+	public IntegerProperty unreadCountProperty(String conversationKey) {
+		return unreadCounts.computeIfAbsent(conversationKey, k -> new SimpleIntegerProperty(0));
+	}
+
+	public void markRead(String conversationKey) {
+		unreadCountProperty(conversationKey).set(0);
+	}
+
+	// ── Auth state ───────────────────────────────────────────────────────────
+
+	public boolean isAuthenticated(Contact contact) {
+		return authenticatedContacts.contains(contactKey(contact));
+	}
+
+	// ── Sending ──────────────────────────────────────────────────────────────
+
+	public void sendToContact(Contact contact, String text, SendMode mode) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		long now = Instant.now().getEpochSecond();
+		String key = contactKey(contact);
+		ObservableList<ChatMessage> msgs = getMessages(key);
+		ChatMessage msg = new ChatMessage(msgs.size(), now, text, true, "Me", false, null);
+		msgs.add(msg);
+		if (deviceHex != null)
+			ChatStore.appendMessage(deviceHex, key, msg);
+		byte[] prefix6 = MeshcoreUtils.prefix6(contact.getPubkey());
+
+		new Thread(() -> {
+			try {
+				switch (mode) {
+				case ASYNC -> {
+					Sent sent = c.sendTxtMsgAsync(TXT_TYPE_PLAIN, prefix6, 0, now, text);
+					String tagHex = MeshcoreUtils.hex(sent.getAckIdOrTag());
+					Platform.runLater(() -> updateTag(msgs, msg, tagHex, false, key));
+				}
+				case SYNC -> {
+					var confirm = c.sendTxtMsg(TXT_TYPE_PLAIN, prefix6, 0, now, text);
+					String tagHex = MeshcoreUtils.hex(confirm.getTag());
+					Platform.runLater(() -> updateTag(msgs, msg, tagHex, true, key));
+				}
+				case RETRY -> {
+					var confirm = c.sendTxtMsgWithRetry(TXT_TYPE_PLAIN, prefix6, now, text);
+					String tagHex = MeshcoreUtils.hex(confirm.getTag());
+					Platform.runLater(() -> updateTag(msgs, msg, tagHex, true, key));
+				}
+				}
+			} catch (Exception e) {
+				log.error("Failed to send message to {} (mode={})", contact.getName(), mode, e);
+			}
+		}, "meshcore-send").start();
+	}
+
+	private void updateTag(ObservableList<ChatMessage> msgs, ChatMessage msg, String tagHex, boolean confirmed,
+			String key) {
+		msg.setTag(tagHex);
+		msg.setConfirmed(confirmed);
+		int idx = msgs.indexOf(msg);
+		if (idx >= 0)
+			msgs.set(idx, msg);
+		if (deviceHex != null)
+			ChatStore.save(deviceHex, key, new ArrayList<>(msgs));
+	}
+
+	public void sendToChannel(ChannelInfo channel, String text) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		long now = Instant.now().getEpochSecond();
+		String key = channelKey(channel);
+		ObservableList<ChatMessage> msgs = getMessages(key);
+		ChatMessage msg = new ChatMessage(msgs.size(), now, text, true, "Me", true, null);
+		msgs.add(msg);
+		if (deviceHex != null)
+			ChatStore.appendMessage(deviceHex, key, msg);
+
+		new Thread(() -> {
+			try {
+				c.sendChannelTxtMessage(TXT_TYPE_PLAIN, channel.getId(), now, text);
+				Platform.runLater(() -> {
+					msg.setConfirmed(true);
+					int idx = msgs.indexOf(msg);
+					if (idx >= 0)
+						msgs.set(idx, msg);
+				});
+				startRepeatMonitor(c, msgs, msg, text);
+			} catch (Exception e) {
+				log.error("Failed to send message to channel {}", channel.getName(), e);
+			}
+		}, "meshcore-send").start();
+	}
+
+	private void startRepeatMonitor(MeshcoreCompanion c, ObservableList<ChatMessage> msgs, ChatMessage msg,
+			String sentText) {
+		long deadline = System.currentTimeMillis() + 30_000;
+		FrameListener<LogRXDataPush> repeatListener = push -> {
+			if (System.currentTimeMillis() > deadline)
+				return;
+			if (push.tryDecryptGrpTxt()) {
+				OtaFrame ota = push.getOtaFrame();
+				if (ota instanceof OtaGroupFrame grp && sentText.equals(grp.decryptedText)) {
+					Platform.runLater(() -> {
+						msg.setRepeatCount(msg.getRepeatCount() + 1);
+						int idx = msgs.indexOf(msg);
+						if (idx >= 0)
+							msgs.set(idx, msg);
+					});
+				}
+			}
+		};
+		c.registerFrameListener(LogRXDataPush.class, repeatListener);
+		new Thread(() -> {
+			try {
+				Thread.sleep(30_000);
+			} catch (InterruptedException ignored) {
+			}
+			c.removeFrameListener(LogRXDataPush.class, repeatListener);
+		}, "meshcore-repeat-cleanup").start();
+	}
+
+	// ── Contact management ───────────────────────────────────────────────────
+
+	public void addContactByPubkey(String pubkeyHex, String displayName) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		byte[] pubkey = MeshcoreUtils.fromHex(pubkeyHex);
+		long now = Instant.now().getEpochSecond();
+		CmdAddUpdateContact cmd = new CmdAddUpdateContact(pubkey, AdvertType.ADV_TYPE_CHAT, 0,
+				new byte[Settings.MAX_PATH_SIZE], displayName, now, null, null, null);
+		new Thread(() -> {
+			try {
+				var resp = c.sendFrameWithResult(cmd, 5000);
+				log.info("Added contact {}", displayName);
+				if (resp instanceof Contact contact && contact.isSaved()) {
+					updateContactInList(contact);
+				}
+			} catch (Exception e) {
+				log.error("Failed to add contact {}", displayName, e);
+			}
+		}, "meshcore-add-contact").start();
+	}
+
+	public void importDiscovered(NewAdvertPush advert) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		new Thread(() -> {
+			try {
+				var resp = c.sendFrameWithResult(advert.getCmdAddUpdateContact(), 5000);
+				log.info("Imported discovered contact {}", advert.getName());
+				if (resp instanceof Contact contact && contact.isSaved()) {
+					updateContactInList(contact);
+				}
+			} catch (Exception e) {
+				log.error("Failed to import contact {}", advert.getName(), e);
+			}
+		}, "meshcore-import-contact").start();
+	}
+
+	public void removeContact(Contact contact) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		new Thread(() -> {
+			try {
+				c.getConfig().removeContact(contact.getPubkey());
+				log.info("Removed contact {}", contact.getName());
+			} catch (Exception e) {
+				log.error("Failed to remove contact {}", contact.getName(), e);
+			}
+		}, "meshcore-remove-contact").start();
+	}
+
+	public void toggleFavourite(Contact contact) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		boolean wasFav = contact.hasFlag(ContactFlags.FAVOURITE);
+		ContactFlags[] newFlags = wasFav ? new ContactFlags[0] : new ContactFlags[] { ContactFlags.FAVOURITE };
+		CmdAddUpdateContact cmd = new CmdAddUpdateContact(contact.getPubkey(), contact.getType(), 0,
+				new byte[Settings.MAX_PATH_SIZE], contact.getName(), 0, null, null, null, newFlags);
+		new Thread(() -> {
+			try {
+				var resp = c.sendFrameWithResult(cmd, 5000);
+				log.info("Toggled favourite for {}", contact.getName());
+				if (resp instanceof Contact updated && updated.isSaved()) {
+					updateContactInList(updated);
+				}
+			} catch (Exception e) {
+				log.error("Failed to toggle favourite for {}", contact.getName(), e);
+			}
+		}, "meshcore-favourite").start();
+	}
+
+	private void updateContactInList(Contact contact) {
+		String hex = MeshcoreUtils.hex(contact.getPubkey());
+		Platform.runLater(() -> {
+			for (int i = 0; i < contacts.size(); i++) {
+				if (MeshcoreUtils.hex(contacts.get(i).getPubkey()).equals(hex)) {
+					contacts.set(i, contact);
+					return;
+				}
+			}
+			contacts.add(contact);
+			discoveredContacts.removeIf(d -> MeshcoreUtils.hex(d.getPubkey()).equals(hex));
+		});
+	}
+
+	// ── Channel management ───────────────────────────────────────────────────
+
+	public void addPublicChannel(String name) {
+		doAddChannel(name, Settings.PUBLIC_GROUP_PSK.clone());
+	}
+
+	public void addHashChannel(String name) {
+		String hashName = name.startsWith("#") ? name : "#" + name;
+		doAddChannel(hashName, null);
+	}
+
+	public void addPrivateChannel(String name, byte[] key) {
+		doAddChannel(name, key);
+	}
+
+	private void doAddChannel(String name, byte[] key) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		new Thread(() -> {
+			try {
+				c.getConfig().setChannel(name, key);
+				List<ChannelInfo> chs = new ArrayList<>(c.getConfig().getChannels());
+				Platform.runLater(() -> channels.setAll(chs));
+				log.info("Added channel {}", name);
+			} catch (Exception e) {
+				log.error("Failed to add channel {}", name, e);
+			}
+		}, "meshcore-add-channel").start();
+	}
+
+	public void removeChannel(ChannelInfo channel) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		new Thread(() -> {
+			try {
+				c.getConfig().setChannel(channel.getId(), null, new byte[16]);
+				List<ChannelInfo> chs = new ArrayList<>(c.getConfig().getChannels());
+				Platform.runLater(() -> channels.setAll(chs));
+				log.info("Removed channel {}", channel.getName());
+			} catch (Exception e) {
+				log.error("Failed to remove channel {}", channel.getName(), e);
+			}
+		}, "meshcore-remove-channel").start();
+	}
+
+	// ── Login / logout ───────────────────────────────────────────────────────
+
+	public void loginToRoom(Contact contact, String password) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		new Thread(() -> {
+			try {
+				c.login(contact.getPubkey(), password);
+				authenticatedContacts.add(contactKey(contact));
+				log.info("Logged in to room {}", contact.getName());
+				if (onAuthChanged != null)
+					Platform.runLater(onAuthChanged);
+			} catch (Exception e) {
+				log.error("Login to room {} failed", contact.getName(), e);
+			}
+		}, "meshcore-login").start();
+	}
+
+	public void logoutFromRoom(Contact contact) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		new Thread(() -> {
+			try {
+				c.logout(contact.getPubkey());
+				authenticatedContacts.remove(contactKey(contact));
+				log.info("Logged out from room {}", contact.getName());
+				if (onAuthChanged != null)
+					Platform.runLater(onAuthChanged);
+			} catch (Exception e) {
+				log.error("Logout from room {} failed", contact.getName(), e);
+			}
+		}, "meshcore-logout").start();
+	}
+
+	// ── Advert ───────────────────────────────────────────────────────────────
+
+	public void sendSingleAdvert() {
+		sendAdvert(false);
+	}
+
+	public void sendFloodAdvert() {
+		sendAdvert(true);
+	}
+
+	private void sendAdvert(boolean flood) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		new Thread(() -> {
+			try {
+				c.sendFrame(new cz.bliksoft.meshcore.frames.cmd.CmdSendSelfAdvert(
+						flood ? cz.bliksoft.meshcore.frames.cmd.CmdSendSelfAdvert.AdvertMethod.FLOOD
+								: cz.bliksoft.meshcore.frames.cmd.CmdSendSelfAdvert.AdvertMethod.SINGLE));
+				log.info("Sent {} advert", flood ? "flood" : "single-hop");
+			} catch (Exception e) {
+				log.error("Failed to send advert", e);
+			}
+		}, "meshcore-advert").start();
+	}
+
+	// ── Keys ─────────────────────────────────────────────────────────────────
+
+	public String contactKey(Contact c) {
+		return MeshcoreUtils.hex(c.getPubkey());
+	}
+
+	public String channelKey(ChannelInfo ch) {
+		return "ch_" + ch.getName();
+	}
 }

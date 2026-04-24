@@ -8,6 +8,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.HBox;
@@ -21,6 +22,8 @@ public class LogPane extends VBox {
     private final FilteredList<LogEntry> filteredEntries;
     private final ComboBox<String> typeFilter = new ComboBox<>();
     private final TextField textFilter = new TextField();
+
+    private boolean atBottom = true;
 
     public LogPane() {
         filteredEntries = new FilteredList<>(MeshcorePushBridge.getInstance().getLogEntries());
@@ -57,8 +60,24 @@ public class LogPane extends VBox {
         });
         VBox.setVgrow(listView, Priority.ALWAYS);
 
+        listView.skinProperty().addListener((obs, o, skin) -> {
+            if (skin == null) return;
+            ScrollBar sb = (ScrollBar) listView.lookup(".scroll-bar:vertical");
+            if (sb != null) {
+                sb.valueProperty().addListener((sObs, sO, sN) -> {
+                    double max = sb.getMax();
+                    atBottom = max <= 0 || sN.doubleValue() >= max - sb.getVisibleAmount() / 2;
+                });
+            }
+        });
+
         MeshcorePushBridge.getInstance().getLogEntries().addListener(
-                (javafx.collections.ListChangeListener<LogEntry>) change -> updateTypeFilter());
+                (javafx.collections.ListChangeListener<LogEntry>) change -> {
+                    updateTypeFilter();
+                    if (atBottom && !filteredEntries.isEmpty()) {
+                        listView.scrollTo(filteredEntries.size() - 1);
+                    }
+                });
 
         getChildren().addAll(filterBar, listView);
         setPadding(new Insets(0));

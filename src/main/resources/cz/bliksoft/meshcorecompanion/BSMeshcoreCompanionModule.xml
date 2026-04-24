@@ -24,6 +24,9 @@
 					<file name="right" type="HBox" id="toolbar/right">
 						<attribute name="FXclass" value="tool-bar" />
 						<attribute name="maxHeight" value="max" />
+						<file name="Advert" type="Class">
+							<attribute name="class" value="cz.bliksoft.meshcorecompanion.actions.AdvertMenuButton" />
+						</file>
 						<file name="Connect" type="Button">
 							<attribute name="action" value="ConnectAction" />
 							<attribute name="focusTraversable" value="false" />
@@ -64,12 +67,12 @@
 				<file name="filler" type="StackPane">
 					<attribute name="hgrow" value="SOMETIMES" />
 				</file>
-				<file name="contactsCount" type="Label" id="statusbar/contacts">
-					<attribute name="text" value="Contacts: -" />
+				<file name="contactsCount" type="Class">
+					<attribute name="class" value="cz.bliksoft.meshcorecompanion.controls.ContactsCountLabel" />
 					<attribute name="FXclass" value="bevel-lowered" />
 				</file>
-				<file name="groupsCount" type="Label" id="statusbar/groups">
-					<attribute name="text" value="Groups: -" />
+				<file name="groupsCount" type="Class">
+					<attribute name="class" value="cz.bliksoft.meshcorecompanion.controls.GroupsCountLabel" />
 					<attribute name="FXclass" value="bevel-lowered" />
 				</file>
 				<file name="statusbarMessage" type="Class">

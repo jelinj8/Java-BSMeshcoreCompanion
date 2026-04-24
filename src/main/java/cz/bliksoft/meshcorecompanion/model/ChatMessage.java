@@ -12,6 +12,8 @@ public class ChatMessage {
     private String senderName;
     private boolean confirmed;
     private String tag;
+    private String signalInfo;
+    private int repeatCount;
 
     public ChatMessage() {
     }
@@ -46,4 +48,10 @@ public class ChatMessage {
 
     public String getTag() { return tag; }
     public void setTag(String tag) { this.tag = tag; }
+
+    public String getSignalInfo() { return signalInfo; }
+    public void setSignalInfo(String signalInfo) { this.signalInfo = signalInfo; }
+
+    public int getRepeatCount() { return repeatCount; }
+    public void setRepeatCount(int repeatCount) { this.repeatCount = repeatCount; }
 }
