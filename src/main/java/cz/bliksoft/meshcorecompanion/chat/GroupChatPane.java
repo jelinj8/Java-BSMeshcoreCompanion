@@ -51,7 +51,10 @@ public class GroupChatPane extends VBox {
 				chatView.setConversation(null, null);
 			} else {
 				chatView.setConversation(chatManager.channelKey(selected),
-						(key, text, mode) -> chatManager.sendToChannel(selected, text));
+						(key, text, mode, onComplete, onTextReturn) -> {
+							onComplete.run();
+							chatManager.sendToChannel(selected, text);
+						});
 				chatManager.markRead(chatManager.channelKey(selected));
 				channelList.refresh();
 			}

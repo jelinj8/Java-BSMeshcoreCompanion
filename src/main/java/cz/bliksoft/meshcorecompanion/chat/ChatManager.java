@@ -348,7 +348,8 @@ public class ChatManager {
 
 	// ── Sending ──────────────────────────────────────────────────────────────
 
-	public void sendToContact(Contact contact, String text, SendMode mode) {
+	public void sendToContact(Contact contact, String text, SendMode mode, Runnable onComplete,
+			Consumer<String> onTextReturn) {
 		MeshcoreCompanion c = currentCompanion;
 		if (c == null)
 			return;
@@ -357,31 +358,60 @@ public class ChatManager {
 		ObservableList<ChatMessage> msgs = getMessages(key);
 		ChatMessage msg = new ChatMessage(msgs.size(), now, text, true, "Me", false, null);
 		msgs.add(msg);
-		if (deviceHex != null)
-			ChatStore.appendMessage(deviceHex, key, msg);
 		byte[] prefix6 = MeshcoreUtils.prefix6(contact.getPubkey());
 
 		new Thread(() -> {
-			try {
-				switch (mode) {
-				case ASYNC -> {
+			switch (mode) {
+			case ASYNC -> {
+				try {
+					onComplete.run();
+					if (deviceHex != null)
+						ChatStore.appendMessage(deviceHex, key, msg);
 					Sent sent = c.sendTxtMsgAsync(TXT_TYPE_PLAIN, prefix6, 0, now, text);
 					String tagHex = MeshcoreUtils.hex(sent.getAckIdOrTag());
 					Platform.runLater(() -> updateTag(msgs, msg, tagHex, false, key));
+				} catch (Exception e) {
+					log.error("Failed to send message to {} (mode=ASYNC)", contact.getName(), e);
 				}
-				case SYNC -> {
+			}
+			case SYNC -> {
+				try {
 					var confirm = c.sendTxtMsg(TXT_TYPE_PLAIN, prefix6, 0, now, text);
 					String tagHex = MeshcoreUtils.hex(confirm.getTag());
-					Platform.runLater(() -> updateTag(msgs, msg, tagHex, true, key));
+					if (deviceHex != null)
+						ChatStore.appendMessage(deviceHex, key, msg);
+					Platform.runLater(() -> {
+						updateTag(msgs, msg, tagHex, true, key);
+						onComplete.run();
+					});
+				} catch (Exception e) {
+					log.error("SYNC send failed to {}", contact.getName(), e);
+					Platform.runLater(() -> {
+						msgs.remove(msg);
+						onTextReturn.accept(text);
+						onComplete.run();
+					});
 				}
-				case RETRY -> {
+			}
+			case RETRY -> {
+				try {
 					var confirm = c.sendTxtMsgWithRetry(TXT_TYPE_PLAIN, prefix6, now, text);
 					String tagHex = MeshcoreUtils.hex(confirm.getTag());
-					Platform.runLater(() -> updateTag(msgs, msg, tagHex, true, key));
+					if (deviceHex != null)
+						ChatStore.appendMessage(deviceHex, key, msg);
+					Platform.runLater(() -> {
+						updateTag(msgs, msg, tagHex, true, key);
+						onComplete.run();
+					});
+				} catch (Exception e) {
+					log.error("RETRY send failed to {}", contact.getName(), e);
+					Platform.runLater(() -> {
+						msgs.remove(msg);
+						onTextReturn.accept(text);
+						onComplete.run();
+					});
 				}
-				}
-			} catch (Exception e) {
-				log.error("Failed to send message to {} (mode={})", contact.getName(), mode, e);
+			}
 			}
 		}, "meshcore-send").start();
 	}

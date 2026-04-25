@@ -20,6 +20,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
+import java.util.function.Consumer;
+
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -37,7 +39,7 @@ class ChatView extends VBox {
 
 	@FunctionalInterface
 	interface SendCallback {
-		void send(String key, String text, SendMode mode);
+		void send(String key, String text, SendMode mode, Runnable onComplete, Consumer<String> onTextReturn);
 	}
 
 	private final ListView<ChatMessage> listView = new ListView<>();
@@ -83,7 +85,7 @@ class ChatView extends VBox {
 		HBox.setHgrow(inputField, Priority.ALWAYS);
 
 		modeBox.getItems().addAll(SendMode.values());
-		modeBox.setValue(SendMode.ASYNC);
+		modeBox.setValue(SendMode.SYNC);
 		modeBox.setTooltip(new javafx.scene.control.Tooltip(
 				"Async – fire and forget\nSync – wait for ACK\nRetry – up to 3 attempts with flood fallback"));
 
@@ -159,7 +161,24 @@ class ChatView extends VBox {
 		if (text.isEmpty() || conversationKey == null || sendCallback == null)
 			return;
 		inputField.clear();
-		sendCallback.send(conversationKey, text, modeBox.getValue());
+		SendMode mode = modeBox.getValue();
+		boolean blocking = mode == SendMode.SYNC || mode == SendMode.RETRY;
+		if (blocking)
+			sendBar.setDisable(true);
+		String sentKey = conversationKey;
+		Runnable onComplete = blocking ? () -> {
+			if (sentKey.equals(conversationKey)) {
+				sendBar.setDisable(false);
+				inputField.requestFocus();
+			}
+		} : () -> {
+		};
+		sendCallback.send(conversationKey, text, mode, onComplete, t -> {
+			if (sentKey.equals(conversationKey)) {
+				inputField.setText(t);
+				inputField.end();
+			}
+		});
 	}
 
 	// ── Message cell ─────────────────────────────────────────────────────────

@@ -124,8 +124,8 @@ public class ContactChatPane extends VBox {
 				|| contact.getType() == AdvertType.ADV_TYPE_REPEATER;
 		boolean authed = !isRoomRepeater || chatManager.isAuthenticated(contact);
 
-		chatView.setConversation(chatManager.contactKey(contact),
-				authed ? (key, text, mode) -> chatManager.sendToContact(contact, text, mode) : null);
+		chatView.setConversation(chatManager.contactKey(contact), authed ? (key, text, mode, onComplete,
+				onTextReturn) -> chatManager.sendToContact(contact, text, mode, onComplete, onTextReturn) : null);
 		chatView.setSendEnabled(authed);
 		chatManager.markRead(chatManager.contactKey(contact));
 	}
