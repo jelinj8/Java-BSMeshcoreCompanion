@@ -5,9 +5,19 @@ import javafx.scene.control.Label;
 
 public class ConnectionStatusLabel extends Label {
 
-    public ConnectionStatusLabel() {
-        setText("Disconnected");
-        ConnectionManager.getInstance().connectedProperty().addListener((obs, o, connected) ->
-                setText(connected ? "Connected" : "Disconnected"));
-    }
+	public ConnectionStatusLabel() {
+		ConnectionManager cm = ConnectionManager.getInstance();
+		cm.connectedProperty().addListener((obs, o, n) -> update(cm));
+		cm.connectedDeviceProperty().addListener((obs, o, n) -> update(cm));
+		update(cm);
+	}
+
+	private void update(ConnectionManager cm) {
+		if (!cm.connectedProperty().get()) {
+			setText("Disconnected");
+			return;
+		}
+		String device = cm.connectedDeviceProperty().get();
+		setText(device != null ? "Connected — " + device : "Connected");
+	}
 }

@@ -18,6 +18,8 @@ import cz.bliksoft.meshcore.utils.MeshcoreUtils;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -32,184 +34,210 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 public class ConnectionManager {
 
-    private static final Logger log = LogManager.getLogger(ConnectionManager.class);
+	private static final Logger log = LogManager.getLogger(ConnectionManager.class);
 
-    private static final ConnectionManager INSTANCE = new ConnectionManager();
+	private static final ConnectionManager INSTANCE = new ConnectionManager();
 
-    private final ReadOnlyBooleanWrapper connected    = new ReadOnlyBooleanWrapper(false);
-    private final ReadOnlyBooleanWrapper disconnected = new ReadOnlyBooleanWrapper(true);
+	private final ReadOnlyBooleanWrapper connected = new ReadOnlyBooleanWrapper(false);
+	private final ReadOnlyBooleanWrapper disconnected = new ReadOnlyBooleanWrapper(true);
+	private final ReadOnlyStringWrapper connectedDevice = new ReadOnlyStringWrapper();
 
-    private MeshcoreCompanion companion;
-    private String connectedPortName;
+	private MeshcoreCompanion companion;
 
-    private ConnectionManager() {
-        connected.addListener((obs, o, n) -> disconnected.set(!n));
-    }
+	private ConnectionManager() {
+		connected.addListener((obs, o, n) -> disconnected.set(!n));
+	}
 
-    public static ConnectionManager getInstance() { return INSTANCE; }
+	public static ConnectionManager getInstance() {
+		return INSTANCE;
+	}
 
-    public ReadOnlyBooleanProperty connectedProperty()  { return connected.getReadOnlyProperty(); }
-    public ObservableBooleanValue disconnectedProperty() { return disconnected.getReadOnlyProperty(); }
-    public MeshcoreCompanion getCompanion()             { return companion; }
+	public ReadOnlyBooleanProperty connectedProperty() {
+		return connected.getReadOnlyProperty();
+	}
 
-    // ── Connect dialog ───────────────────────────────────────────────────────
+	public ObservableBooleanValue disconnectedProperty() {
+		return disconnected.getReadOnlyProperty();
+	}
 
-    public void openConnectDialog() {
-        List<SavedDevice> saved = DeviceRegistry.load();
-        if (saved.isEmpty()) {
-            pickNewSerialPort();
-        } else {
-            showConnectDialog(saved);
-        }
-    }
+	public ReadOnlyStringProperty connectedDeviceProperty() {
+		return connectedDevice.getReadOnlyProperty();
+	}
 
-    private void showConnectDialog(List<SavedDevice> initialDevices) {
-        ObservableList<SavedDevice> devices = FXCollections.observableArrayList(initialDevices);
+	public MeshcoreCompanion getCompanion() {
+		return companion;
+	}
 
-        ListView<SavedDevice> listView = new ListView<>(devices);
-        listView.setPrefHeight(160);
+	// ── Connect dialog ───────────────────────────────────────────────────────
 
-        Button connectBtn = new Button("Connect");
-        connectBtn.setDefaultButton(true);
-        connectBtn.disableProperty().bind(listView.getSelectionModel().selectedItemProperty().isNull());
+	public void openConnectDialog() {
+		List<SavedDevice> saved = DeviceRegistry.load();
+		if (saved.isEmpty()) {
+			pickNewSerialPort();
+		} else {
+			showConnectDialog(saved);
+		}
+	}
 
-        Button forgetBtn = new Button("Forget");
-        forgetBtn.disableProperty().bind(listView.getSelectionModel().selectedItemProperty().isNull());
+	private void showConnectDialog(List<SavedDevice> initialDevices) {
+		ObservableList<SavedDevice> devices = FXCollections.observableArrayList(initialDevices);
 
-        HBox savedButtons = new HBox(8, connectBtn, forgetBtn);
-        savedButtons.setAlignment(Pos.CENTER_LEFT);
+		ListView<SavedDevice> listView = new ListView<>(devices);
+		listView.setPrefHeight(160);
 
-        Button newUsbBtn = new Button("New USB connection…");
+		Button connectBtn = new Button("Connect");
+		connectBtn.setDefaultButton(true);
+		connectBtn.disableProperty().bind(listView.getSelectionModel().selectedItemProperty().isNull());
 
-        VBox content = new VBox(8, new Label("Known devices:"), listView, savedButtons,
-                new Separator(), newUsbBtn);
-        content.setPadding(new Insets(8));
+		Button forgetBtn = new Button("Forget");
+		forgetBtn.disableProperty().bind(listView.getSelectionModel().selectedItemProperty().isNull());
 
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.setTitle("Connect");
-        dialog.getDialogPane().setContent(content);
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
-        dialog.initOwner(BSAppUI.getStage());
+		HBox savedButtons = new HBox(8, connectBtn, forgetBtn);
+		savedButtons.setAlignment(Pos.CENTER_LEFT);
 
-        forgetBtn.setOnAction(e -> {
-            SavedDevice selected = listView.getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                devices.remove(selected);
-                DeviceRegistry.remove(selected);
-            }
-        });
+		Button newUsbBtn = new Button("New USB connection…");
 
-        connectBtn.setOnAction(e -> {
-            SavedDevice selected = listView.getSelectionModel().getSelectedItem();
-            if (selected == null) return;
-            dialog.close();
-            String portHint = selected.getPortHint();
-            if (portHint != null && !portHint.isBlank()) {
-                // Try the last-known port directly; if it fails the error dialog appears
-                connectSerial(portHint, 115200, false);
-            } else {
-                pickNewSerialPort();
-            }
-        });
+		VBox content = new VBox(8, new Label("Known devices:"), listView, savedButtons, new Separator(), newUsbBtn);
+		content.setPadding(new Insets(8));
 
-        newUsbBtn.setOnAction(e -> {
-            dialog.close();
-            pickNewSerialPort();
-        });
+		Dialog<Void> dialog = new Dialog<>();
+		dialog.setTitle("Connect");
+		dialog.getDialogPane().setContent(content);
+		dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+		dialog.initOwner(BSAppUI.getStage());
 
-        dialog.showAndWait();
-    }
+		forgetBtn.setOnAction(e -> {
+			SavedDevice selected = listView.getSelectionModel().getSelectedItem();
+			if (selected != null) {
+				devices.remove(selected);
+				DeviceRegistry.remove(selected);
+			}
+		});
 
-    private void pickNewSerialPort() {
-        SerialPort[] ports = SerialPort.getCommPorts();
-        if (ports.length == 0) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Connect");
-            alert.setHeaderText("No serial ports found");
-            alert.initOwner(BSAppUI.getStage());
-            alert.showAndWait();
-            return;
-        }
+		connectBtn.setOnAction(e -> {
+			SavedDevice selected = listView.getSelectionModel().getSelectedItem();
+			if (selected == null)
+				return;
+			dialog.close();
+			String portHint = selected.getPortHint();
+			if (portHint != null && !portHint.isBlank()) {
+				// Try the last-known port directly; if it fails the error dialog appears
+				connectSerial(portHint, 115200, false);
+			} else {
+				pickNewSerialPort();
+			}
+		});
 
-        String[] portNames = new String[ports.length];
-        for (int i = 0; i < ports.length; i++) {
-            portNames[i] = ports[i].getSystemPortName() + " – " + ports[i].getDescriptivePortName();
-        }
+		newUsbBtn.setOnAction(e -> {
+			dialog.close();
+			pickNewSerialPort();
+		});
 
-        ChoiceDialog<String> dialog = new ChoiceDialog<>(portNames[0], portNames);
-        dialog.setTitle("New USB connection");
-        dialog.setHeaderText("Select serial port");
-        dialog.setContentText("Port:");
-        dialog.initOwner(BSAppUI.getStage());
+		dialog.showAndWait();
+	}
 
-        dialog.showAndWait().ifPresent(choice -> {
-            String portName = choice.split(" – ")[0].trim();
-            connectSerial(portName, 115200, false);
-        });
-    }
+	private void pickNewSerialPort() {
+		SerialPort[] ports = SerialPort.getCommPorts();
+		if (ports.length == 0) {
+			Alert alert = new Alert(Alert.AlertType.WARNING);
+			alert.setTitle("Connect");
+			alert.setHeaderText("No serial ports found");
+			alert.initOwner(BSAppUI.getStage());
+			alert.showAndWait();
+			return;
+		}
 
-    private void connectSerial(String portName, int baud, boolean unused) {
-        new Thread(() -> {
-            try {
-                SerialMeshcoreCompanion c = new SerialMeshcoreCompanion("BSMeshcoreCompanion", portName, baud);
-                c.installAutosyncMessages();
-                c.awaitAvailable(2000L);
-                companion = c;
-                connectedPortName = portName;
+		String[] portNames = new String[ports.length];
+		for (int i = 0; i < ports.length; i++) {
+			portNames[i] = ports[i].getSystemPortName() + " – " + ports[i].getDescriptivePortName();
+		}
 
-                // Auto-save/update device by pubkey
-                autoSaveDevice(c, portName);
+		ChoiceDialog<String> dialog = new ChoiceDialog<>(portNames[0], portNames);
+		dialog.setTitle("New USB connection");
+		dialog.setHeaderText("Select serial port");
+		dialog.setContentText("Port:");
+		dialog.initOwner(BSAppUI.getStage());
 
-                Platform.runLater(() -> {
-                    connected.set(true);
-                    Context.getCurrentContext().put(MeshcoreCompanion.class, c);
-                    BSAppUI.showStatusMessage("Connected to " + portName);
-                    log.info("Connected to {}", portName);
-                });
-            } catch (TimeoutException | InterruptedException | IOException e) {
-                log.error("Connection to {} failed", portName, e);
-                Platform.runLater(() -> {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Connection failed");
-                    alert.setHeaderText("Could not connect to " + portName);
-                    alert.setContentText(e.getMessage());
-                    alert.initOwner(BSAppUI.getStage());
-                    alert.showAndWait();
-                });
-            }
-        }, "meshcore-connect").start();
-    }
+		dialog.showAndWait().ifPresent(choice -> {
+			String portName = choice.split(" – ")[0].trim();
+			connectSerial(portName, 115200, false);
+		});
+	}
 
-    private void autoSaveDevice(SerialMeshcoreCompanion c, String portName) {
-        var si = c.getSelfInfo();
-        if (si == null) return;
-        String pubHex = MeshcoreUtils.hex(Arrays.copyOf(si.getPubkey(), 6));
-        String nodeName = si.getNodeName();
-        String name = (nodeName != null && !nodeName.isBlank()) ? nodeName : pubHex;
-        DeviceRegistry.addOrUpdate(new SavedDevice(name, pubHex, portName));
-        log.info("Device saved: {} [{}] on {}", name, pubHex, portName);
-    }
+	private void connectSerial(String portName, int baud, boolean unused) {
+		new Thread(() -> {
+			try {
+				SerialMeshcoreCompanion c = new SerialMeshcoreCompanion("BSMeshcoreCompanion", portName, baud);
+				c.awaitAvailable(2000L);
+				c.installAutosyncMessages();
+				companion = c;
 
-    // ── Disconnect ───────────────────────────────────────────────────────────
+				// Auto-save/update device by pubkey
+				autoSaveDevice(c, portName);
+				String deviceLabel = buildDeviceLabel(c, portName);
 
-    public void disconnect() {
-        MeshcoreCompanion c = companion;
-        if (c == null) return;
-        try {
-            c.close();
-        } catch (Exception e) {
-            log.warn("Error during disconnect", e);
-        }
-        companion = null;
-        connectedPortName = null;
-        connected.set(false);
-        Context.getCurrentContext().remove(MeshcoreCompanion.class);
-        BSAppUI.showStatusMessage("Disconnected");
-        log.info("Disconnected");
-    }
+				Platform.runLater(() -> {
+					connected.set(true);
+					connectedDevice.set(deviceLabel);
+					Context.getCurrentContext().put(MeshcoreCompanion.class, c);
+					BSAppUI.showStatusMessage("Connected to " + portName);
+					log.info("Connected to {}", portName);
+				});
+			} catch (TimeoutException | InterruptedException | IOException e) {
+				log.error("Connection to {} failed", portName, e);
+				Platform.runLater(() -> {
+					Alert alert = new Alert(Alert.AlertType.ERROR);
+					alert.setTitle("Connection failed");
+					alert.setHeaderText("Could not connect to " + portName);
+					alert.setContentText(e.getMessage());
+					alert.initOwner(BSAppUI.getStage());
+					alert.showAndWait();
+				});
+			}
+		}, "meshcore-connect").start();
+	}
+
+	private void autoSaveDevice(SerialMeshcoreCompanion c, String portName) {
+		var si = c.getSelfInfo();
+		if (si == null)
+			return;
+		String pubHex = MeshcoreUtils.hex(Arrays.copyOf(si.getPubkey(), 6));
+		String nodeName = si.getNodeName();
+		String name = (nodeName != null && !nodeName.isBlank()) ? nodeName : pubHex;
+		DeviceRegistry.addOrUpdate(new SavedDevice(name, pubHex, portName));
+		log.info("Device saved: {} [{}] on {}", name, pubHex, portName);
+	}
+
+	private String buildDeviceLabel(SerialMeshcoreCompanion c, String portName) {
+		var si = c.getSelfInfo();
+		if (si == null)
+			return portName;
+		String pubHex = MeshcoreUtils.hex(Arrays.copyOf(si.getPubkey(), 6));
+		String nodeName = si.getNodeName();
+		String name = (nodeName != null && !nodeName.isBlank()) ? nodeName : pubHex;
+		return name + " [" + pubHex + "]";
+	}
+
+	// ── Disconnect ───────────────────────────────────────────────────────────
+
+	public void disconnect() {
+		MeshcoreCompanion c = companion;
+		if (c == null)
+			return;
+		try {
+			c.close();
+		} catch (Exception e) {
+			log.warn("Error during disconnect", e);
+		}
+		companion = null;
+		connected.set(false);
+		connectedDevice.set(null);
+		Context.getCurrentContext().remove(MeshcoreCompanion.class);
+		BSAppUI.showStatusMessage("Disconnected");
+		log.info("Disconnected");
+	}
 }

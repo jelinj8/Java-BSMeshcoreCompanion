@@ -4,11 +4,13 @@ import cz.bliksoft.meshcorecompanion.events.meshcore.MeshcorePushBridge;
 import cz.bliksoft.meshcorecompanion.model.LogEntry;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Insets;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.HBox;
@@ -35,13 +37,25 @@ public class LogPane extends VBox {
         textFilter.setPromptText("Filter text…");
         textFilter.textProperty().addListener((obs, o, n) -> updateFilter());
 
+        Button markBtn = new Button("Mark");
+        markBtn.setOnAction(e -> MeshcorePushBridge.getInstance().addMark());
+
+        Button clearBtn = new Button("Clear");
+        clearBtn.setOnAction(e -> {
+            MeshcorePushBridge.getInstance().clear();
+            typeFilter.getItems().setAll(ALL_TYPES);
+            typeFilter.getSelectionModel().selectFirst();
+        });
+
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         ToolBar filterBar = new ToolBar(
                 new Label("Type:"), typeFilter,
                 spacer,
-                new Label("Filter:"), textFilter
+                new Label("Filter:"), textFilter,
+                new Separator(),
+                markBtn, clearBtn
         );
 
         ListView<LogEntry> listView = new ListView<>(filteredEntries);
@@ -49,12 +63,16 @@ public class LogPane extends VBox {
             @Override
             protected void updateItem(LogEntry item, boolean empty) {
                 super.updateItem(item, empty);
+                getStyleClass().removeAll("log-push", "log-other", "log-mark");
                 if (empty || item == null) {
                     setText(null);
                 } else {
                     setText(item.toString());
-                    getStyleClass().removeAll("log-push", "log-other");
-                    getStyleClass().add(item.getFrameType().startsWith("PUSH_") ? "log-push" : "log-other");
+                    if (item.isMarker()) {
+                        getStyleClass().add("log-mark");
+                    } else {
+                        getStyleClass().add(item.getFrameType().startsWith("PUSH_") ? "log-push" : "log-other");
+                    }
                 }
             }
         });

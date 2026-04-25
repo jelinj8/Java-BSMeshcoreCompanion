@@ -24,162 +24,190 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 /**
- * Reusable right-hand chat panel: message list + compose bar with send-mode selector.
+ * Reusable right-hand chat panel: message list + compose bar with send-mode
+ * selector.
  *
- * <p>The send callback receives (conversationKey, text, sendMode).
+ * <p>
+ * The send callback receives (conversationKey, text, sendMode).
  */
 class ChatView extends VBox {
 
-    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
+	private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
 
-    @FunctionalInterface
-    interface SendCallback {
-        void send(String key, String text, SendMode mode);
-    }
+	@FunctionalInterface
+	interface SendCallback {
+		void send(String key, String text, SendMode mode);
+	}
 
-    private final ListView<ChatMessage> listView = new ListView<>();
-    private final TextField inputField = new TextField();
-    private final ComboBox<SendMode> modeBox = new ComboBox<>();
-    private final HBox sendBar;
+	private final ListView<ChatMessage> listView = new ListView<>();
+	private final TextField inputField = new TextField();
+	private final ComboBox<SendMode> modeBox = new ComboBox<>();
+	private final HBox sendBar;
 
-    private String conversationKey;
-    private SendCallback sendCallback;
-    private ListChangeListener<ChatMessage> messageChangeListener;
-    private boolean atBottom = true;
+	private String conversationKey;
+	private SendCallback sendCallback;
+	private ListChangeListener<ChatMessage> messageChangeListener;
+	private boolean atBottom = true;
 
-    ChatView() {
-        getStyleClass().add("chat-view");
+	ChatView() {
+		getStyleClass().add("chat-view");
 
-        listView.setCellFactory(lv -> new MessageCell());
-        VBox.setVgrow(listView, Priority.ALWAYS);
+		listView.setCellFactory(lv -> new MessageCell());
+		VBox.setVgrow(listView, Priority.ALWAYS);
 
-        // Track whether the user is scrolled to the bottom
-        listView.skinProperty().addListener((obs, o, skin) -> {
-            if (skin == null) return;
-            ScrollBar sb = (ScrollBar) listView.lookup(".scroll-bar:vertical");
-            if (sb != null) {
-                sb.valueProperty().addListener((sObs, sO, sN) -> {
-                    double max = sb.getMax();
-                    atBottom = max <= 0 || sN.doubleValue() >= max - sb.getVisibleAmount() / 2;
-                });
-            }
-        });
+		// Track whether the user is scrolled to the bottom; also suppress the
+		// horizontal scrollbar — chat bubbles size to content, so the ListView's
+		// natural prefWidth can exceed the viewport for long messages, but we never
+		// want horizontal scrolling in a chat view.
+		listView.skinProperty().addListener((obs, o, skin) -> {
+			if (skin == null)
+				return;
+			ScrollBar vbar = (ScrollBar) listView.lookup(".scroll-bar:vertical");
+			if (vbar != null) {
+				vbar.valueProperty().addListener((sObs, sO, sN) -> {
+					double max = vbar.getMax();
+					atBottom = max <= 0 || sN.doubleValue() >= max - vbar.getVisibleAmount() / 2;
+				});
+			}
+			ScrollBar hbar = (ScrollBar) listView.lookup(".scroll-bar:horizontal");
+			if (hbar != null) {
+				hbar.setVisible(false);
+				hbar.setManaged(false);
+			}
+		});
 
-        inputField.setPromptText("Type a message…");
-        HBox.setHgrow(inputField, Priority.ALWAYS);
+		inputField.setPromptText("Type a message…");
+		HBox.setHgrow(inputField, Priority.ALWAYS);
 
-        modeBox.getItems().addAll(SendMode.values());
-        modeBox.setValue(SendMode.ASYNC);
-        modeBox.setTooltip(new javafx.scene.control.Tooltip(
-                "Async – fire and forget\nSync – wait for ACK\nRetry – up to 3 attempts with flood fallback"));
+		modeBox.getItems().addAll(SendMode.values());
+		modeBox.setValue(SendMode.ASYNC);
+		modeBox.setTooltip(new javafx.scene.control.Tooltip(
+				"Async – fire and forget\nSync – wait for ACK\nRetry – up to 3 attempts with flood fallback"));
 
-        Button sendBtn = new Button("Send");
-        sendBtn.setOnAction(e -> doSend());
-        inputField.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.ENTER) doSend();
-        });
+		Button sendBtn = new Button("Send");
+		sendBtn.setOnAction(e -> doSend());
+		inputField.setOnKeyPressed(e -> {
+			if (e.getCode() == KeyCode.ENTER)
+				doSend();
+		});
 
-        sendBar = new HBox(4, inputField, modeBox, sendBtn);
-        sendBar.setPadding(new Insets(4));
-        sendBar.setAlignment(Pos.CENTER_LEFT);
+		sendBar = new HBox(4, inputField, modeBox, sendBtn);
+		sendBar.setPadding(new Insets(4));
+		sendBar.setAlignment(Pos.CENTER_LEFT);
 
-        getChildren().addAll(listView, sendBar);
-        setDisable(true);
-    }
+		getChildren().addAll(listView, sendBar);
+		setDisable(true);
+	}
 
-    void setConversation(String key, SendCallback sendCallback) {
-        if (messageChangeListener != null && conversationKey != null) {
-            ObservableList<ChatMessage> old = ChatManager.getInstance().getMessages(conversationKey);
-            old.removeListener(messageChangeListener);
-        }
-        this.conversationKey = key;
-        this.sendCallback = sendCallback;
+	void setConversation(String key, SendCallback sendCallback) {
+		if (messageChangeListener != null && conversationKey != null) {
+			ObservableList<ChatMessage> old = ChatManager.getInstance().getMessages(conversationKey);
+			old.removeListener(messageChangeListener);
+		}
+		this.conversationKey = key;
+		this.sendCallback = sendCallback;
 
-        if (key == null) {
-            listView.setItems(null);
-            setDisable(true);
-            return;
-        }
+		if (key == null) {
+			listView.setItems(null);
+			setDisable(true);
+			return;
+		}
 
-        ObservableList<ChatMessage> msgs = ChatManager.getInstance().getMessages(key);
-        listView.setItems(msgs);
-        setDisable(false);
-        sendBar.setDisable(sendCallback == null);
-        atBottom = true;
-        ChatManager.getInstance().markRead(key);
-        if (!msgs.isEmpty()) listView.scrollTo(msgs.size() - 1);
+		ObservableList<ChatMessage> msgs = ChatManager.getInstance().getMessages(key);
+		listView.setItems(msgs);
+		setDisable(false);
+		sendBar.setDisable(sendCallback == null);
+		atBottom = true;
+		ChatManager.getInstance().markRead(key);
+		if (!msgs.isEmpty())
+			listView.scrollTo(msgs.size() - 1);
 
-        messageChangeListener = change -> {
-            if (atBottom && !msgs.isEmpty()) listView.scrollTo(msgs.size() - 1);
-        };
-        msgs.addListener(messageChangeListener);
-        inputField.requestFocus();
-    }
+		messageChangeListener = change -> {
+			if (atBottom && !msgs.isEmpty())
+				listView.scrollTo(msgs.size() - 1);
+		};
+		msgs.addListener(messageChangeListener);
+		inputField.requestFocus();
+	}
 
-    void setSendEnabled(boolean enabled) {
-        sendBar.setDisable(!enabled);
-    }
+	void setSendEnabled(boolean enabled) {
+		sendBar.setDisable(!enabled);
+	}
 
-    void setModeVisible(boolean visible) {
-        modeBox.setVisible(visible);
-        modeBox.setManaged(visible);
-    }
+	void setModeVisible(boolean visible) {
+		modeBox.setVisible(visible);
+		modeBox.setManaged(visible);
+	}
 
-    private void doSend() {
-        String text = inputField.getText().trim();
-        if (text.isEmpty() || conversationKey == null || sendCallback == null) return;
-        inputField.clear();
-        sendCallback.send(conversationKey, text, modeBox.getValue());
-    }
+	private void doSend() {
+		String text = inputField.getText().trim();
+		if (text.isEmpty() || conversationKey == null || sendCallback == null)
+			return;
+		inputField.clear();
+		sendCallback.send(conversationKey, text, modeBox.getValue());
+	}
 
-    // ── Message cell ─────────────────────────────────────────────────────────
+	// ── Message cell ─────────────────────────────────────────────────────────
 
-    private static class MessageCell extends ListCell<ChatMessage> {
+	private static class MessageCell extends ListCell<ChatMessage> {
 
-        private final Label textLabel = new Label();
-        private final Label metaLabel = new Label();
-        private final VBox content = new VBox(2, textLabel, metaLabel);
-        private final HBox wrapper = new HBox(content);
+		private final Label textLabel = new Label();
+		private final Label metaLabel = new Label();
+		private final VBox content = new VBox(2, textLabel, metaLabel);
+		private final HBox wrapper = new HBox(content);
 
-        MessageCell() {
-            textLabel.setWrapText(true);
-            textLabel.setMaxWidth(380);
-            metaLabel.getStyleClass().add("chat-meta");
-            content.setPadding(new Insets(4, 8, 4, 8));
-            setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-        }
+		MessageCell() {
+			textLabel.setWrapText(true);
+			metaLabel.setWrapText(true);
+			metaLabel.getStyleClass().add("chat-meta");
+			content.setPadding(new Insets(4, 8, 4, 8));
+			HBox.setHgrow(content, Priority.NEVER);
+			setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+		}
 
-        @Override
-        protected void updateItem(ChatMessage msg, boolean empty) {
-            super.updateItem(msg, empty);
-            if (empty || msg == null) {
-                setGraphic(null);
-                return;
-            }
+		// Give the virtual flow an accurate height estimate so it doesn't
+		// underallocate the cell pool and log "index exceeds maxCellCount".
+		@Override
+		protected double computePrefHeight(double width) {
+			if (isEmpty() || getItem() == null) {
+				return super.computePrefHeight(width);
+			}
+			double insetH = snappedTopInset() + snappedBottomInset();
+			double insetW = snappedLeftInset() + snappedRightInset();
+			double availW = (width > 0 ? width : getWidth()) - insetW;
+			// Bubble is at most as wide as the cell; text wraps if content is wider.
+			double bubbleW = availW > 0 ? Math.min(content.prefWidth(-1), availW) : content.prefWidth(-1);
+			return content.prefHeight(bubbleW) + insetH;
+		}
 
-            textLabel.setText(msg.getText());
+		@Override
+		protected void updateItem(ChatMessage msg, boolean empty) {
+			super.updateItem(msg, empty);
+			if (empty || msg == null) {
+				setGraphic(null);
+				return;
+			}
 
-            String time = LocalDateTime
-                    .ofInstant(Instant.ofEpochSecond(msg.getTimestamp()), ZoneId.systemDefault())
-                    .format(TIME_FMT);
+			textLabel.setText(msg.getText());
 
-            content.getStyleClass().removeAll("chat-bubble-in", "chat-bubble-out");
-            if (msg.isOutgoing()) {
-                String status = msg.getTag() == null ? " ⏳" : (msg.isConfirmed() ? " ✓" : " …");
-                String repeats = msg.getRepeatCount() > 0 ? "  🔁 " + msg.getRepeatCount() : "";
-                metaLabel.setText(time + status + repeats);
-                content.getStyleClass().add("chat-bubble-out");
-                wrapper.setAlignment(Pos.CENTER_RIGHT);
-            } else {
-                String signal = msg.getSignalInfo() != null ? "  · " + msg.getSignalInfo() : "";
-                metaLabel.setText(msg.getSenderName() + "  " + time + signal);
-                content.getStyleClass().add("chat-bubble-in");
-                wrapper.setAlignment(Pos.CENTER_LEFT);
-            }
+			String time = LocalDateTime.ofInstant(Instant.ofEpochSecond(msg.getTimestamp()), ZoneId.systemDefault())
+					.format(TIME_FMT);
 
-            HBox.setHgrow(content, Priority.NEVER);
-            wrapper.setPrefWidth(USE_COMPUTED_SIZE);
-            setGraphic(wrapper);
-        }
-    }
+			content.getStyleClass().removeAll("chat-bubble-in", "chat-bubble-out");
+			if (msg.isOutgoing()) {
+				String status = msg.getTag() == null ? " ⏳" : (msg.isConfirmed() ? " ✓" : " …");
+				String repeats = msg.getRepeatCount() > 0 ? "  🔁 " + msg.getRepeatCount() : "";
+				metaLabel.setText(time + status + repeats);
+				content.getStyleClass().add("chat-bubble-out");
+				wrapper.setAlignment(Pos.CENTER_RIGHT);
+			} else {
+				String signal = msg.getSignalInfo() != null ? "  · " + msg.getSignalInfo() : "";
+				metaLabel.setText(msg.getSenderName() + "  " + time + signal);
+				content.getStyleClass().add("chat-bubble-in");
+				wrapper.setAlignment(Pos.CENTER_LEFT);
+			}
+
+			setGraphic(wrapper);
+		}
+	}
 }

@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,6 +23,7 @@ import cz.bliksoft.meshcore.companion.MeshcoreCompanion;
 import cz.bliksoft.meshcore.frames.FrameConstants.AdvertType;
 import cz.bliksoft.meshcore.frames.FrameConstants.ContactFlags;
 import cz.bliksoft.meshcore.frames.cmd.CmdAddUpdateContact;
+import cz.bliksoft.meshcore.frames.cmd.CmdGetContactByKey;
 import cz.bliksoft.meshcore.frames.group.MessageFrameGroup;
 import cz.bliksoft.meshcore.frames.push.LogRXDataPush;
 import cz.bliksoft.meshcore.frames.push.NewAdvertPush;
@@ -30,6 +32,7 @@ import cz.bliksoft.meshcore.frames.resp.ChannelInfo;
 import cz.bliksoft.meshcore.frames.resp.ChannelMsgRecv;
 import cz.bliksoft.meshcore.frames.resp.Contact;
 import cz.bliksoft.meshcore.frames.resp.ContactMsgRecv;
+import cz.bliksoft.meshcore.frames.resp.Error;
 import cz.bliksoft.meshcore.frames.resp.Sent;
 import cz.bliksoft.meshcore.otaframe.OtaFrame;
 import cz.bliksoft.meshcore.otaframe.OtaGroupFrame;
@@ -95,15 +98,30 @@ public class ChatManager {
 		this.currentCompanion = companion;
 		companion.setLogFramePairing(true);
 
-//        // Set device clock
-//        new Thread(() -> {
-//            try {
-//                companion.getConfig().setDeviceTime(null);
-//                log.info("Device time set");
-//            } catch (Exception e) {
-//                log.warn("Failed to set device time", e);
-//            }
-//        }, "meshcore-settime").start();
+		// Set device clock only when it differs from system time by more than 2 hours
+		// (covers DST; avoids firmware rejecting a timestamp older than its current
+		// time).
+		new Thread(() -> {
+			try {
+				if (companion != currentCompanion)
+					return;
+				long deviceTime = companion.getConfig().getDeviceTime().getTimestamp();
+				if (companion != currentCompanion)
+					return;
+				long systemTime = Instant.now().getEpochSecond();
+				long diff = Math.abs(systemTime - deviceTime);
+				if (diff > 7200) {
+					companion.getConfig().setDeviceTime(null);
+					log.info("Device time set (was off by {} s)", diff);
+				} else {
+					log.debug("Device time within 2 h of system time, skipping ({} s off)", diff);
+				}
+			} catch (IllegalStateException e) {
+				log.debug("Device time check aborted — disconnected mid-flight");
+			} catch (Exception e) {
+				log.warn("Failed to check/set device time", e);
+			}
+		}, "meshcore-settime").start();
 
 		if (companion.getSelfInfo() != null) {
 			deviceHex = MeshcoreUtils.hex(companion.getSelfInfo().getPubkey());
@@ -218,11 +236,14 @@ public class ChatManager {
 			} catch (Exception e) {
 				log.warn("Contacts sync await failed on connect", e);
 			}
-			if (companion != currentCompanion) return;
+			if (companion != currentCompanion)
+				return;
+			companion.installAutosyncMessages();
 			List<Contact> savedContacts = companion.getConfig().getSavedContacts();
 			List<ChannelInfo> chs = new ArrayList<>(companion.getConfig().getChannels());
 			Platform.runLater(() -> {
-				if (companion != currentCompanion) return;
+				if (companion != currentCompanion)
+					return;
 				contacts.setAll(savedContacts);
 				channels.setAll(chs);
 				if (deviceHex == null && companion.getSelfInfo() != null) {
@@ -445,8 +466,13 @@ public class ChatManager {
 		new Thread(() -> {
 			try {
 				var resp = c.sendFrameWithResult(cmd, 5000);
+				if (resp instanceof Error err) {
+					log.warn("Add contact {} failed: {}", displayName, err.getCode());
+					return;
+				}
 				log.info("Added contact {}", displayName);
-				if (resp instanceof Contact contact && contact.isSaved()) {
+				var fetched = c.sendFrameWithResult(new CmdGetContactByKey(pubkey), 2000);
+				if (fetched instanceof Contact contact) {
 					updateContactInList(contact);
 				}
 			} catch (Exception e) {
@@ -455,19 +481,33 @@ public class ChatManager {
 		}, "meshcore-add-contact").start();
 	}
 
-	public void importDiscovered(NewAdvertPush advert) {
+	public void importDiscovered(NewAdvertPush advert, Consumer<String> onError, Runnable onSuccess) {
 		MeshcoreCompanion c = currentCompanion;
 		if (c == null)
 			return;
 		new Thread(() -> {
 			try {
 				var resp = c.sendFrameWithResult(advert.getCmdAddUpdateContact(), 5000);
+				if (resp instanceof Error error) {
+					String msg = switch (error.getCode()) {
+					case TABLE_FULL ->
+						"Contact table is full. Remove a contact or enable 'Overwrite oldest' in auto-add settings.";
+					default -> "Device returned error: " + error.getCode();
+					};
+					log.warn("Import contact {} failed: {}", advert.getName(), error.getCode());
+					Platform.runLater(() -> onError.accept(msg));
+					return;
+				}
 				log.info("Imported discovered contact {}", advert.getName());
-				if (resp instanceof Contact contact && contact.isSaved()) {
+				var fetched = c.sendFrameWithResult(new CmdGetContactByKey(advert.getPubkey()), 2000);
+				if (fetched instanceof Contact contact) {
 					updateContactInList(contact);
+					if (onSuccess != null)
+						Platform.runLater(onSuccess);
 				}
 			} catch (Exception e) {
 				log.error("Failed to import contact {}", advert.getName(), e);
+				Platform.runLater(() -> onError.accept(e.getMessage()));
 			}
 		}, "meshcore-import-contact").start();
 	}
@@ -490,15 +530,25 @@ public class ChatManager {
 		MeshcoreCompanion c = currentCompanion;
 		if (c == null)
 			return;
-		boolean wasFav = contact.hasFlag(ContactFlags.FAVOURITE);
-		ContactFlags[] newFlags = wasFav ? new ContactFlags[0] : new ContactFlags[] { ContactFlags.FAVOURITE };
-		CmdAddUpdateContact cmd = new CmdAddUpdateContact(contact.getPubkey(), contact.getType(), 0,
-				new byte[Settings.MAX_PATH_SIZE], contact.getName(), 0, null, null, null, newFlags);
+		// Patch flags byte in a clone of the contact's raw bytes to preserve
+		// path/advertTS
+		byte[] cmdBytes = contact.getBytes().clone();
+		final int FLAGS_OFFSET = 34; // 1 (type) + 32 (pubkey) + 1 (advert type)
+		if (contact.hasFlag(ContactFlags.FAVOURITE))
+			cmdBytes[FLAGS_OFFSET] &= ~ContactFlags.FAVOURITE.mask();
+		else
+			cmdBytes[FLAGS_OFFSET] |= ContactFlags.FAVOURITE.mask();
+		CmdAddUpdateContact cmd = new CmdAddUpdateContact(cmdBytes);
 		new Thread(() -> {
 			try {
 				var resp = c.sendFrameWithResult(cmd, 5000);
+				if (resp instanceof Error err) {
+					log.warn("Toggle favourite for {} failed: {}", contact.getName(), err.getCode());
+					return;
+				}
 				log.info("Toggled favourite for {}", contact.getName());
-				if (resp instanceof Contact updated && updated.isSaved()) {
+				var fetched = c.sendFrameWithResult(new CmdGetContactByKey(contact.getPubkey()), 2000);
+				if (fetched instanceof Contact updated) {
 					updateContactInList(updated);
 				}
 			} catch (Exception e) {
@@ -630,7 +680,27 @@ public class ChatManager {
 		}, "meshcore-advert").start();
 	}
 
+	// ── Path reset ───────────────────────────────────────────────────────────
+
+	public void resetPath(Contact contact) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		new Thread(() -> {
+			try {
+				c.getConfig().resetPath(contact.getPubkey());
+				log.info("Reset path for {}", contact.getName());
+			} catch (Exception e) {
+				log.error("Failed to reset path for {}", contact.getName(), e);
+			}
+		}, "meshcore-reset-path").start();
+	}
+
 	// ── Keys ─────────────────────────────────────────────────────────────────
+
+	public boolean isConnected() {
+		return currentCompanion != null;
+	}
 
 	public String contactKey(Contact c) {
 		return MeshcoreUtils.hex(c.getPubkey());

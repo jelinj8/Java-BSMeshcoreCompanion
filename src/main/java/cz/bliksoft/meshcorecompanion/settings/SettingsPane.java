@@ -3,6 +3,8 @@ package cz.bliksoft.meshcorecompanion.settings;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -15,9 +17,8 @@ import cz.bliksoft.javautils.app.ui.BSAppUI;
 import cz.bliksoft.javautils.app.ui.actions.interfaces.IClose;
 import cz.bliksoft.javautils.app.ui.actions.interfaces.ISave;
 import cz.bliksoft.javautils.context.IContextProvider;
-import cz.bliksoft.javautils.fx.tools.Styling;
 import cz.bliksoft.meshcore.companion.MeshcoreCompanion;
-import cz.bliksoft.meshcorecompanion.events.meshcore.MeshcorePushBridge;
+import cz.bliksoft.meshcore.frames.resp.SelfInfo;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
@@ -25,308 +26,374 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
 public class SettingsPane extends VBox implements IContextProvider, IClose, ISave {
 
-    private static final Logger log = LogManager.getLogger(SettingsPane.class);
+	private static final Logger log = LogManager.getLogger(SettingsPane.class);
 
-    private static final ButtonType BTN_SAVE    = new ButtonType("Save");
-    private static final ButtonType BTN_DISCARD = new ButtonType("Discard");
+	private static final ButtonType BTN_SAVE = new ButtonType("Save");
+	private static final ButtonType BTN_DISCARD = new ButtonType("Discard");
 
-    private final BooleanProperty saveEnabled  = new SimpleBooleanProperty(false);
-    private final BooleanProperty closeEnabled = new SimpleBooleanProperty(true);
+	private final BooleanProperty saveEnabled = new SimpleBooleanProperty(false);
+	private final BooleanProperty closeEnabled = new SimpleBooleanProperty(true);
 
-    private String originalTheme;
-    private String pendingTheme;
-    private int    originalLogSize;
+	private final AppSettingsSection appSection;
+	private final RadioConfigSection radioSection;
+	private final AdvertLocationSection locationSection;
+	private final ContactBehaviourSection behaviourSection;
+	private final AutoaddSection autoaddSection;
+	private final TuningSection tuningSection;
+	private final SecuritySection securitySection;
 
-    private final RadioConfigSection radioSection;
+	public SettingsPane() {
+		appSection = new AppSettingsSection(this::markModified);
+		radioSection = new RadioConfigSection(this::markModified);
+		locationSection = new AdvertLocationSection(this::markModified);
+		behaviourSection = new ContactBehaviourSection(this::markModified);
+		autoaddSection = new AutoaddSection(this::markModified);
+		tuningSection = new TuningSection(this::markModified);
+		securitySection = new SecuritySection();
 
-    public SettingsPane() {
-        setPadding(new Insets(16));
-        setSpacing(12);
+		VBox content = new VBox(12, appSection, new Separator(), radioSection, new Separator(), locationSection,
+				new Separator(), behaviourSection, new Separator(), autoaddSection, new Separator(), tuningSection,
+				new Separator(), securitySection, new Separator(), buildBackupSection(), new Separator(),
+				buildDangerZoneSection());
+		content.setPadding(new Insets(16));
 
-        Object themeObj = BSApp.getProperty(BSAppUI.PROP_THEME);
-        originalTheme = themeObj != null ? capitalise(themeObj.toString()) : "Default";
-        pendingTheme  = originalTheme;
-        originalLogSize = MeshcorePushBridge.getInstance().getMaxLogEntries();
+		ScrollPane scroll = new ScrollPane(content);
+		scroll.setFitToWidth(true);
+		scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
-        radioSection = new RadioConfigSection(this::markModified);
+		getChildren().add(scroll);
+		setFillWidth(true);
 
-        getChildren().addAll(
-                buildAppSettingsSection(),
-                new Separator(),
-                radioSection,
-                new Separator(),
-                buildBackupSection());
+		getItemContext().addValue(this);
+	}
 
-        getItemContext().addValue(this);
-    }
+	private void markModified() {
+		boolean anyDirty = appSection.isDirty() || radioSection.isDirty() || locationSection.isDirty()
+				|| behaviourSection.isDirty() || autoaddSection.isDirty() || tuningSection.isDirty();
+		saveEnabled.set(anyDirty);
+	}
 
-    private GridPane buildAppSettingsSection() {
-        GridPane grid = new GridPane();
-        grid.setHgap(12);
-        grid.setVgap(8);
+	// ── ISave ────────────────────────────────────────────────────────────────
 
-        int row = 0;
+	@Override
+	public void save() {
+		if (appSection.isDirty()) {
+			appSection.save();
+		}
+		saveEnabled.set(false);
 
-        grid.add(new Label("Theme:"), 0, row);
-        ComboBox<String> themeBox = new ComboBox<>();
-        themeBox.getItems().addAll("Default", "System", "Light", "Dark");
-        themeBox.setValue(capitalise(originalTheme));
-        themeBox.setOnAction(e -> {
-            pendingTheme = themeBox.getValue();
-            Styling.setThemeMode(toThemeMode(pendingTheme));
-            markModified();
-        });
-        grid.add(themeBox, 1, row++);
+		// Device settings — async, only modified sections
+		if (radioSection.hasCompanion() && (radioSection.isDirty() || locationSection.isDirty()
+				|| behaviourSection.isDirty() || autoaddSection.isDirty() || tuningSection.isDirty())) {
+			new Thread(() -> {
+				try {
+					if (radioSection.isDirty()) {
+						radioSection.writeToDevice();
+						javafx.application.Platform.runLater(radioSection::clearDirty);
+					}
+					if (locationSection.isDirty()) {
+						locationSection.writeToDevice();
+						javafx.application.Platform.runLater(locationSection::clearDirty);
+					}
+					if (behaviourSection.isDirty()) {
+						behaviourSection.writeToDevice();
+						javafx.application.Platform.runLater(behaviourSection::clearDirty);
+					}
+					if (autoaddSection.isDirty()) {
+						autoaddSection.writeToDevice();
+						javafx.application.Platform.runLater(autoaddSection::clearDirty);
+					}
+					if (tuningSection.isDirty()) {
+						tuningSection.writeToDevice();
+						javafx.application.Platform.runLater(tuningSection::clearDirty);
+					}
+				} catch (Exception e) {
+					log.error("Failed to write device config", e);
+					javafx.application.Platform.runLater(() -> {
+						Alert err = new Alert(Alert.AlertType.ERROR);
+						err.setTitle("Device config error");
+						err.setHeaderText("Could not write parameters to device.");
+						err.setContentText(e.getMessage());
+						err.initOwner(BSAppUI.getStage());
+						err.showAndWait();
+					});
+				}
+			}, "radio-write").start();
+		}
+	}
 
-        grid.add(new Label("Log history size:"), 0, row);
-        Spinner<Integer> logSizeSpinner = new Spinner<>(
-                new SpinnerValueFactory.IntegerSpinnerValueFactory(100, 10000, originalLogSize, 100));
-        logSizeSpinner.setEditable(true);
-        logSizeSpinner.valueProperty().addListener((obs, o, n) -> {
-            if (n != null) {
-                MeshcorePushBridge.getInstance().setMaxLogEntries(n);
-                markModified();
-            }
-        });
-        grid.add(logSizeSpinner, 1, row++);
+	@Override
+	public BooleanProperty getSaveEnabled() {
+		return saveEnabled;
+	}
 
-        return grid;
-    }
+	// ── IClose ───────────────────────────────────────────────────────────────
 
-    private void markModified() {
-        saveEnabled.set(true);
-    }
+	@Override
+	public void close() {
+		if (saveEnabled.get()) {
+			Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+			alert.setTitle("Unsaved changes");
+			alert.setHeaderText("Settings have unsaved changes.");
+			alert.setContentText("Do you want to save before closing?");
+			alert.initOwner(BSAppUI.getStage());
+			alert.getButtonTypes().setAll(BTN_SAVE, BTN_DISCARD, ButtonType.CANCEL);
 
-    // ── ISave ────────────────────────────────────────────────────────────────
+			Optional<ButtonType> result = alert.showAndWait();
+			if (result.isEmpty() || result.get() == ButtonType.CANCEL)
+				return;
+			if (result.get() == BTN_SAVE) {
+				save();
+			} else {
+				appSection.revert();
+			}
+		}
+		BSAppUI.popUI();
+	}
 
-    @Override
-    public void save() {
-        // App settings — synchronous
-        BSApp.setLocalProperty(BSAppUI.PROP_THEME, "Default".equals(pendingTheme) ? null : pendingTheme.toUpperCase());
-        try {
-            BSApp.saveLocalProperties();
-        } catch (ViewableException e) {
-            log.warn("Failed to save app settings", e);
-        }
-        originalTheme   = pendingTheme;
-        originalLogSize = MeshcorePushBridge.getInstance().getMaxLogEntries();
-        saveEnabled.set(false);
+	@Override
+	public BooleanProperty getCloseEnabled() {
+		return closeEnabled;
+	}
 
-        // Radio settings — async (fire-and-forget; errors shown via log/status)
-        if (radioSection.isConnected()) {
-            new Thread(() -> {
-                try {
-                    radioSection.writeToDevice();
-                } catch (Exception e) {
-                    log.error("Failed to write radio config to device", e);
-                    javafx.application.Platform.runLater(() -> {
-                        Alert err = new Alert(Alert.AlertType.ERROR);
-                        err.setTitle("Radio config error");
-                        err.setHeaderText("Could not write radio parameters to device.");
-                        err.setContentText(e.getMessage());
-                        err.initOwner(BSAppUI.getStage());
-                        err.showAndWait();
-                    });
-                }
-            }, "radio-write").start();
-        }
-    }
+	// ── Backup / Restore ─────────────────────────────────────────────────────
 
-    @Override
-    public BooleanProperty getSaveEnabled() {
-        return saveEnabled;
-    }
+	private VBox buildBackupSection() {
+		Label title = new Label("Device Backup / Restore");
+		title.setStyle("-fx-font-weight: bold;");
 
-    // ── IClose ───────────────────────────────────────────────────────────────
+		Button backupBtn = new Button("Backup…");
+		Button restoreBtn = new Button("Restore…");
 
-    @Override
-    public void close() {
-        if (saveEnabled.get()) {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Unsaved changes");
-            alert.setHeaderText("Settings have unsaved changes.");
-            alert.setContentText("Do you want to save before closing?");
-            alert.initOwner(BSAppUI.getStage());
-            alert.getButtonTypes().setAll(BTN_SAVE, BTN_DISCARD, ButtonType.CANCEL);
+		backupBtn.setDisable(!radioSection.hasCompanion());
+		restoreBtn.setDisable(!radioSection.hasCompanion());
 
-            Optional<ButtonType> result = alert.showAndWait();
-            if (result.isEmpty() || result.get() == ButtonType.CANCEL) return;
-            if (result.get() == BTN_SAVE) {
-                save();
-            } else {
-                revertApp();
-            }
-        }
-        BSAppUI.popUI();
-    }
+		radioSection.connectedProperty().addListener((obs, o, connected) -> {
+			backupBtn.setDisable(!connected);
+			restoreBtn.setDisable(!connected);
+		});
 
-    @Override
-    public BooleanProperty getCloseEnabled() {
-        return closeEnabled;
-    }
+		backupBtn.setOnAction(e -> doBackup());
+		restoreBtn.setOnAction(e -> doRestore());
 
-    // ── Backup / Restore ─────────────────────────────────────────────────────
+		HBox buttons = new HBox(8, backupBtn, restoreBtn);
+		return new VBox(4, title, buttons);
+	}
 
-    private VBox buildBackupSection() {
-        Label title = new Label("Device Backup / Restore");
-        title.setStyle("-fx-font-weight: bold;");
+	private static final String PROP_BACKUP_LAST_DIR = "backup.lastDir";
 
-        Button backupBtn  = new Button("Backup…");
-        Button restoreBtn = new Button("Restore…");
+	private void doBackup() {
+		MeshcoreCompanion c = radioSection.getCompanion();
+		if (c == null) {
+			showNoDevice();
+			return;
+		}
 
-        backupBtn.setDisable(!radioSection.isConnected());
-        restoreBtn.setDisable(!radioSection.isConnected());
+		FileChooser chooser = new FileChooser();
+		chooser.setTitle("Save device backup");
+		chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Properties", "*.properties"));
 
-        radioSection.connectedProperty().addListener((obs, o, connected) -> {
-            backupBtn.setDisable(!connected);
-            restoreBtn.setDisable(!connected);
-        });
+		String lastDir = (String) BSApp.getProperty(PROP_BACKUP_LAST_DIR);
+		if (lastDir != null) {
+			File dir = new File(lastDir);
+			if (dir.isDirectory())
+				chooser.setInitialDirectory(dir);
+		}
 
-        backupBtn.setOnAction(e -> doBackup());
-        restoreBtn.setOnAction(e -> doRestore());
+		SelfInfo si = c.getConfig().getSelfInfo();
+		String nodeName = (si != null && si.getNodeName() != null && !si.getNodeName().isBlank())
+				? si.getNodeName().strip().replaceAll("[^A-Za-z0-9._-]", "_")
+				: "backup";
+		String timestamp = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now());
+		chooser.setInitialFileName(nodeName + "_" + timestamp + ".properties");
 
-        HBox buttons = new HBox(8, backupBtn, restoreBtn);
-        return new VBox(4, title, buttons);
-    }
+		File file = chooser.showSaveDialog(BSAppUI.getStage());
+		if (file == null)
+			return;
 
-    private void doBackup() {
-        MeshcoreCompanion c = radioSection.getCompanion();
-        if (c == null) { showNoDevice(); return; }
+		BSApp.setLocalProperty(PROP_BACKUP_LAST_DIR, file.getParent());
+		try {
+			BSApp.saveLocalProperties();
+		} catch (ViewableException e) {
+			log.warn("Could not save backup dir preference", e);
+		}
 
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Save device backup");
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Properties", "*.properties"));
-        File file = chooser.showSaveDialog(BSAppUI.getStage());
-        if (file == null) return;
+		new Thread(() -> {
+			Properties props = new Properties();
+			try {
+				c.getConfig().deviceBackup(props);
+				c.getConfig().channelsBackup(props);
+				c.getConfig().contactsBackup(props);
+				try (FileOutputStream out = new FileOutputStream(file)) {
+					props.store(out, "BSMeshcoreCompanion device backup");
+				}
+				javafx.application.Platform.runLater(() -> {
+					Alert info = new Alert(Alert.AlertType.INFORMATION);
+					info.setTitle("Backup complete");
+					info.setHeaderText("Device backup saved successfully.");
+					info.initOwner(BSAppUI.getStage());
+					info.showAndWait();
+				});
+			} catch (Exception ex) {
+				log.error("Backup failed", ex);
+				javafx.application.Platform.runLater(() -> showError("Backup failed", ex.getMessage()));
+			}
+		}, "meshcore-backup").start();
+	}
 
-        new Thread(() -> {
-            Properties props = new Properties();
-            try {
-                c.getConfig().deviceBackup(props);
-                c.getConfig().channelsBackup(props);
-                c.getConfig().contactsBackup(props);
-                try (FileOutputStream out = new FileOutputStream(file)) {
-                    props.store(out, "BSMeshcoreCompanion device backup");
-                }
-                javafx.application.Platform.runLater(() -> {
-                    Alert info = new Alert(Alert.AlertType.INFORMATION);
-                    info.setTitle("Backup complete");
-                    info.setHeaderText("Device backup saved successfully.");
-                    info.initOwner(BSAppUI.getStage());
-                    info.showAndWait();
-                });
-            } catch (Exception ex) {
-                log.error("Backup failed", ex);
-                javafx.application.Platform.runLater(() -> showError("Backup failed", ex.getMessage()));
-            }
-        }, "meshcore-backup").start();
-    }
+	private void doRestore() {
+		MeshcoreCompanion c = radioSection.getCompanion();
+		if (c == null) {
+			showNoDevice();
+			return;
+		}
 
-    private void doRestore() {
-        MeshcoreCompanion c = radioSection.getCompanion();
-        if (c == null) { showNoDevice(); return; }
+		FileChooser chooser = new FileChooser();
+		chooser.setTitle("Open device backup");
+		chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Properties", "*.properties"));
 
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Open device backup");
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Properties", "*.properties"));
-        File file = chooser.showOpenDialog(BSAppUI.getStage());
-        if (file == null) return;
+		String lastDir = (String) BSApp.getProperty(PROP_BACKUP_LAST_DIR);
+		if (lastDir != null) {
+			File dir = new File(lastDir);
+			if (dir.isDirectory())
+				chooser.setInitialDirectory(dir);
+		}
 
-        CheckBox settingsBox = new CheckBox("Device settings (radio parameters)");
-        CheckBox groupsBox   = new CheckBox("Groups (channels)");
-        CheckBox contactsBox = new CheckBox("Contacts");
-        settingsBox.setSelected(true);
-        groupsBox.setSelected(true);
-        contactsBox.setSelected(true);
+		File file = chooser.showOpenDialog(BSAppUI.getStage());
+		if (file == null)
+			return;
 
-        VBox selection = new VBox(6, new Label("Select what to restore:"), settingsBox, groupsBox, contactsBox);
-        selection.setPadding(new Insets(8, 0, 0, 0));
+		BSApp.setLocalProperty(PROP_BACKUP_LAST_DIR, file.getParent());
+		try {
+			BSApp.saveLocalProperties();
+		} catch (ViewableException e) {
+			log.warn("Could not save backup dir preference", e);
+		}
 
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Restore backup");
-        confirm.setHeaderText("Restore device configuration from file?");
-        confirm.setContentText("Only the selected parts will be restored.");
-        confirm.getDialogPane().setExpandableContent(selection);
-        confirm.getDialogPane().setExpanded(true);
-        confirm.initOwner(BSAppUI.getStage());
-        Optional<ButtonType> result = confirm.showAndWait();
-        if (result.isEmpty() || result.get() != ButtonType.OK) return;
+		CheckBox settingsBox = new CheckBox("Device settings (radio parameters)");
+		CheckBox groupsBox = new CheckBox("Groups (channels)");
+		CheckBox contactsBox = new CheckBox("Contacts");
+		settingsBox.setSelected(true);
+		groupsBox.setSelected(true);
+		contactsBox.setSelected(true);
 
-        boolean restoreSettings = settingsBox.isSelected();
-        boolean restoreGroups   = groupsBox.isSelected();
-        boolean restoreContacts = contactsBox.isSelected();
-        if (!restoreSettings && !restoreGroups && !restoreContacts) return;
+		VBox selection = new VBox(6, new Label("Select what to restore:"), settingsBox, groupsBox, contactsBox);
+		selection.setPadding(new Insets(8, 0, 0, 0));
 
-        new Thread(() -> {
-            Properties props = new Properties();
-            try (FileInputStream in = new FileInputStream(file)) {
-                props.load(in);
-                if (restoreSettings) c.getConfig().deviceRestore(props);
-                if (restoreGroups)   c.getConfig().channelsRestore(props);
-                if (restoreContacts) c.getConfig().contactsRestore(props);
-                javafx.application.Platform.runLater(() -> {
-                    Alert info = new Alert(Alert.AlertType.INFORMATION);
-                    info.setTitle("Restore complete");
-                    info.setHeaderText("Device configuration restored successfully.");
-                    info.initOwner(BSAppUI.getStage());
-                    info.showAndWait();
-                });
-            } catch (Exception ex) {
-                log.error("Restore failed", ex);
-                javafx.application.Platform.runLater(() -> showError("Restore failed", ex.getMessage()));
-            }
-        }, "meshcore-restore").start();
-    }
+		Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+		confirm.setTitle("Restore backup");
+		confirm.setHeaderText("Restore device configuration from file?");
+		confirm.setContentText("Only the selected parts will be restored.");
+		confirm.getDialogPane().setExpandableContent(selection);
+		confirm.getDialogPane().setExpanded(true);
+		confirm.initOwner(BSAppUI.getStage());
+		Optional<ButtonType> result = confirm.showAndWait();
+		if (result.isEmpty() || result.get() != ButtonType.OK)
+			return;
 
-    private void showNoDevice() {
-        Alert err = new Alert(Alert.AlertType.WARNING);
-        err.setTitle("Not connected");
-        err.setHeaderText("No device connected.");
-        err.initOwner(BSAppUI.getStage());
-        err.showAndWait();
-    }
+		boolean restoreSettings = settingsBox.isSelected();
+		boolean restoreGroups = groupsBox.isSelected();
+		boolean restoreContacts = contactsBox.isSelected();
+		if (!restoreSettings && !restoreGroups && !restoreContacts)
+			return;
 
-    private void showError(String title, String message) {
-        Alert err = new Alert(Alert.AlertType.ERROR);
-        err.setTitle(title);
-        err.setHeaderText(title);
-        err.setContentText(message);
-        err.initOwner(BSAppUI.getStage());
-        err.showAndWait();
-    }
+		new Thread(() -> {
+			Properties props = new Properties();
+			try (FileInputStream in = new FileInputStream(file)) {
+				props.load(in);
+				if (restoreSettings)
+					c.getConfig().deviceRestore(props);
+				if (restoreGroups)
+					c.getConfig().channelsRestore(props);
+				if (restoreContacts)
+					c.getConfig().contactsRestore(props);
+				javafx.application.Platform.runLater(() -> {
+					Alert info = new Alert(Alert.AlertType.INFORMATION);
+					info.setTitle("Restore complete");
+					info.setHeaderText("Device configuration restored successfully.");
+					info.initOwner(BSAppUI.getStage());
+					info.showAndWait();
+				});
+			} catch (Exception ex) {
+				log.error("Restore failed", ex);
+				javafx.application.Platform.runLater(() -> showError("Restore failed", ex.getMessage()));
+			}
+		}, "meshcore-restore").start();
+	}
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
+	// ── Danger zone ──────────────────────────────────────────────────────────
 
-    private void revertApp() {
-        Styling.setThemeMode(toThemeMode(capitalise(originalTheme)));
-        MeshcorePushBridge.getInstance().setMaxLogEntries(originalLogSize);
-        pendingTheme = originalTheme;
-    }
+	private VBox buildDangerZoneSection() {
+		Label title = new Label("Danger Zone");
+		title.setStyle("-fx-font-weight: bold; -fx-text-fill: #cc0000;");
 
-    private static Styling.ThemeMode toThemeMode(String label) {
-        return switch (label) {
-            case "Light"   -> Styling.ThemeMode.LIGHT;
-            case "Dark"    -> Styling.ThemeMode.DARK;
-            case "Default" -> Styling.ThemeMode.NONE;
-            default        -> Styling.ThemeMode.SYSTEM;
-        };
-    }
+		Button resetBtn = new Button("Factory Reset…");
+		resetBtn.setStyle("-fx-background-color: #cc0000; -fx-text-fill: white;");
 
-    private static String capitalise(String s) {
-        if (s == null || s.isEmpty()) return "System";
-        String lower = s.toLowerCase();
-        return Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
-    }
+		resetBtn.setDisable(!radioSection.hasCompanion());
+		radioSection.connectedProperty().addListener((obs, o, connected) -> resetBtn.setDisable(!connected));
+
+		resetBtn.setOnAction(e -> doFactoryReset());
+
+		return new VBox(4, title, resetBtn);
+	}
+
+	private void doFactoryReset() {
+		MeshcoreCompanion c = radioSection.getCompanion();
+		if (c == null) {
+			showNoDevice();
+			return;
+		}
+
+		Alert confirm = new Alert(Alert.AlertType.WARNING);
+		confirm.setTitle("Factory Reset");
+		confirm.setHeaderText("This will erase all device configuration!");
+		confirm.setContentText("All radio settings, contacts, groups and custom variables will be lost.\n"
+				+ "The device will return to factory defaults.\n\n" + "This cannot be undone. Continue?");
+		confirm.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+		confirm.initOwner(BSAppUI.getStage());
+
+		confirm.showAndWait().ifPresent(btn -> {
+			if (btn != ButtonType.OK)
+				return;
+			new Thread(() -> {
+				c.factoryReset();
+				javafx.application.Platform.runLater(() -> {
+					Alert info = new Alert(Alert.AlertType.INFORMATION);
+					info.setTitle("Factory reset complete");
+					info.setHeaderText("Device has been reset to factory defaults.");
+					info.initOwner(BSAppUI.getStage());
+					info.showAndWait();
+				});
+			}, "factory-reset").start();
+		});
+	}
+
+	// ── Helpers ──────────────────────────────────────────────────────────────
+
+	private void showNoDevice() {
+		Alert err = new Alert(Alert.AlertType.WARNING);
+		err.setTitle("Not connected");
+		err.setHeaderText("No device connected.");
+		err.initOwner(BSAppUI.getStage());
+		err.showAndWait();
+	}
+
+	private void showError(String title, String message) {
+		Alert err = new Alert(Alert.AlertType.ERROR);
+		err.setTitle(title);
+		err.setHeaderText(title);
+		err.setContentText(message);
+		err.initOwner(BSAppUI.getStage());
+		err.showAndWait();
+	}
 }
