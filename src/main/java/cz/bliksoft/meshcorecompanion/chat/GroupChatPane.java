@@ -5,6 +5,8 @@ import java.util.Optional;
 import cz.bliksoft.meshcore.frames.resp.ChannelInfo;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -182,9 +184,23 @@ public class GroupChatPane extends VBox {
 		private javafx.beans.property.IntegerProperty observedProp;
 		private javafx.beans.InvalidationListener unreadListener;
 
+		private final Label nameLabel = new Label();
+		private final Label unreadLabel = new Label();
+		private final HBox graphic = new HBox(4, nameLabel, unreadLabel);
+
 		ChannelCell(ChatManager mgr, java.util.function.Consumer<ChannelInfo> onClearHistory) {
 			this.mgr = mgr;
 			this.onClearHistory = onClearHistory;
+
+			getStyleClass().add("channel-list-cell");
+			nameLabel.getStyleClass().add("channel-name");
+			nameLabel.setMaxWidth(Double.MAX_VALUE);
+			HBox.setHgrow(nameLabel, Priority.ALWAYS);
+			unreadLabel.getStyleClass().add("channel-unread");
+			graphic.setAlignment(Pos.CENTER_LEFT);
+			widthProperty().addListener((obs, o, n) -> graphic
+					.setPrefWidth(n.doubleValue() - getInsets().getLeft() - getInsets().getRight()));
+			setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
 		}
 
 		@Override
@@ -197,25 +213,29 @@ public class GroupChatPane extends VBox {
 			}
 			currentItem = item;
 			if (empty || item == null) {
-				setText(null);
+				setGraphic(null);
 				setContextMenu(null);
 				return;
 			}
 			observedProp = mgr.unreadCountProperty(mgr.channelKey(item));
-			unreadListener = obs -> refreshText();
+			unreadListener = obs -> refresh();
 			observedProp.addListener(unreadListener);
-			refreshText();
+			refresh();
+			setGraphic(graphic);
 			javafx.scene.control.MenuItem clearItem = new javafx.scene.control.MenuItem("Clear history");
 			clearItem.setOnAction(e -> onClearHistory.accept(item));
 			setContextMenu(new javafx.scene.control.ContextMenu(clearItem));
 		}
 
-		private void refreshText() {
+		private void refresh() {
 			ChannelInfo item = currentItem;
 			if (item == null)
 				return;
 			int unread = mgr.unreadCountProperty(mgr.channelKey(item)).get();
-			setText(unread > 0 ? item.getName() + " (" + unread + ")" : item.getName());
+			nameLabel.setText(item.getName());
+			unreadLabel.setText("(" + unread + ")");
+			unreadLabel.setVisible(unread > 0);
+			unreadLabel.setManaged(unread > 0);
 		}
 	}
 

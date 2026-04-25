@@ -18,6 +18,8 @@ import javafx.scene.input.KeyCode;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -400,6 +402,12 @@ public class ContactChatPane extends VBox {
 		private javafx.beans.property.IntegerProperty observedProp;
 		private javafx.beans.InvalidationListener unreadListener;
 
+		private final Label favIndicator = new Label("★");
+		private final Label loggedInIndicator = new Label("●");
+		private final Label nameLabel = new Label();
+		private final Label unreadLabel = new Label();
+		private final HBox graphic = new HBox(4, favIndicator, loggedInIndicator, nameLabel, unreadLabel);
+
 		ContactCell(ChatManager mgr, Consumer<Contact> onLoginLogout, Consumer<Contact> onDetails,
 				Consumer<Contact> onClearHistory, Consumer<Contact> onResync) {
 			this.mgr = mgr;
@@ -407,6 +415,18 @@ public class ContactChatPane extends VBox {
 			this.onDetails = onDetails;
 			this.onClearHistory = onClearHistory;
 			this.onResync = onResync;
+
+			getStyleClass().add("contact-list-cell");
+			favIndicator.getStyleClass().add("contact-favourite-indicator");
+			loggedInIndicator.getStyleClass().add("contact-loggedin-indicator");
+			nameLabel.getStyleClass().add("contact-name");
+			nameLabel.setMaxWidth(Double.MAX_VALUE);
+			HBox.setHgrow(nameLabel, Priority.ALWAYS);
+			unreadLabel.getStyleClass().add("contact-unread");
+			graphic.setAlignment(Pos.CENTER_LEFT);
+			widthProperty().addListener((obs, o, n) -> graphic
+					.setPrefWidth(n.doubleValue() - getInsets().getLeft() - getInsets().getRight()));
+			setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
 		}
 
 		@Override
@@ -419,24 +439,44 @@ public class ContactChatPane extends VBox {
 			}
 			currentContact = contact;
 			if (empty || contact == null) {
-				setText(null);
+				setGraphic(null);
 				setContextMenu(null);
 				return;
 			}
 			observedProp = mgr.unreadCountProperty(mgr.contactKey(contact));
-			unreadListener = obs -> refreshText();
+			unreadListener = obs -> refresh();
 			observedProp.addListener(unreadListener);
-			refreshText();
+			refresh();
+			setGraphic(graphic);
 			setContextMenu(buildContextMenu(contact));
 		}
 
-		private void refreshText() {
+		private void refresh() {
 			Contact c = currentContact;
 			if (c == null)
 				return;
-			int unread = mgr.unreadCountProperty(mgr.contactKey(c)).get();
 			boolean fav = c.hasFlag(ContactFlags.FAVOURITE);
-			setText((fav ? "★ " : "") + c.getName() + (unread > 0 ? " (" + unread + ")" : ""));
+			boolean roomRepeater = c.getType() == AdvertType.ADV_TYPE_ROOM
+					|| c.getType() == AdvertType.ADV_TYPE_REPEATER;
+			boolean loggedIn = roomRepeater && mgr.isAuthenticated(c);
+			int unread = mgr.unreadCountProperty(mgr.contactKey(c)).get();
+
+			favIndicator.setVisible(fav);
+			favIndicator.setManaged(fav);
+			loggedInIndicator.setVisible(loggedIn);
+			loggedInIndicator.setManaged(loggedIn);
+			nameLabel.setText(c.getName());
+			unreadLabel.setText("(" + unread + ")");
+			unreadLabel.setVisible(unread > 0);
+			unreadLabel.setManaged(unread > 0);
+
+			getStyleClass().removeAll("contact-type-chat", "contact-type-room", "contact-type-repeater");
+			getStyleClass().add(switch (c.getType()) {
+			case ADV_TYPE_CHAT -> "contact-type-chat";
+			case ADV_TYPE_ROOM -> "contact-type-room";
+			case ADV_TYPE_REPEATER -> "contact-type-repeater";
+			default -> "contact-type-chat";
+			});
 		}
 
 		private ContextMenu buildContextMenu(Contact contact) {
