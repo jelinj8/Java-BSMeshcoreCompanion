@@ -63,7 +63,9 @@ public class ContactChatPane extends VBox {
 		VBox.setVgrow(contactList, Priority.ALWAYS);
 
 		// ── Discovered list ───────────────────────────────────────────────────
-		ListView<NewAdvertPush> discoveredList = new ListView<>(chatManager.getDiscoveredContacts());
+		SortedList<NewAdvertPush> sortedDiscovered = new SortedList<>(chatManager.getDiscoveredContacts(),
+				Comparator.comparingLong(NewAdvertPush::getAdvertTS).reversed());
+		ListView<NewAdvertPush> discoveredList = new ListView<>(sortedDiscovered);
 		discoveredList.setCellFactory(lv -> new javafx.scene.control.ListCell<>() {
 			@Override
 			protected void updateItem(NewAdvertPush item, boolean empty) {
