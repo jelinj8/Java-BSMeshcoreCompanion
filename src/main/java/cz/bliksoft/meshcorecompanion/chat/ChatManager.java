@@ -727,6 +727,27 @@ public class ChatManager {
 		}, "meshcore-advert").start();
 	}
 
+	// ── Resync ───────────────────────────────────────────────────────────────
+
+	public void resyncContact(Contact contact) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		new Thread(() -> {
+			try {
+				var fetched = c.sendFrameWithResult(new CmdGetContactByKey(contact.getPubkey()), 2000);
+				if (fetched instanceof Contact updated) {
+					updateContactInList(updated);
+					log.info("Resynced contact {}", contact.getName());
+				} else {
+					log.warn("Resync contact {} returned unexpected frame: {}", contact.getName(), fetched);
+				}
+			} catch (Exception e) {
+				log.error("Failed to resync contact {}", contact.getName(), e);
+			}
+		}, "meshcore-resync").start();
+	}
+
 	// ── Path reset ───────────────────────────────────────────────────────────
 
 	public void resetPath(Contact contact) {

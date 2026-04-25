@@ -59,7 +59,7 @@ public class ContactChatPane extends VBox {
 		contactList = new ListView<>(sortedContacts);
 		contactList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 		contactList.setCellFactory(lv -> new ContactCell(chatManager, this::handleLoginLogout, this::openDetailsDialog,
-				this::clearContactHistory));
+				this::clearContactHistory, c -> chatManager.resyncContact(c)));
 		VBox.setVgrow(contactList, Priority.ALWAYS);
 
 		// ── Discovered list ───────────────────────────────────────────────────
@@ -392,17 +392,19 @@ public class ContactChatPane extends VBox {
 		private final Consumer<Contact> onLoginLogout;
 		private final Consumer<Contact> onDetails;
 		private final Consumer<Contact> onClearHistory;
+		private final Consumer<Contact> onResync;
 
 		private Contact currentContact;
 		private javafx.beans.property.IntegerProperty observedProp;
 		private javafx.beans.InvalidationListener unreadListener;
 
 		ContactCell(ChatManager mgr, Consumer<Contact> onLoginLogout, Consumer<Contact> onDetails,
-				Consumer<Contact> onClearHistory) {
+				Consumer<Contact> onClearHistory, Consumer<Contact> onResync) {
 			this.mgr = mgr;
 			this.onLoginLogout = onLoginLogout;
 			this.onDetails = onDetails;
 			this.onClearHistory = onClearHistory;
+			this.onResync = onResync;
 		}
 
 		@Override
@@ -450,6 +452,10 @@ public class ContactChatPane extends VBox {
 			resetPathItem.setDisable(!mgr.isConnected());
 			resetPathItem.setOnAction(e -> mgr.resetPath(contact));
 
+			MenuItem resyncItem = new MenuItem("Resync contact");
+			resyncItem.setDisable(!mgr.isConnected());
+			resyncItem.setOnAction(e -> onResync.accept(contact));
+
 			MenuItem clearHistoryItem = new MenuItem("Clear history");
 			clearHistoryItem.setOnAction(e -> onClearHistory.accept(contact));
 
@@ -459,8 +465,8 @@ public class ContactChatPane extends VBox {
 			ContextMenu menu = new ContextMenu(favItem);
 			if (isRoomRepeater)
 				menu.getItems().add(loginItem);
-			menu.getItems().addAll(new SeparatorMenuItem(), resetPathItem, clearHistoryItem, new SeparatorMenuItem(),
-					detailsItem);
+			menu.getItems().addAll(new SeparatorMenuItem(), resetPathItem, resyncItem, clearHistoryItem,
+					new SeparatorMenuItem(), detailsItem);
 			return menu;
 		}
 	}
