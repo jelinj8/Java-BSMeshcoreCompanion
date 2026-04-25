@@ -10,6 +10,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import cz.bliksoft.javautils.app.BSApp;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
@@ -17,7 +18,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
-import javafx.scene.control.TextField;
+import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -40,7 +41,7 @@ class ChatView extends VBox {
 	}
 
 	private final ListView<ChatMessage> listView = new ListView<>();
-	private final TextField inputField = new TextField();
+	private final TextArea inputField = new TextArea();
 	private final ComboBox<SendMode> modeBox = new ComboBox<>();
 	private final HBox sendBar;
 
@@ -77,6 +78,8 @@ class ChatView extends VBox {
 		});
 
 		inputField.setPromptText("Type a message…");
+		inputField.setWrapText(true);
+		inputField.setPrefRowCount(3);
 		HBox.setHgrow(inputField, Priority.ALWAYS);
 
 		modeBox.getItems().addAll(SendMode.values());
@@ -87,13 +90,25 @@ class ChatView extends VBox {
 		Button sendBtn = new Button("Send");
 		sendBtn.setOnAction(e -> doSend());
 		inputField.setOnKeyPressed(e -> {
-			if (e.getCode() == KeyCode.ENTER)
-				doSend();
+			if (e.getCode() != KeyCode.ENTER)
+				return;
+			boolean enterSends = "true".equals(BSApp.getProperty("chat.enterSends"));
+			if (enterSends) {
+				if (!e.isShiftDown() && !e.isControlDown()) {
+					e.consume();
+					doSend();
+				}
+			} else {
+				if (e.isControlDown()) {
+					e.consume();
+					doSend();
+				}
+			}
 		});
 
 		sendBar = new HBox(4, inputField, modeBox, sendBtn);
 		sendBar.setPadding(new Insets(4));
-		sendBar.setAlignment(Pos.CENTER_LEFT);
+		sendBar.setAlignment(Pos.BOTTOM_LEFT);
 
 		getChildren().addAll(listView, sendBar);
 		setDisable(true);

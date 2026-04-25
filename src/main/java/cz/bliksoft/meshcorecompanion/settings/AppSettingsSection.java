@@ -9,6 +9,7 @@ import cz.bliksoft.javautils.app.ui.BSAppUI;
 import cz.bliksoft.javautils.fx.tools.Styling;
 import cz.bliksoft.meshcorecompanion.events.meshcore.MeshcorePushBridge;
 import javafx.geometry.Insets;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
@@ -20,13 +21,17 @@ class AppSettingsSection extends VBox {
 
 	private static final Logger log = LogManager.getLogger(AppSettingsSection.class);
 
+	static final String PROP_ENTER_SENDS = "chat.enterSends";
+
 	private final Label titleLabel = new Label("Application settings:");
 	private final ComboBox<String> themeBox = new ComboBox<>();
 	private final Spinner<Integer> logSizeSpinner;
+	private final CheckBox enterSendsBox = new CheckBox("ENTER to send  (SHIFT+ENTER for newline)");
 
 	private String originalTheme;
 	private String pendingTheme;
 	private int originalLogSize;
+	private boolean originalEnterSends;
 
 	private Runnable onModified;
 	private boolean dirty = false;
@@ -38,6 +43,9 @@ class AppSettingsSection extends VBox {
 		originalTheme = themeObj != null ? capitalise(themeObj.toString()) : "Default";
 		pendingTheme = originalTheme;
 		originalLogSize = MeshcorePushBridge.getInstance().getMaxLogEntries();
+		originalEnterSends = "true".equals(BSApp.getProperty(PROP_ENTER_SENDS));
+		enterSendsBox.setSelected(originalEnterSends);
+		enterSendsBox.setOnAction(e -> markDirty());
 
 		themeBox.getItems().addAll("Default", "System", "Light", "Dark");
 		themeBox.setValue(originalTheme);
@@ -65,6 +73,8 @@ class AppSettingsSection extends VBox {
 		grid.add(themeBox, 1, row++);
 		grid.add(new Label("Log history size:"), 0, row);
 		grid.add(logSizeSpinner, 1, row++);
+		grid.add(new Label("Chat Enter key:"), 0, row);
+		grid.add(enterSendsBox, 1, row++);
 
 		setPadding(new Insets(0));
 		setSpacing(8);
@@ -83,6 +93,7 @@ class AppSettingsSection extends VBox {
 		} else {
 			BSApp.setLocalProperty(BSAppUI.PROP_THEME, pendingTheme.toUpperCase());
 		}
+		BSApp.setLocalProperty(PROP_ENTER_SENDS, String.valueOf(enterSendsBox.isSelected()));
 		try {
 			BSApp.saveLocalProperties();
 		} catch (ViewableException e) {
@@ -90,6 +101,7 @@ class AppSettingsSection extends VBox {
 		}
 		originalTheme = pendingTheme;
 		originalLogSize = MeshcorePushBridge.getInstance().getMaxLogEntries();
+		originalEnterSends = enterSendsBox.isSelected();
 		clearDirty();
 		onModified.run();
 	}
@@ -103,6 +115,7 @@ class AppSettingsSection extends VBox {
 		};
 		themeBox.setValue(originalTheme);
 		logSizeSpinner.getValueFactory().setValue(originalLogSize);
+		enterSendsBox.setSelected(originalEnterSends);
 		onModified = saved;
 		pendingTheme = originalTheme;
 		clearDirty();

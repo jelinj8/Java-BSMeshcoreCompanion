@@ -7,12 +7,14 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import cz.bliksoft.javautils.app.ui.BSAppUI;
+import javafx.application.Platform;
 import cz.bliksoft.meshcore.frames.FrameConstants.AdvertType;
 import cz.bliksoft.meshcore.frames.FrameConstants.ContactFlags;
 import cz.bliksoft.meshcore.frames.push.NewAdvertPush;
 import cz.bliksoft.meshcore.frames.resp.Contact;
 import cz.bliksoft.meshcore.utils.MeshcoreUtils;
 import javafx.collections.transformation.FilteredList;
+import javafx.scene.input.KeyCode;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -157,6 +159,15 @@ public class ContactChatPane extends VBox {
 		nameFilter.setPromptText("Search…");
 		HBox.setHgrow(nameFilter, Priority.ALWAYS);
 
+		Button clearFilterBtn = new Button("✕");
+		clearFilterBtn.setTooltip(new Tooltip("Clear filter"));
+		clearFilterBtn.disableProperty().bind(nameFilter.textProperty().isEmpty());
+		clearFilterBtn.setOnAction(e -> nameFilter.clear());
+		nameFilter.setOnKeyPressed(e -> {
+			if (e.getCode() == KeyCode.ESCAPE)
+				nameFilter.clear();
+		});
+
 		Runnable updateFilter = () -> {
 			String sel = typeFilter.getValue();
 			String text = nameFilter.getText().toLowerCase().strip();
@@ -175,7 +186,7 @@ public class ContactChatPane extends VBox {
 		typeFilter.setOnAction(e -> updateFilter.run());
 		nameFilter.textProperty().addListener((obs, o, n) -> updateFilter.run());
 
-		HBox filterBar = new HBox(4, typeFilter, nameFilter);
+		HBox filterBar = new HBox(4, typeFilter, nameFilter, clearFilterBtn);
 		filterBar.setPadding(new Insets(2, 4, 2, 4));
 
 		Label savedLabel = new Label("Contacts");
@@ -256,6 +267,7 @@ public class ContactChatPane extends VBox {
 		dlg.setTitle("Login");
 		dlg.setHeaderText("Log in to " + contact.getName());
 		dlg.getDialogPane().setContent(grid);
+		dlg.setOnShown(e -> Platform.runLater(pw::requestFocus));
 		dlg.showAndWait().ifPresent(btn -> {
 			if (btn == ButtonType.OK)
 				chatManager.loginToRoom(contact, pw.getText());
