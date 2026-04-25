@@ -183,7 +183,8 @@ public class ContactChatPane extends VBox {
 				case "Repeater" -> c.getType() == AdvertType.ADV_TYPE_REPEATER;
 				default -> true;
 				};
-				boolean nameOk = text.isEmpty() || c.getName().toLowerCase().contains(text);
+				boolean nameOk = text.isEmpty() || c.getName().toLowerCase().contains(text)
+						|| MeshcoreUtils.hex(c.getPubkey()).contains(text);
 				return typeOk && nameOk;
 			});
 		};
