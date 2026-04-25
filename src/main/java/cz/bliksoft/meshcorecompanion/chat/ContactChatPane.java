@@ -58,8 +58,8 @@ public class ContactChatPane extends VBox {
 
 		contactList = new ListView<>(sortedContacts);
 		contactList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-		contactList
-				.setCellFactory(lv -> new ContactCell(chatManager, this::handleLoginLogout, this::openDetailsDialog));
+		contactList.setCellFactory(lv -> new ContactCell(chatManager, this::handleLoginLogout, this::openDetailsDialog,
+				this::clearContactHistory));
 		VBox.setVgrow(contactList, Priority.ALWAYS);
 
 		// ── Discovered list ───────────────────────────────────────────────────
@@ -350,6 +350,18 @@ public class ContactChatPane extends VBox {
 		dlg.showAndWait();
 	}
 
+	private void clearContactHistory(Contact contact) {
+		Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+		confirm.setTitle("Clear history");
+		confirm.setHeaderText("Clear chat history with " + contact.getName() + "?");
+		confirm.setContentText("This cannot be undone.");
+		confirm.initOwner(BSAppUI.getStage());
+		confirm.showAndWait().ifPresent(btn -> {
+			if (btn == ButtonType.OK)
+				chatManager.clearHistory(chatManager.contactKey(contact));
+		});
+	}
+
 	private void importDiscovered(ListView<NewAdvertPush> list) {
 		NewAdvertPush selected = list.getSelectionModel().getSelectedItem();
 		if (selected == null)
@@ -379,15 +391,18 @@ public class ContactChatPane extends VBox {
 		private final ChatManager mgr;
 		private final Consumer<Contact> onLoginLogout;
 		private final Consumer<Contact> onDetails;
+		private final Consumer<Contact> onClearHistory;
 
 		private Contact currentContact;
 		private javafx.beans.property.IntegerProperty observedProp;
 		private javafx.beans.InvalidationListener unreadListener;
 
-		ContactCell(ChatManager mgr, Consumer<Contact> onLoginLogout, Consumer<Contact> onDetails) {
+		ContactCell(ChatManager mgr, Consumer<Contact> onLoginLogout, Consumer<Contact> onDetails,
+				Consumer<Contact> onClearHistory) {
 			this.mgr = mgr;
 			this.onLoginLogout = onLoginLogout;
 			this.onDetails = onDetails;
+			this.onClearHistory = onClearHistory;
 		}
 
 		@Override
@@ -435,13 +450,17 @@ public class ContactChatPane extends VBox {
 			resetPathItem.setDisable(!mgr.isConnected());
 			resetPathItem.setOnAction(e -> mgr.resetPath(contact));
 
+			MenuItem clearHistoryItem = new MenuItem("Clear history");
+			clearHistoryItem.setOnAction(e -> onClearHistory.accept(contact));
+
 			MenuItem detailsItem = new MenuItem("Show details");
 			detailsItem.setOnAction(e -> onDetails.accept(contact));
 
 			ContextMenu menu = new ContextMenu(favItem);
 			if (isRoomRepeater)
 				menu.getItems().add(loginItem);
-			menu.getItems().addAll(new SeparatorMenuItem(), resetPathItem, new SeparatorMenuItem(), detailsItem);
+			menu.getItems().addAll(new SeparatorMenuItem(), resetPathItem, clearHistoryItem, new SeparatorMenuItem(),
+					detailsItem);
 			return menu;
 		}
 	}

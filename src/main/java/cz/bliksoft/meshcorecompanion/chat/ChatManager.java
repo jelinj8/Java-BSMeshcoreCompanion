@@ -346,6 +346,23 @@ public class ChatManager {
 		return authenticatedContacts.contains(contactKey(contact));
 	}
 
+	// ── History ─────────────────────────────────────────────────────────────
+
+	public void clearHistory(String conversationKey) {
+		ObservableList<ChatMessage> msgs = loadedConversations.get(conversationKey);
+		if (msgs != null)
+			msgs.clear();
+		if (deviceHex != null)
+			ChatStore.clear(deviceHex, conversationKey);
+	}
+
+	public void clearAllHistory() {
+		for (ObservableList<ChatMessage> msgs : loadedConversations.values())
+			msgs.clear();
+		if (deviceHex != null)
+			ChatStore.clearAll(deviceHex);
+	}
+
 	// ── Sending ──────────────────────────────────────────────────────────────
 
 	public void sendToContact(Contact contact, String text, SendMode mode, Runnable onComplete,

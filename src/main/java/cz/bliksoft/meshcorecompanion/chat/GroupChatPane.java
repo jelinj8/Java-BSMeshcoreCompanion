@@ -27,7 +27,7 @@ public class GroupChatPane extends VBox {
 
 	public GroupChatPane() {
 		ListView<ChannelInfo> channelList = new ListView<>(chatManager.getChannels());
-		channelList.setCellFactory(lv -> new ChannelCell(chatManager));
+		channelList.setCellFactory(lv -> new ChannelCell(chatManager, this::clearChannelHistory));
 		VBox.setVgrow(channelList, Priority.ALWAYS);
 
 		VBox leftPane = buildLeftPane(channelList);
@@ -177,12 +177,14 @@ public class GroupChatPane extends VBox {
 
 	private static class ChannelCell extends javafx.scene.control.ListCell<ChannelInfo> {
 		private final ChatManager mgr;
+		private final java.util.function.Consumer<ChannelInfo> onClearHistory;
 		private ChannelInfo currentItem;
 		private javafx.beans.property.IntegerProperty observedProp;
 		private javafx.beans.InvalidationListener unreadListener;
 
-		ChannelCell(ChatManager mgr) {
+		ChannelCell(ChatManager mgr, java.util.function.Consumer<ChannelInfo> onClearHistory) {
 			this.mgr = mgr;
+			this.onClearHistory = onClearHistory;
 		}
 
 		@Override
@@ -196,12 +198,16 @@ public class GroupChatPane extends VBox {
 			currentItem = item;
 			if (empty || item == null) {
 				setText(null);
+				setContextMenu(null);
 				return;
 			}
 			observedProp = mgr.unreadCountProperty(mgr.channelKey(item));
 			unreadListener = obs -> refreshText();
 			observedProp.addListener(unreadListener);
 			refreshText();
+			javafx.scene.control.MenuItem clearItem = new javafx.scene.control.MenuItem("Clear history");
+			clearItem.setOnAction(e -> onClearHistory.accept(item));
+			setContextMenu(new javafx.scene.control.ContextMenu(clearItem));
 		}
 
 		private void refreshText() {
@@ -211,6 +217,18 @@ public class GroupChatPane extends VBox {
 			int unread = mgr.unreadCountProperty(mgr.channelKey(item)).get();
 			setText(unread > 0 ? item.getName() + " (" + unread + ")" : item.getName());
 		}
+	}
+
+	private void clearChannelHistory(ChannelInfo channel) {
+		Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+		confirm.setTitle("Clear history");
+		confirm.setHeaderText("Clear chat history for " + channel.getName() + "?");
+		confirm.setContentText("This cannot be undone.");
+		confirm.initOwner(cz.bliksoft.javautils.app.ui.BSAppUI.getStage());
+		confirm.showAndWait().ifPresent(btn -> {
+			if (btn == ButtonType.OK)
+				chatManager.clearHistory(chatManager.channelKey(channel));
+		});
 	}
 
 	private void removeSelected(ListView<ChannelInfo> list) {

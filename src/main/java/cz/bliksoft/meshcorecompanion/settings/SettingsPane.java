@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 
 import cz.bliksoft.javautils.app.BSApp;
 import cz.bliksoft.javautils.app.exceptions.ViewableException;
+import cz.bliksoft.meshcorecompanion.chat.ChatManager;
 import cz.bliksoft.javautils.app.ui.BSAppUI;
 import cz.bliksoft.javautils.app.ui.actions.interfaces.IClose;
 import cz.bliksoft.javautils.app.ui.actions.interfaces.ISave;
@@ -344,7 +345,11 @@ public class SettingsPane extends VBox implements IContextProvider, IClose, ISav
 
 		resetBtn.setOnAction(e -> doFactoryReset());
 
-		return new VBox(4, title, resetBtn);
+		Button clearAllChatsBtn = new Button("Clear All Chat History…");
+		clearAllChatsBtn.setStyle("-fx-background-color: #cc0000; -fx-text-fill: white;");
+		clearAllChatsBtn.setOnAction(e -> doClearAllChatHistory());
+
+		return new VBox(4, title, resetBtn, clearAllChatsBtn);
 	}
 
 	private void doFactoryReset() {
@@ -375,6 +380,20 @@ public class SettingsPane extends VBox implements IContextProvider, IClose, ISav
 					info.showAndWait();
 				});
 			}, "factory-reset").start();
+		});
+	}
+
+	private void doClearAllChatHistory() {
+		Alert confirm = new Alert(Alert.AlertType.WARNING);
+		confirm.setTitle("Clear all chat history");
+		confirm.setHeaderText("Delete all local chat history?");
+		confirm.setContentText(
+				"All conversation history for all contacts and groups will be permanently deleted.\n\nThis cannot be undone.");
+		confirm.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+		confirm.initOwner(BSAppUI.getStage());
+		confirm.showAndWait().ifPresent(btn -> {
+			if (btn == ButtonType.OK)
+				ChatManager.getInstance().clearAllHistory();
 		});
 	}
 
