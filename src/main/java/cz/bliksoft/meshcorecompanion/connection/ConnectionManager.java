@@ -147,7 +147,13 @@ public class ConnectionManager {
 	}
 
 	private void pickNewSerialPort() {
-		SerialPort[] ports = SerialPort.getCommPorts();
+		new Thread(() -> {
+			SerialPort[] ports = SerialPort.getCommPorts();
+			Platform.runLater(() -> showPortSelectionDialog(ports));
+		}, "serial-port-scan").start();
+	}
+
+	private void showPortSelectionDialog(SerialPort[] ports) {
 		if (ports.length == 0) {
 			Alert alert = new Alert(Alert.AlertType.WARNING);
 			alert.setTitle("Connect");
