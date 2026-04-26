@@ -1,5 +1,6 @@
 package cz.bliksoft.meshcorecompanion.chat;
 
+import java.nio.ByteOrder;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,6 +9,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
@@ -40,11 +43,12 @@ import cz.bliksoft.meshcore.utils.MeshcoreUtils;
 import cz.bliksoft.meshcorecompanion.model.ChatMessage;
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import static cz.bliksoft.meshcore.frames.FrameConstants.MessageTextType.TXT_TYPE_PLAIN;
+import cz.bliksoft.meshcore.frames.FrameConstants.MessageTextType;
 
 public class ChatManager {
 
@@ -56,7 +60,15 @@ public class ChatManager {
 	private final ObservableList<ChannelInfo> channels = FXCollections.observableArrayList();
 	private final Map<String, ObservableList<ChatMessage>> loadedConversations = new HashMap<>();
 	private final Map<String, IntegerProperty> unreadCounts = new HashMap<>();
+	private final IntegerProperty totalContactUnread = new SimpleIntegerProperty(0);
+	private final IntegerProperty totalGroupUnread = new SimpleIntegerProperty(0);
+	private String activeConversationKey = null;
+	private boolean conversationAtBottom = false;
 	private final Set<String> authenticatedContacts = new HashSet<>();
+	private final Map<String, Long> lastRoomTimestamp = new ConcurrentHashMap<>();
+
+	private volatile Thread keepAliveThread;
+	private volatile Contact keepAliveContact;
 
 	private MeshcoreCompanion currentCompanion;
 	private String deviceHex;
@@ -133,10 +145,23 @@ public class ChatManager {
 				ContactMsgRecv m = (ContactMsgRecv) frame;
 				List<Contact> found = companion.getConfig().findContacts(m.getFrom6(), null);
 				Contact contact = found.isEmpty() ? null : found.get(0);
-				String senderName = contact != null ? contact.getName() : MeshcoreUtils.hex(m.getFrom6());
 				String key = contact != null ? contactKey(contact) : MeshcoreUtils.hex(m.getFrom6());
+				// TXT_TYPE_SIGNED_PLAIN: room server forwarded a post from another member;
+				// the actual author's 4-byte prefix is in getSenderPrefix(), not from6.
+				String senderName;
+				byte[] authorPrefix = m.getSenderPrefix();
+				if (authorPrefix != null && authorPrefix.length > 0) {
+					List<Contact> authors = companion.getConfig().findContacts(authorPrefix, null);
+					senderName = authors.isEmpty() ? MeshcoreUtils.hex(authorPrefix) : authors.get(0).getName();
+				} else {
+					senderName = contact != null ? contact.getName() : MeshcoreUtils.hex(m.getFrom6());
+				}
 				ChatMessage msg = new ChatMessage(0, m.getTimestamp(), m.getText(), false, senderName, true, null);
+				if (m.getTextType() != null)
+					msg.setTxtType(m.getTextType().name());
 				setSignalInfo(msg, frame);
+				// Track latest post timestamp per contact for room keep-alive sync_since
+				lastRoomTimestamp.merge(key, m.getTimestamp(), Math::max);
 				Platform.runLater(() -> appendIncoming(key, msg));
 			}
 			case RESP_CHANNEL_MSG_RECV, RESP_CHANNEL_MSG_RECV_V3 -> {
@@ -256,6 +281,7 @@ public class ChatManager {
 	private void onCompanionDisconnected(MeshcoreCompanion companion) {
 		if (companion != this.currentCompanion)
 			return;
+		stopKeepAlive();
 		if (messageListener != null)
 			companion.removeFrameListener(MessageFrameGroup.class, messageListener);
 		if (contactListener != null)
@@ -308,7 +334,13 @@ public class ChatManager {
 		msgs.add(msg);
 		if (deviceHex != null)
 			ChatStore.appendMessage(deviceHex, key, msg);
-		unreadCountProperty(key).set(unreadCountProperty(key).get() + 1);
+		if (!(key.equals(activeConversationKey) && conversationAtBottom)) {
+			unreadCountProperty(key).set(unreadCountProperty(key).get() + 1);
+			if (isChannelKey(key))
+				totalGroupUnread.set(totalGroupUnread.get() + 1);
+			else
+				totalContactUnread.set(totalContactUnread.get() + 1);
+		}
 	}
 
 	// ── Accessors ────────────────────────────────────────────────────────────
@@ -336,8 +368,39 @@ public class ChatManager {
 		return unreadCounts.computeIfAbsent(conversationKey, k -> new SimpleIntegerProperty(0));
 	}
 
+	public ReadOnlyIntegerProperty totalContactUnreadProperty() {
+		return totalContactUnread;
+	}
+
+	public ReadOnlyIntegerProperty totalGroupUnreadProperty() {
+		return totalGroupUnread;
+	}
+
+	public void setActiveConversation(String key) {
+		activeConversationKey = key;
+		conversationAtBottom = false;
+	}
+
+	public void notifyAtBottom(String key) {
+		if (key == null || !key.equals(activeConversationKey))
+			return;
+		conversationAtBottom = true;
+		markRead(key);
+	}
+
 	public void markRead(String conversationKey) {
-		unreadCountProperty(conversationKey).set(0);
+		int prev = unreadCountProperty(conversationKey).get();
+		if (prev > 0) {
+			unreadCountProperty(conversationKey).set(0);
+			if (isChannelKey(conversationKey))
+				totalGroupUnread.set(Math.max(0, totalGroupUnread.get() - prev));
+			else
+				totalContactUnread.set(Math.max(0, totalContactUnread.get() - prev));
+		}
+	}
+
+	private boolean isChannelKey(String key) {
+		return key.startsWith("ch_");
 	}
 
 	// ── Auth state ───────────────────────────────────────────────────────────
@@ -365,7 +428,7 @@ public class ChatManager {
 
 	// ── Sending ──────────────────────────────────────────────────────────────
 
-	public void sendToContact(Contact contact, String text, SendMode mode, Runnable onComplete,
+	public void sendToContact(Contact contact, String text, SendMode mode, MessageTextType txtType, Runnable onComplete,
 			Consumer<String> onTextReturn) {
 		MeshcoreCompanion c = currentCompanion;
 		if (c == null)
@@ -374,17 +437,56 @@ public class ChatManager {
 		String key = contactKey(contact);
 		ObservableList<ChatMessage> msgs = getMessages(key);
 		ChatMessage msg = new ChatMessage(msgs.size(), now, text, true, "Me", false, null);
+		if (txtType == MessageTextType.TXT_TYPE_CLI_DATA)
+			msg.setTxtType(txtType.name());
 		msgs.add(msg);
 		byte[] prefix6 = MeshcoreUtils.prefix6(contact.getPubkey());
 
 		new Thread(() -> {
+			try {
+				c.awaitAvailable(30_000L);
+			} catch (TimeoutException | InterruptedException e) {
+				log.warn("Device not available for send to {}", contact.getName(), e);
+				Platform.runLater(() -> {
+					msgs.remove(msg);
+					onTextReturn.accept(text);
+					onComplete.run();
+				});
+				return;
+			}
+			// CLI sends get no SendConfirmedPush from the firmware; always use ASYNC path
+			// and mark the message stored immediately without waiting for an ACK.
+			if (txtType == MessageTextType.TXT_TYPE_CLI_DATA) {
+				try {
+					Platform.runLater(onComplete);
+					if (deviceHex != null)
+						ChatStore.appendMessage(deviceHex, key, msg);
+					Sent sent = c.sendTxtMsgAsync(txtType, prefix6, 0, now, text);
+					byte[] ackTag = sent.getAckIdOrTag();
+					// Skip tag tracking when tag is all-zero (no ACK expected for CLI)
+					if (ackTag != null && !Arrays.equals(ackTag, new byte[4])) {
+						String tagHex = MeshcoreUtils.hex(ackTag);
+						Platform.runLater(() -> updateTag(msgs, msg, tagHex, false, key));
+					} else {
+						Platform.runLater(() -> {
+							msg.setConfirmed(true);
+							int idx = msgs.indexOf(msg);
+							if (idx >= 0)
+								msgs.set(idx, msg);
+						});
+					}
+				} catch (Exception e) {
+					log.error("Failed to send CLI message to {}", contact.getName(), e);
+				}
+				return;
+			}
 			switch (mode) {
 			case ASYNC -> {
 				try {
 					onComplete.run();
 					if (deviceHex != null)
 						ChatStore.appendMessage(deviceHex, key, msg);
-					Sent sent = c.sendTxtMsgAsync(TXT_TYPE_PLAIN, prefix6, 0, now, text);
+					Sent sent = c.sendTxtMsgAsync(txtType, prefix6, 0, now, text);
 					String tagHex = MeshcoreUtils.hex(sent.getAckIdOrTag());
 					Platform.runLater(() -> updateTag(msgs, msg, tagHex, false, key));
 				} catch (Exception e) {
@@ -393,7 +495,7 @@ public class ChatManager {
 			}
 			case SYNC -> {
 				try {
-					var confirm = c.sendTxtMsg(TXT_TYPE_PLAIN, prefix6, 0, now, text);
+					var confirm = c.sendTxtMsg(txtType, prefix6, 0, now, text);
 					String tagHex = MeshcoreUtils.hex(confirm.getTag());
 					if (deviceHex != null)
 						ChatStore.appendMessage(deviceHex, key, msg);
@@ -412,7 +514,7 @@ public class ChatManager {
 			}
 			case RETRY -> {
 				try {
-					var confirm = c.sendTxtMsgWithRetry(TXT_TYPE_PLAIN, prefix6, now, text);
+					var confirm = c.sendTxtMsgWithRetry(txtType, prefix6, now, text);
 					String tagHex = MeshcoreUtils.hex(confirm.getTag());
 					if (deviceHex != null)
 						ChatStore.appendMessage(deviceHex, key, msg);
@@ -451,20 +553,16 @@ public class ChatManager {
 		long now = Instant.now().getEpochSecond();
 		String key = channelKey(channel);
 		ObservableList<ChatMessage> msgs = getMessages(key);
-		ChatMessage msg = new ChatMessage(msgs.size(), now, text, true, "Me", true, null);
+		ChatMessage msg = new ChatMessage(msgs.size(), now, text, true, "Me", false, null);
 		msgs.add(msg);
 		if (deviceHex != null)
 			ChatStore.appendMessage(deviceHex, key, msg);
 
 		new Thread(() -> {
 			try {
-				c.sendChannelTxtMessage(TXT_TYPE_PLAIN, channel.getId(), now, text);
-				Platform.runLater(() -> {
-					msg.setConfirmed(true);
-					int idx = msgs.indexOf(msg);
-					if (idx >= 0)
-						msgs.set(idx, msg);
-				});
+				var resp = c.sendChannelTxtMessage(MessageTextType.TXT_TYPE_PLAIN, channel.getId(), now, text);
+				String tagHex = resp instanceof Sent sent ? MeshcoreUtils.hex(sent.getAckIdOrTag()) : "ch_" + now;
+				Platform.runLater(() -> updateTag(msgs, msg, tagHex, true, key));
 				startRepeatMonitor(c, msgs, msg, text);
 			} catch (Exception e) {
 				log.error("Failed to send message to channel {}", channel.getName(), e);
@@ -480,7 +578,8 @@ public class ChatManager {
 				return;
 			if (push.tryDecryptGrpTxt()) {
 				OtaFrame ota = push.getOtaFrame();
-				if (ota instanceof OtaGroupFrame grp && sentText.equals(grp.decryptedText)) {
+				if (ota instanceof OtaGroupFrame grp && msg.getTimestamp() == grp.decryptedTimestamp
+						&& sentText.equals(grp.decryptedText)) {
 					Platform.runLater(() -> {
 						msg.setRepeatCount(msg.getRepeatCount() + 1);
 						int idx = msgs.indexOf(msg);
@@ -688,6 +787,7 @@ public class ChatManager {
 		MeshcoreCompanion c = currentCompanion;
 		if (c == null)
 			return;
+		stopKeepAlive();
 		new Thread(() -> {
 			try {
 				c.logout(contact.getPubkey());
@@ -699,6 +799,44 @@ public class ChatManager {
 				log.error("Logout from room {} failed", contact.getName(), e);
 			}
 		}, "meshcore-logout").start();
+	}
+
+	// ── Keep-alive (room server) ─────────────────────────────────────────────
+
+	public void startKeepAlive(Contact contact) {
+		stopKeepAlive();
+		keepAliveContact = contact;
+		String key = contactKey(contact);
+		Thread t = new Thread(() -> {
+			while (!Thread.currentThread().isInterrupted()) {
+				try {
+					Thread.sleep(30_000);
+				} catch (InterruptedException e) {
+					break;
+				}
+				MeshcoreCompanion c = currentCompanion;
+				if (c == null || contact != keepAliveContact)
+					break;
+				try {
+					long syncSince = lastRoomTimestamp.getOrDefault(key, 0L);
+					c.sendKeepAlive(contact.getPubkey(), syncSince);
+					log.debug("Keep-alive sent to room {}", contact.getName());
+				} catch (Exception e) {
+					log.warn("Keep-alive failed for {}", contact.getName(), e);
+				}
+			}
+		}, "meshcore-keepalive");
+		t.setDaemon(true);
+		keepAliveThread = t;
+		t.start();
+	}
+
+	public void stopKeepAlive() {
+		keepAliveContact = null;
+		Thread t = keepAliveThread;
+		keepAliveThread = null;
+		if (t != null)
+			t.interrupt();
 	}
 
 	// ── Advert ───────────────────────────────────────────────────────────────

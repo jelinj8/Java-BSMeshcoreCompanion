@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import cz.bliksoft.javautils.EnvironmentUtils;
 import cz.bliksoft.javautils.PropertiesUtils;
 import cz.bliksoft.javautils.app.ui.BSAppUI;
+import cz.bliksoft.javautils.fx.tools.Styling;
 import cz.bliksoft.javautils.logging.LogUtils;
 import cz.bliksoft.javautils.modules.Modules;
 import javafx.application.Application;
@@ -36,6 +37,7 @@ public class Main extends Application {
 	public void start(Stage stage) {
 		log.info("BSMeshcoreCompanion started");
 		Modules.autoloadModule(BSMeshcoreCompanionModule.class);
+		Styling.registerCss("/css/companion-jfx.css");
 		BSAppUI.init(this, stage);
 	}
 

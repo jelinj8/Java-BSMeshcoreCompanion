@@ -1,16 +1,19 @@
 package cz.bliksoft.meshcorecompanion.chat;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
+import cz.bliksoft.meshcore.frames.cmd.CmdSendTxtMsg;
 import cz.bliksoft.meshcorecompanion.model.ChatMessage;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import cz.bliksoft.javautils.app.BSApp;
+import cz.bliksoft.meshcore.frames.FrameConstants.MessageTextType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
@@ -19,8 +22,11 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.input.KeyCode;
 import java.util.function.Consumer;
+
+import static cz.bliksoft.meshcore.frames.FrameConstants.MessageTextType.*;
 
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -39,18 +45,23 @@ class ChatView extends VBox {
 
 	@FunctionalInterface
 	interface SendCallback {
-		void send(String key, String text, SendMode mode, Runnable onComplete, Consumer<String> onTextReturn);
+		void send(String key, String text, SendMode mode, MessageTextType txtType, Runnable onComplete,
+				Consumer<String> onTextReturn);
 	}
 
 	private final ListView<ChatMessage> listView = new ListView<>();
 	private final TextArea inputField = new TextArea();
 	private final ComboBox<SendMode> modeBox = new ComboBox<>();
+	private final ToggleButton cliToggle = new ToggleButton("CLI");
+	private final Label byteCountLabel = new Label();
 	private final HBox sendBar;
 
+	private int maxMsgBytes = CmdSendTxtMsg.MAX_TEXT_BYTES;
 	private String conversationKey;
 	private SendCallback sendCallback;
 	private ListChangeListener<ChatMessage> messageChangeListener;
 	private boolean atBottom = true;
+	private MessageTextType currentTxtType = TXT_TYPE_PLAIN;
 
 	ChatView() {
 		getStyleClass().add("chat-view");
@@ -69,7 +80,10 @@ class ChatView extends VBox {
 			if (vbar != null) {
 				vbar.valueProperty().addListener((sObs, sO, sN) -> {
 					double max = vbar.getMax();
+					boolean was = atBottom;
 					atBottom = max <= 0 || sN.doubleValue() >= max - vbar.getVisibleAmount() / 2;
+					if (atBottom && !was && conversationKey != null)
+						ChatManager.getInstance().notifyAtBottom(conversationKey);
 				});
 			}
 			ScrollBar hbar = (ScrollBar) listView.lookup(".scroll-bar:horizontal");
@@ -82,12 +96,28 @@ class ChatView extends VBox {
 		inputField.setPromptText("Type a message…");
 		inputField.setWrapText(true);
 		inputField.setPrefRowCount(3);
-		HBox.setHgrow(inputField, Priority.ALWAYS);
+
+		byteCountLabel.getStyleClass().add("byte-count");
+		byteCountLabel.setMaxWidth(Double.MAX_VALUE);
+		byteCountLabel.setAlignment(Pos.CENTER_RIGHT);
+		inputField.textProperty().addListener((obs, old, text) -> updateByteCount(text));
+		updateByteCount("");
 
 		modeBox.getItems().addAll(SendMode.values());
 		modeBox.setValue(SendMode.SYNC);
 		modeBox.setTooltip(new javafx.scene.control.Tooltip(
 				"Async – fire and forget\nSync – wait for ACK\nRetry – up to 3 attempts with flood fallback"));
+
+		cliToggle.setVisible(false);
+		cliToggle.setManaged(false);
+		cliToggle.selectedProperty().addListener((obs, o, selected) -> {
+			currentTxtType = selected ? TXT_TYPE_CLI_DATA : TXT_TYPE_PLAIN;
+			modeBox.setDisable(selected);
+		});
+
+		VBox inputContainer = new VBox(2, inputField, byteCountLabel);
+		VBox.setVgrow(inputField, Priority.ALWAYS);
+		HBox.setHgrow(inputContainer, Priority.ALWAYS);
 
 		Button sendBtn = new Button("Send");
 		sendBtn.setOnAction(e -> doSend());
@@ -108,7 +138,7 @@ class ChatView extends VBox {
 			}
 		});
 
-		sendBar = new HBox(4, inputField, modeBox, sendBtn);
+		sendBar = new HBox(4, inputContainer, cliToggle, modeBox, sendBtn);
 		sendBar.setPadding(new Insets(4));
 		sendBar.setAlignment(Pos.BOTTOM_LEFT);
 
@@ -125,6 +155,7 @@ class ChatView extends VBox {
 		this.sendCallback = sendCallback;
 
 		if (key == null) {
+			ChatManager.getInstance().setActiveConversation(null);
 			listView.setItems(null);
 			setDisable(true);
 			return;
@@ -135,9 +166,10 @@ class ChatView extends VBox {
 		setDisable(false);
 		sendBar.setDisable(sendCallback == null);
 		atBottom = true;
-		ChatManager.getInstance().markRead(key);
+		ChatManager.getInstance().setActiveConversation(key);
 		if (!msgs.isEmpty())
 			listView.scrollTo(msgs.size() - 1);
+		ChatManager.getInstance().notifyAtBottom(key);
 
 		messageChangeListener = change -> {
 			if (atBottom && !msgs.isEmpty())
@@ -154,6 +186,31 @@ class ChatView extends VBox {
 	void setModeVisible(boolean visible) {
 		modeBox.setVisible(visible);
 		modeBox.setManaged(visible);
+	}
+
+	void setCliToggleVisible(boolean visible) {
+		cliToggle.setVisible(visible);
+		cliToggle.setManaged(visible);
+	}
+
+	void setTxtType(MessageTextType type) {
+		currentTxtType = type;
+		cliToggle.setSelected(type == TXT_TYPE_CLI_DATA);
+	}
+
+	void setMaxMessageBytes(int max) {
+		maxMsgBytes = max;
+		updateByteCount(inputField.getText());
+	}
+
+	private void updateByteCount(String text) {
+		int bytes = text.getBytes(StandardCharsets.UTF_8).length;
+		byteCountLabel.setText(bytes + " / " + maxMsgBytes);
+		byteCountLabel.getStyleClass().removeAll("byte-count-warn", "byte-count-over");
+		if (bytes > maxMsgBytes)
+			byteCountLabel.getStyleClass().add("byte-count-over");
+		else if (bytes > maxMsgBytes * 0.85)
+			byteCountLabel.getStyleClass().add("byte-count-warn");
 	}
 
 	private void doSend() {
@@ -173,7 +230,7 @@ class ChatView extends VBox {
 			}
 		} : () -> {
 		};
-		sendCallback.send(conversationKey, text, mode, onComplete, t -> {
+		sendCallback.send(conversationKey, text, mode, currentTxtType, onComplete, t -> {
 			if (sentKey.equals(conversationKey)) {
 				inputField.setText(t);
 				inputField.end();
@@ -209,6 +266,12 @@ class ChatView extends VBox {
 			double insetH = snappedTopInset() + snappedBottomInset();
 			double insetW = snappedLeftInset() + snappedRightInset();
 			double availW = (width > 0 ? width : getWidth()) - insetW;
+			// Also cap by the bubble's CSS max-width: without this, height is computed
+			// assuming the full cell width, but the bubble renders narrower, needs more
+			// lines, and the ListView under-allocates height causing ellipsis truncation.
+			double maxW = content.getMaxWidth();
+			if (maxW > 0)
+				availW = Math.min(availW, maxW);
 			// Bubble is at most as wide as the cell; text wraps if content is wider.
 			double bubbleW = availW > 0 ? Math.min(content.prefWidth(-1), availW) : content.prefWidth(-1);
 			return content.prefHeight(bubbleW) + insetH;
@@ -227,7 +290,9 @@ class ChatView extends VBox {
 			String time = LocalDateTime.ofInstant(Instant.ofEpochSecond(msg.getTimestamp()), ZoneId.systemDefault())
 					.format(TIME_FMT);
 
-			content.getStyleClass().removeAll("chat-bubble-in", "chat-bubble-out");
+			content.getStyleClass().removeAll("chat-bubble-in", "chat-bubble-out", "chat-bubble-cli");
+			if (msg.isCli())
+				content.getStyleClass().add("chat-bubble-cli");
 			if (msg.isOutgoing()) {
 				String status = msg.getTag() == null ? " ⏳" : (msg.isConfirmed() ? " ✓" : " …");
 				String repeats = msg.getRepeatCount() > 0 ? "  🔁 " + msg.getRepeatCount() : "";

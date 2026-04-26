@@ -8,8 +8,10 @@ import java.util.Optional;
 
 import cz.bliksoft.javautils.app.ui.BSAppUI;
 import javafx.application.Platform;
+import cz.bliksoft.meshcore.frames.cmd.CmdSendTxtMsg;
 import cz.bliksoft.meshcore.frames.FrameConstants.AdvertType;
 import cz.bliksoft.meshcore.frames.FrameConstants.ContactFlags;
+import cz.bliksoft.meshcore.frames.FrameConstants.MessageTextType;
 import cz.bliksoft.meshcore.frames.push.NewAdvertPush;
 import cz.bliksoft.meshcore.frames.resp.Contact;
 import cz.bliksoft.meshcore.utils.MeshcoreUtils;
@@ -70,6 +72,11 @@ public class ContactChatPane extends VBox {
 		ListView<NewAdvertPush> discoveredList = new ListView<>(sortedDiscovered);
 		discoveredList.setCellFactory(lv -> new javafx.scene.control.ListCell<>() {
 			@Override
+			protected double computePrefWidth(double height) {
+				return 0;
+			}
+
+			@Override
 			protected void updateItem(NewAdvertPush item, boolean empty) {
 				super.updateItem(item, empty);
 				if (empty || item == null) {
@@ -84,6 +91,7 @@ public class ContactChatPane extends VBox {
 
 		// ── Chat view ─────────────────────────────────────────────────────────
 		chatView = new ChatView();
+		chatView.setMaxMessageBytes(CmdSendTxtMsg.MAX_TEXT_BYTES);
 		VBox.setVgrow(chatView, Priority.ALWAYS);
 
 		VBox leftPane = buildLeftPane(contactList, discoveredList, filteredContacts);
@@ -101,10 +109,10 @@ public class ContactChatPane extends VBox {
 		contactList.getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -> {
 			selectedContact = selected;
 			if (selected == null) {
+				chatManager.stopKeepAlive();
 				chatView.setConversation(null, null);
 			} else {
 				updateChatViewForContact(selected);
-				chatManager.markRead(chatManager.contactKey(selected));
 				contactList.refresh();
 			}
 		});
@@ -124,14 +132,37 @@ public class ContactChatPane extends VBox {
 	}
 
 	private void updateChatViewForContact(Contact contact) {
-		boolean isRoomRepeater = contact.getType() == AdvertType.ADV_TYPE_ROOM
-				|| contact.getType() == AdvertType.ADV_TYPE_REPEATER;
+		AdvertType type = contact.getType();
+		boolean isRepeater = type == AdvertType.ADV_TYPE_REPEATER;
+		boolean isRoom = type == AdvertType.ADV_TYPE_ROOM;
+		boolean isRoomRepeater = isRoom || isRepeater;
 		boolean authed = !isRoomRepeater || chatManager.isAuthenticated(contact);
 
-		chatView.setConversation(chatManager.contactKey(contact), authed ? (key, text, mode, onComplete,
-				onTextReturn) -> chatManager.sendToContact(contact, text, mode, onComplete, onTextReturn) : null);
+		// Configure UI controls per node type
+		chatView.setTxtType(MessageTextType.TXT_TYPE_PLAIN);
+		if (isRepeater) {
+			chatView.setModeVisible(false);
+			chatView.setCliToggleVisible(false);
+			chatView.setTxtType(MessageTextType.TXT_TYPE_CLI_DATA);
+		} else if (isRoom) {
+			chatView.setModeVisible(true);
+			chatView.setCliToggleVisible(true);
+		} else {
+			chatView.setModeVisible(true);
+			chatView.setCliToggleVisible(false);
+		}
+
+		ChatView.SendCallback cb = authed ? (key, text, mode, txtType, onComplete, onTextReturn) -> chatManager
+				.sendToContact(contact, text, mode, txtType, onComplete, onTextReturn) : null;
+		chatView.setConversation(chatManager.contactKey(contact), cb);
 		chatView.setSendEnabled(authed);
-		chatManager.markRead(chatManager.contactKey(contact));
+
+		// Start keep-alive for authenticated room server contacts
+		if (isRoom && authed) {
+			chatManager.startKeepAlive(contact);
+		} else if (!isRoom) {
+			chatManager.stopKeepAlive();
+		}
 	}
 
 	private VBox buildLeftPane(ListView<Contact> contactList, ListView<NewAdvertPush> discoveredList,
@@ -428,6 +459,11 @@ public class ContactChatPane extends VBox {
 			widthProperty().addListener((obs, o, n) -> graphic
 					.setPrefWidth(n.doubleValue() - getInsets().getLeft() - getInsets().getRight()));
 			setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+		}
+
+		@Override
+		protected double computePrefWidth(double height) {
+			return 0;
 		}
 
 		@Override

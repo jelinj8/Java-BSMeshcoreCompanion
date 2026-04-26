@@ -1,0 +1,226 @@
+/* =====================================================================
+   BSMeshcoreCompanion — App Styles
+   Extends app-ui-themed.css tokens (-theme-*)
+   Light: .root {}  |  Dark: .root:dark {}
+   ===================================================================== */
+
+/* =====================================================================
+   COLOUR TOKENS
+   ===================================================================== */
+
+.root {
+    /* chat bubbles */
+    -bubble-out-bg:        #ddeeff;
+    -bubble-out-border:    #8ab8e0;
+    -bubble-in-bg:         -theme-surface-2;
+    -bubble-in-border:     -theme-border;
+    -bubble-cli-bg:        #fdfae6;
+    -bubble-cli-border:    #c8b840;
+
+    /* contact / channel list */
+    -contact-fav-color:    #d4900a;
+    -contact-login-color:  #1faa50;
+    -room-accent:          #2f76d2;
+    -repeater-accent:      #d06010;
+
+    /* log pane */
+    -log-push-bg:          #eef3ff;
+    -log-mark-bg:          #fff8c0;
+    -log-mark-text:        #705a00;
+
+    /* settings danger zone */
+    -danger-color:         #cc0000;
+    -danger-btn-text:      white;
+}
+
+.root:dark {
+    -bubble-out-bg:        #1c2e44;
+    -bubble-out-border:    #3a6090;
+    -bubble-cli-bg:        #282600;
+    -bubble-cli-border:    #605820;
+
+    -contact-fav-color:    #d4a820;
+    -contact-login-color:  #28c860;
+    -room-accent:          #4a90e2;
+    -repeater-accent:      #e07830;
+
+    -log-push-bg:          #151e35;
+    -log-mark-bg:          #302810;
+    -log-mark-text:        #d0a840;
+
+    -danger-color:         #e03030;
+}
+
+/* =====================================================================
+   CHAT VIEW
+   ===================================================================== */
+
+.chat-view {
+    -fx-background-color: -theme-bg;
+}
+
+/* ---- message bubbles ---- */
+
+.chat-bubble-out,
+.chat-bubble-in,
+.chat-bubble-cli {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-max-width: 420;
+}
+
+.chat-bubble-out {
+    -fx-background-color: -bubble-out-bg;
+    -fx-border-color: -bubble-out-border;
+}
+
+.chat-bubble-in {
+    -fx-background-color: -bubble-in-bg;
+    -fx-border-color: -bubble-in-border;
+}
+
+.chat-bubble-cli {
+    -fx-background-color: -bubble-cli-bg;
+    -fx-border-color: -bubble-cli-border;
+    -fx-font-family: "Courier New", "Courier", monospace;
+}
+
+.chat-meta {
+    -fx-font-size: 0.82em;
+    -fx-text-fill: -theme-text-muted;
+}
+
+/* =====================================================================
+   CONTACT / CHANNEL LIST PANE
+   ===================================================================== */
+
+.chat-list-pane {
+    -fx-background-color: -theme-surface;
+}
+
+.list-view .scroll-bar:horizontal {
+    -fx-pref-height: 0;
+    -fx-max-height: 0;
+    visibility: hidden;
+}
+
+/* ---- contact cells ---- */
+
+.contact-list-cell {
+    -fx-padding: 4 8 4 8;
+}
+
+.contact-favourite-indicator {
+    -fx-text-fill: -contact-fav-color;
+    -fx-font-size: 0.9em;
+}
+
+.contact-loggedin-indicator {
+    -fx-text-fill: -contact-login-color;
+    -fx-font-size: 0.75em;
+}
+
+.contact-name {
+    -fx-text-fill: -theme-text;
+}
+
+.contact-unread {
+    -fx-text-fill: -theme-text-muted;
+    -fx-font-size: 0.85em;
+    -fx-font-weight: bold;
+}
+
+.contact-type-room {
+    -fx-border-color: transparent transparent transparent -room-accent;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 4 8 4 5;
+}
+
+.contact-type-repeater {
+    -fx-border-color: transparent transparent transparent -repeater-accent;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 4 8 4 5;
+}
+
+/* ---- channel cells ---- */
+
+.channel-list-cell {
+    -fx-padding: 4 8 4 8;
+}
+
+.channel-name {
+    -fx-text-fill: -theme-text;
+}
+
+.channel-unread {
+    -fx-text-fill: -theme-text-muted;
+    -fx-font-size: 0.85em;
+    -fx-font-weight: bold;
+}
+
+/* =====================================================================
+   BYTE COUNTER (in chat compose bar)
+   ===================================================================== */
+
+.byte-count {
+    -fx-font-size: 10px;
+    -fx-opacity: 0.5;
+}
+
+/* Two-class selectors beat .label (one class) so -fx-text-fill is not overridden by the framework. */
+.byte-count.byte-count-warn {
+    -fx-text-fill: orange;
+    -fx-opacity: 1.0;
+}
+
+.byte-count.byte-count-over {
+    -fx-text-fill: red;
+    -fx-opacity: 1.0;
+}
+
+/* =====================================================================
+   LOG PANE
+   ===================================================================== */
+
+.log-push {
+    -fx-background-color: -log-push-bg;
+}
+
+.log-other {
+    -fx-text-fill: -theme-text-muted;
+}
+
+.log-mark {
+    -fx-background-color: -log-mark-bg;
+    -fx-text-fill: -log-mark-text;
+    -fx-font-weight: bold;
+}
+
+/* =====================================================================
+   SETTINGS PANE
+   ===================================================================== */
+
+.settings-section-title {
+    -fx-font-weight: bold;
+    -fx-text-fill: -theme-text;
+}
+
+.settings-danger-title {
+    -fx-font-weight: bold;
+    -fx-text-fill: -danger-color;
+}
+
+.settings-danger-btn {
+    -fx-background-color: -danger-color;
+    -fx-text-fill: -danger-btn-text;
+    -fx-border-color: derive(-danger-color, -15%);
+}
+
+.settings-danger-btn:hover {
+    -fx-background-color: derive(-danger-color, +10%);
+}
+
+.settings-danger-btn:pressed {
+    -fx-background-color: derive(-danger-color, -10%);
+}

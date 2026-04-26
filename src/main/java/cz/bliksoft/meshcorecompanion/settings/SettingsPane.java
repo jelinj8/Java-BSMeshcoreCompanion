@@ -170,7 +170,7 @@ public class SettingsPane extends VBox implements IContextProvider, IClose, ISav
 
 	private VBox buildBackupSection() {
 		Label title = new Label("Device Backup / Restore");
-		title.setStyle("-fx-font-weight: bold;");
+		title.getStyleClass().add("settings-section-title");
 
 		Button backupBtn = new Button("Backup…");
 		Button restoreBtn = new Button("Restore…");
@@ -335,10 +335,10 @@ public class SettingsPane extends VBox implements IContextProvider, IClose, ISav
 
 	private VBox buildDangerZoneSection() {
 		Label title = new Label("Danger Zone");
-		title.setStyle("-fx-font-weight: bold; -fx-text-fill: #cc0000;");
+		title.getStyleClass().add("settings-danger-title");
 
 		Button resetBtn = new Button("Factory Reset…");
-		resetBtn.setStyle("-fx-background-color: #cc0000; -fx-text-fill: white;");
+		resetBtn.getStyleClass().add("settings-danger-btn");
 
 		resetBtn.setDisable(!radioSection.hasCompanion());
 		radioSection.connectedProperty().addListener((obs, o, connected) -> resetBtn.setDisable(!connected));
@@ -346,7 +346,7 @@ public class SettingsPane extends VBox implements IContextProvider, IClose, ISav
 		resetBtn.setOnAction(e -> doFactoryReset());
 
 		Button clearAllChatsBtn = new Button("Clear All Chat History…");
-		clearAllChatsBtn.setStyle("-fx-background-color: #cc0000; -fx-text-fill: white;");
+		clearAllChatsBtn.getStyleClass().add("settings-danger-btn");
 		clearAllChatsBtn.setOnAction(e -> doClearAllChatHistory());
 
 		return new VBox(4, title, resetBtn, clearAllChatsBtn);

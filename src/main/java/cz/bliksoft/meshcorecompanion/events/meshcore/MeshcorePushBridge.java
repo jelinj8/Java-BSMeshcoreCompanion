@@ -68,9 +68,9 @@ public class MeshcorePushBridge {
 			return;
 
 		String typeName = type.name();
-		// only log PUSH_ frames in the log window
-		if (!typeName.startsWith("PUSH_"))
-			return;
+//		// only log PUSH_ frames in the log window
+//		if (!typeName.startsWith("PUSH_"))
+//			return;
 
 		String summary;
 		try {

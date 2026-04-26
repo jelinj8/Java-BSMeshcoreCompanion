@@ -2,6 +2,7 @@ package cz.bliksoft.meshcorecompanion.chat;
 
 import java.util.Optional;
 
+import cz.bliksoft.meshcore.frames.cmd.CmdSendChannelTxtMessage;
 import cz.bliksoft.meshcore.frames.resp.ChannelInfo;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -36,6 +37,7 @@ public class GroupChatPane extends VBox {
 
 		ChatView chatView = new ChatView();
 		chatView.setModeVisible(false);
+		chatView.setMaxMessageBytes(CmdSendChannelTxtMessage.MAX_TEXT_BYTES);
 		VBox.setVgrow(chatView, Priority.ALWAYS);
 
 		SplitPane splitPane = new SplitPane();
@@ -53,11 +55,10 @@ public class GroupChatPane extends VBox {
 				chatView.setConversation(null, null);
 			} else {
 				chatView.setConversation(chatManager.channelKey(selected),
-						(key, text, mode, onComplete, onTextReturn) -> {
+						(key, text, mode, txtType, onComplete, onTextReturn) -> {
 							onComplete.run();
 							chatManager.sendToChannel(selected, text);
 						});
-				chatManager.markRead(chatManager.channelKey(selected));
 				channelList.refresh();
 			}
 		});
@@ -201,6 +202,11 @@ public class GroupChatPane extends VBox {
 			widthProperty().addListener((obs, o, n) -> graphic
 					.setPrefWidth(n.doubleValue() - getInsets().getLeft() - getInsets().getRight()));
 			setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+		}
+
+		@Override
+		protected double computePrefWidth(double height) {
+			return 0;
 		}
 
 		@Override
