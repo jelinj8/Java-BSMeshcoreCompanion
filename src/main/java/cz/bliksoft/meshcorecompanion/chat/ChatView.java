@@ -1,36 +1,49 @@
 package cz.bliksoft.meshcorecompanion.chat;
 
+import java.awt.Desktop;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import cz.bliksoft.javautils.app.BSApp;
+import cz.bliksoft.meshcore.frames.FrameConstants.MessageTextType;
 import cz.bliksoft.meshcore.frames.cmd.CmdSendTxtMsg;
+import cz.bliksoft.meshcore.otaframe.OtaFrame;
+import cz.bliksoft.meshcore.utils.MeshcoreUtils;
 import cz.bliksoft.meshcorecompanion.model.ChatMessage;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import cz.bliksoft.javautils.app.BSApp;
-import cz.bliksoft.meshcore.frames.FrameConstants.MessageTextType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
-import java.util.function.Consumer;
-
-import static cz.bliksoft.meshcore.frames.FrameConstants.MessageTextType.*;
-
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+
+import static cz.bliksoft.meshcore.frames.FrameConstants.MessageTextType.*;
 
 /**
  * Reusable right-hand chat panel: message list + compose bar with send-mode
@@ -67,6 +80,13 @@ class ChatView extends VBox {
 		getStyleClass().add("chat-view");
 
 		listView.setCellFactory(lv -> new MessageCell());
+		listView.setOnMouseClicked(e -> {
+			if (e.getClickCount() == 2) {
+				ChatMessage sel = listView.getSelectionModel().getSelectedItem();
+				if (sel != null && !sel.isOutgoing())
+					reply(sel);
+			}
+		});
 		VBox.setVgrow(listView, Priority.ALWAYS);
 
 		// Track whether the user is scrolled to the bottom; also suppress the
@@ -145,6 +165,44 @@ class ChatView extends VBox {
 		getChildren().addAll(listView, sendBar);
 		setDisable(true);
 	}
+
+	// ── Helpers ──────────────────────────────────────────────────────────────
+
+	private static final Pattern URL_PATTERN = Pattern.compile("https?://[^\\s<>\"{}|\\\\^`\\[\\]]+",
+			Pattern.CASE_INSENSITIVE);
+
+	private static String findUrl(String text) {
+		Matcher m = URL_PATTERN.matcher(text);
+		return m.find() ? m.group() : null;
+	}
+
+	private static List<String> pathHexes(OtaFrame ota) {
+		if (ota == null || ota.path == null || ota.path.length == 0)
+			return List.of();
+		int sz = Math.max(1, ota.hashSize);
+		List<String> list = new ArrayList<>();
+		for (int i = 0; i + sz <= ota.path.length; i += sz)
+			list.add(MeshcoreUtils.hex(Arrays.copyOfRange(ota.path, i, i + sz)));
+		return list;
+	}
+
+	private static void copyToClipboard(String text) {
+		ClipboardContent cc = new ClipboardContent();
+		cc.putString(text);
+		Clipboard.getSystemClipboard().setContent(cc);
+	}
+
+	void reply(ChatMessage msg) {
+		if (sendBar.isDisabled())
+			return;
+		String mention = "@[" + msg.getSenderName() + "] ";
+		String current = inputField.getText();
+		inputField.setText(current.startsWith(mention) ? current : mention + current);
+		inputField.end();
+		inputField.requestFocus();
+	}
+
+	// ── Conversation ─────────────────────────────────────────────────────────
 
 	void setConversation(String key, SendCallback sendCallback) {
 		if (messageChangeListener != null && conversationKey != null) {
@@ -240,7 +298,7 @@ class ChatView extends VBox {
 
 	// ── Message cell ─────────────────────────────────────────────────────────
 
-	private static class MessageCell extends ListCell<ChatMessage> {
+	private class MessageCell extends ListCell<ChatMessage> {
 
 		private final Label textLabel = new Label();
 		private final Label metaLabel = new Label();
@@ -282,6 +340,7 @@ class ChatView extends VBox {
 			super.updateItem(msg, empty);
 			if (empty || msg == null) {
 				setGraphic(null);
+				setContextMenu(null);
 				return;
 			}
 
@@ -294,7 +353,7 @@ class ChatView extends VBox {
 			if (msg.isCli())
 				content.getStyleClass().add("chat-bubble-cli");
 			if (msg.isOutgoing()) {
-				String status = msg.getTag() == null ? " ⏳" : (msg.isConfirmed() ? " ✓" : " …");
+				String status = msg.isConfirmed() ? " ✓" : (msg.getTag() == null ? " ⏳" : " …");
 				String repeats = msg.getRepeatCount() > 0 ? "  🔁 " + msg.getRepeatCount() : "";
 				metaLabel.setText(time + status + repeats);
 				content.getStyleClass().add("chat-bubble-out");
@@ -307,6 +366,74 @@ class ChatView extends VBox {
 			}
 
 			setGraphic(wrapper);
+			setContextMenu(buildContextMenu(msg));
+		}
+
+		private ContextMenu buildContextMenu(ChatMessage msg) {
+			ContextMenu menu = new ContextMenu();
+
+			MenuItem copyText = new MenuItem("Copy text");
+			copyText.setOnAction(e -> copyToClipboard(msg.getText()));
+			menu.getItems().add(copyText);
+
+			String url = findUrl(msg.getText());
+			if (url != null) {
+				MenuItem copyLink = new MenuItem("Copy link");
+				copyLink.setOnAction(e -> copyToClipboard(url));
+				menu.getItems().add(copyLink);
+
+				MenuItem openLink = new MenuItem("Open link");
+				openLink.setOnAction(e -> {
+					try {
+						if (Desktop.isDesktopSupported())
+							Desktop.getDesktop().browse(URI.create(url));
+					} catch (Exception ex) {
+						// unsupported or malformed URI — ignore
+					}
+				});
+				menu.getItems().add(openLink);
+			}
+
+			OtaFrame ota = msg.getRxLog() != null ? msg.getRxLog().getOtaFrame() : null;
+			List<String> hexes = pathHexes(ota);
+			if (!hexes.isEmpty()) {
+				menu.getItems().add(new SeparatorMenuItem());
+
+				MenuItem copyPath = new MenuItem("Copy path");
+				copyPath.setOnAction(e -> copyToClipboard(String.join(" ", hexes)));
+				menu.getItems().add(copyPath);
+
+				MenuItem copyDetailedPath = new MenuItem("Copy detailed path");
+				copyDetailedPath.setOnAction(e -> {
+					StringBuilder sb = new StringBuilder();
+					for (String h : hexes) {
+						String name = ChatManager.getInstance().resolvePathPrefix(h);
+						sb.append(h);
+						if (name != null)
+							sb.append(" ").append(name);
+						sb.append('\n');
+					}
+					copyToClipboard(sb.toString().stripTrailing());
+				});
+				menu.getItems().add(copyDetailedPath);
+			}
+
+			if (!msg.isOutgoing() && msg.getSenderHex() != null) {
+				if (menu.getItems().stream().noneMatch(i -> i instanceof SeparatorMenuItem))
+					menu.getItems().add(new SeparatorMenuItem());
+				MenuItem copySender = new MenuItem("Copy sender prefix");
+				copySender.setOnAction(e -> copyToClipboard(msg.getSenderHex()));
+				menu.getItems().add(copySender);
+			}
+
+			if (!msg.isOutgoing()) {
+				menu.getItems().add(new SeparatorMenuItem());
+				MenuItem replyItem = new MenuItem("Reply");
+				replyItem.setOnAction(e -> reply(msg));
+				menu.getItems().add(replyItem);
+			}
+
+			return menu;
 		}
 	}
 }

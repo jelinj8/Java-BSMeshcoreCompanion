@@ -1,6 +1,5 @@
 package cz.bliksoft.meshcorecompanion.chat;
 
-import java.nio.ByteOrder;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,6 +24,7 @@ import cz.bliksoft.meshcore.companion.ContactListener;
 import cz.bliksoft.meshcore.companion.MeshcoreCompanion;
 import cz.bliksoft.meshcore.frames.FrameConstants.AdvertType;
 import cz.bliksoft.meshcore.frames.FrameConstants.ContactFlags;
+import cz.bliksoft.meshcore.frames.FrameConstants.MessageTextType;
 import cz.bliksoft.meshcore.frames.cmd.CmdAddUpdateContact;
 import cz.bliksoft.meshcore.frames.cmd.CmdGetContactByKey;
 import cz.bliksoft.meshcore.frames.group.MessageFrameGroup;
@@ -47,8 +47,6 @@ import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-
-import cz.bliksoft.meshcore.frames.FrameConstants.MessageTextType;
 
 public class ChatManager {
 
@@ -159,6 +157,8 @@ public class ChatManager {
 				ChatMessage msg = new ChatMessage(0, m.getTimestamp(), m.getText(), false, senderName, true, null);
 				if (m.getTextType() != null)
 					msg.setTxtType(m.getTextType().name());
+				msg.setSenderHex(authorPrefix != null && authorPrefix.length > 0 ? MeshcoreUtils.hex(authorPrefix)
+						: MeshcoreUtils.hex(m.getFrom6()));
 				setSignalInfo(msg, frame);
 				// Track latest post timestamp per contact for room keep-alive sync_since
 				lastRoomTimestamp.merge(key, m.getTimestamp(), Math::max);
@@ -170,7 +170,11 @@ public class ChatManager {
 				if (ch == null)
 					break;
 				String key = channelKey(ch);
-				ChatMessage msg = new ChatMessage(0, m.getTimestamp(), m.getText(), false, ch.getName(), true, null);
+				String rawText = m.getText();
+				int sep = rawText.indexOf(": ");
+				String senderName = sep > 0 ? rawText.substring(0, sep) : ch.getName();
+				String msgText = sep > 0 ? rawText.substring(sep + 2) : rawText;
+				ChatMessage msg = new ChatMessage(0, m.getTimestamp(), msgText, false, senderName, true, null);
 				setSignalInfo(msg, frame);
 				Platform.runLater(() -> appendIncoming(key, msg));
 			}
@@ -311,6 +315,7 @@ public class ChatManager {
 		var rxLog = frame.getPairedLogFrame();
 		if (rxLog == null)
 			return;
+		msg.setRxLog(rxLog);
 		String snrRssi = String.format("SNR %.1f dB  RSSI %d dBm", rxLog.getSnr4() / 4.0, rxLog.getRssi());
 		OtaFrame ota = rxLog.getOtaFrame();
 		String pathInfo = "";
@@ -914,5 +919,13 @@ public class ChatManager {
 
 	public String channelKey(ChannelInfo ch) {
 		return "ch_" + ch.getName();
+	}
+
+	public String resolvePathPrefix(String hex) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return null;
+		Contact contact = c.getConfig().getContact(MeshcoreUtils.fromHex(hex));
+		return contact != null ? contact.getName() : null;
 	}
 }

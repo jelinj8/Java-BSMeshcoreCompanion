@@ -15,6 +15,10 @@ public class ChatMessage {
 	private String signalInfo;
 	private int repeatCount;
 	private String txtType;
+	private String senderHex;
+
+	@com.fasterxml.jackson.annotation.JsonIgnore
+	private cz.bliksoft.meshcore.frames.push.LogRXDataPush rxLog;
 
 	public ChatMessage() {
 	}
@@ -112,5 +116,21 @@ public class ChatMessage {
 
 	public boolean isCli() {
 		return "TXT_TYPE_CLI_DATA".equals(txtType);
+	}
+
+	public String getSenderHex() {
+		return senderHex;
+	}
+
+	public void setSenderHex(String senderHex) {
+		this.senderHex = senderHex;
+	}
+
+	public cz.bliksoft.meshcore.frames.push.LogRXDataPush getRxLog() {
+		return rxLog;
+	}
+
+	public void setRxLog(cz.bliksoft.meshcore.frames.push.LogRXDataPush rxLog) {
+		this.rxLog = rxLog;
 	}
 }
