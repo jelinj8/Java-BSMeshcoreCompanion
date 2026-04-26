@@ -9,6 +9,7 @@ public class ConnectionStatusLabel extends Label {
 		ConnectionManager cm = ConnectionManager.getInstance();
 		cm.connectedProperty().addListener((obs, o, n) -> update(cm));
 		cm.connectedDeviceProperty().addListener((obs, o, n) -> update(cm));
+		cm.reconnectingProperty().addListener((obs, o, n) -> update(cm));
 		update(cm);
 	}
 
@@ -18,6 +19,7 @@ public class ConnectionStatusLabel extends Label {
 			return;
 		}
 		String device = cm.connectedDeviceProperty().get();
-		setText(device != null ? "Connected — " + device : "Connected");
+		String base = device != null ? "Connected — " + device : "Connected";
+		setText(cm.reconnectingProperty().get() ? base + " (reconnecting…)" : base);
 	}
 }

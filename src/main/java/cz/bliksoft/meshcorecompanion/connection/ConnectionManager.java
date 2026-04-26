@@ -13,6 +13,7 @@ import com.fazecast.jSerialComm.SerialPort;
 import cz.bliksoft.javautils.app.ui.BSAppUI;
 import cz.bliksoft.javautils.context.Context;
 import cz.bliksoft.meshcore.companion.MeshcoreCompanion;
+import cz.bliksoft.meshcore.companion.MeshcoreCompanionBase;
 import cz.bliksoft.meshcore.companion.SerialMeshcoreCompanion;
 import cz.bliksoft.meshcore.utils.MeshcoreUtils;
 import javafx.application.Platform;
@@ -44,6 +45,7 @@ public class ConnectionManager {
 
 	private final ReadOnlyBooleanWrapper connected = new ReadOnlyBooleanWrapper(false);
 	private final ReadOnlyBooleanWrapper disconnected = new ReadOnlyBooleanWrapper(true);
+	private final ReadOnlyBooleanWrapper reconnecting = new ReadOnlyBooleanWrapper(false);
 	private final ReadOnlyStringWrapper connectedDevice = new ReadOnlyStringWrapper();
 
 	private MeshcoreCompanion companion;
@@ -62,6 +64,10 @@ public class ConnectionManager {
 
 	public ObservableBooleanValue disconnectedProperty() {
 		return disconnected.getReadOnlyProperty();
+	}
+
+	public ReadOnlyBooleanProperty reconnectingProperty() {
+		return reconnecting.getReadOnlyProperty();
 	}
 
 	public ReadOnlyStringProperty connectedDeviceProperty() {
@@ -173,6 +179,15 @@ public class ConnectionManager {
 			try {
 				SerialMeshcoreCompanion c = new SerialMeshcoreCompanion("BSMeshcoreCompanion", portName, baud);
 				c.awaitAvailable(2000L);
+				c.addAvailabilityListener(new MeshcoreCompanionBase.AvailabilityListener() {
+					public void onAvailable(MeshcoreCompanionBase companion) {
+						Platform.runLater(() -> reconnecting.set(false));
+					}
+
+					public void onUnavailable(MeshcoreCompanionBase companion) {
+						Platform.runLater(() -> reconnecting.set(true));
+					}
+				});
 				c.installAutosyncMessages();
 				companion = c;
 
@@ -235,6 +250,7 @@ public class ConnectionManager {
 		}
 		companion = null;
 		connected.set(false);
+		reconnecting.set(false);
 		connectedDevice.set(null);
 		Context.getCurrentContext().remove(MeshcoreCompanion.class);
 		BSAppUI.showStatusMessage("Disconnected");
