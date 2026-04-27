@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,9 +13,11 @@ import com.fazecast.jSerialComm.SerialPort;
 
 import cz.bliksoft.javautils.app.ui.BSAppUI;
 import cz.bliksoft.javautils.context.Context;
+import cz.bliksoft.meshcore.companion.BleMeshcoreCompanion;
 import cz.bliksoft.meshcore.companion.MeshcoreCompanion;
 import cz.bliksoft.meshcore.companion.MeshcoreCompanionBase;
 import cz.bliksoft.meshcore.companion.SerialMeshcoreCompanion;
+import cz.bliksoft.meshcore.companion.TCPMeshcoreCompanion;
 import cz.bliksoft.meshcore.utils.MeshcoreUtils;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -34,6 +37,7 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -105,9 +109,14 @@ public class ConnectionManager {
 		HBox savedButtons = new HBox(8, connectBtn, forgetBtn);
 		savedButtons.setAlignment(Pos.CENTER_LEFT);
 
-		Button newUsbBtn = new Button("New USB connection…");
+		Button newUsbBtn = new Button("USB…");
+		Button newTcpBtn = new Button("TCP…");
+		Button newBleBtn = new Button("BLE…");
 
-		VBox content = new VBox(8, new Label("Known devices:"), listView, savedButtons, new Separator(), newUsbBtn);
+		HBox buttons = new HBox(4, new Label("Connect new:"), newUsbBtn, newTcpBtn, newBleBtn);
+		buttons.setAlignment(Pos.CENTER_LEFT);
+
+		VBox content = new VBox(8, new Label("Known devices:"), listView, savedButtons, new Separator(), buttons);
 		content.setPadding(new Insets(8));
 
 		Dialog<Void> dialog = new Dialog<>();
@@ -130,17 +139,49 @@ public class ConnectionManager {
 				return;
 			dialog.close();
 			String portHint = selected.getPortHint();
-			if (portHint != null && !portHint.isBlank()) {
-				// Try the last-known port directly; if it fails the error dialog appears
-				connectSerial(portHint, 115200, false);
+			if ("tcp".equals(selected.getTransport())) {
+				if (portHint != null && portHint.contains(":")) {
+					int lastColon = portHint.lastIndexOf(':');
+					String host = portHint.substring(0, lastColon);
+					int port;
+					try {
+						port = Integer.parseInt(portHint.substring(lastColon + 1));
+					} catch (NumberFormatException ex) {
+						showTcpDialog();
+						return;
+					}
+					connectTcp(host, port);
+				} else {
+					showTcpDialog();
+				}
+			} else if ("ble".equals(selected.getTransport())) {
+				if (portHint != null && !portHint.isBlank()) {
+					connectBle(portHint);
+				} else {
+					pickNewBleDevice();
+				}
 			} else {
-				pickNewSerialPort();
+				if (portHint != null && !portHint.isBlank()) {
+					connectSerial(portHint, 115200, false);
+				} else {
+					pickNewSerialPort();
+				}
 			}
 		});
 
 		newUsbBtn.setOnAction(e -> {
 			dialog.close();
-			pickNewSerialPort();
+			Platform.runLater(this::pickNewSerialPort);
+		});
+
+		newTcpBtn.setOnAction(e -> {
+			dialog.close();
+			Platform.runLater(this::showTcpDialog);
+		});
+
+		newBleBtn.setOnAction(e -> {
+			dialog.close();
+			Platform.runLater(this::pickNewBleDevice);
 		});
 
 		dialog.showAndWait();
@@ -180,10 +221,147 @@ public class ConnectionManager {
 		});
 	}
 
-	private void connectSerial(String portName, int baud, boolean unused) {
-		new Thread(() -> {
+	private void showTcpDialog() {
+		TextField hostField = new TextField();
+		hostField.setPromptText("host or IP address");
+
+		TextField portField = new TextField();
+		portField.setPromptText("port");
+		portField.textProperty().addListener((obs, o, n) -> {
+			if (!n.matches("\\d*"))
+				portField.setText(n.replaceAll("[^\\d]", ""));
+		});
+
+		Button connectBtn = new Button("Connect");
+		connectBtn.setDefaultButton(true);
+		connectBtn.disableProperty().bind(hostField.textProperty().isEmpty().or(portField.textProperty().isEmpty()));
+
+		VBox content = new VBox(8, new Label("Host / IP:"), hostField, new Label("Port:"), portField, connectBtn);
+		content.setPadding(new Insets(8));
+
+		Dialog<Void> dialog = new Dialog<>();
+		dialog.setTitle("New TCP connection");
+		dialog.getDialogPane().setContent(content);
+		dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+		dialog.initOwner(BSAppUI.getStage());
+
+		connectBtn.setOnAction(e -> {
+			String host = hostField.getText().trim();
+			String portText = portField.getText().trim();
+			if (host.isBlank() || portText.isBlank())
+				return;
+			int port;
 			try {
-				SerialMeshcoreCompanion c = new SerialMeshcoreCompanion("BSMeshcoreCompanion", portName, baud);
+				port = Integer.parseInt(portText);
+			} catch (NumberFormatException ex) {
+				return;
+			}
+			dialog.close();
+			connectTcp(host, port);
+		});
+
+		dialog.showAndWait();
+	}
+
+	private void pickNewBleDevice() {
+		AtomicReference<List<String>> result = new AtomicReference<>(List.of());
+		AtomicReference<IOException> error = new AtomicReference<>();
+
+		BSAppUI.executeWaiting(() -> {
+			try {
+				result.set(BleMeshcoreCompanion.scanForNusDevices(5000));
+			} catch (IOException e) {
+				error.set(e);
+			}
+		}, "Add BLE Companion", "Scanning for devices…");
+
+		showBleDeviceSelectionDialog(result.get(), error.get());
+	}
+
+	private void showBleDeviceSelectionDialog(List<String> devices, IOException scanError) {
+		if (scanError != null) {
+			Alert alert = new Alert(Alert.AlertType.ERROR);
+			alert.setTitle("BLE Scan");
+			alert.setHeaderText("Bluetooth scan failed");
+			alert.setContentText(scanError.getMessage());
+			alert.initOwner(BSAppUI.getStage());
+			alert.showAndWait();
+			return;
+		}
+		if (devices.isEmpty()) {
+			Alert alert = new Alert(Alert.AlertType.WARNING);
+			alert.setTitle("BLE Scan");
+			alert.setHeaderText("No BLE devices found");
+			alert.initOwner(BSAppUI.getStage());
+			alert.showAndWait();
+			return;
+		}
+
+		ChoiceDialog<String> dialog = new ChoiceDialog<>(devices.get(0), devices);
+		dialog.setTitle("New BLE connection");
+		dialog.setHeaderText("Select BLE device");
+		dialog.setContentText("Device:");
+		dialog.initOwner(BSAppUI.getStage());
+
+		dialog.showAndWait().ifPresent(choice -> {
+			// format: "AA:BB:CC:DD:EE:FF (name)"
+			String address = choice.contains(" ") ? choice.substring(0, choice.indexOf(' ')).trim() : choice.trim();
+			connectBle(address);
+		});
+	}
+
+	private void connectBle(String address) {
+		new Thread(() -> {
+			MeshcoreCompanionBase created = null;
+			try {
+				BleMeshcoreCompanion c = new BleMeshcoreCompanion("BSMeshcoreCompanion", address);
+				created = c;
+				// BLE connect includes an internal 5-second scan; allow extra time
+				c.awaitAvailable(12000L);
+				c.addAvailabilityListener(new MeshcoreCompanionBase.AvailabilityListener() {
+					public void onAvailable(MeshcoreCompanionBase companion) {
+						Platform.runLater(() -> reconnecting.set(false));
+					}
+
+					public void onUnavailable(MeshcoreCompanionBase companion) {
+						Platform.runLater(() -> reconnecting.set(true));
+					}
+				});
+				c.installAutosyncMessages();
+				companion = c;
+
+				autoSaveDevice(c, address, "ble");
+				String deviceLabel = buildDeviceLabel(c, address);
+
+				Platform.runLater(() -> {
+					connected.set(true);
+					connectedDevice.set(deviceLabel);
+					Context.getCurrentContext().put(MeshcoreCompanion.class, c);
+					BSAppUI.showStatusMessage("Connected to " + address);
+					log.info("BLE connected to {}", address);
+				});
+			} catch (TimeoutException | InterruptedException e) {
+				if (created != null)
+					created.close();
+				log.error("BLE connection to {} failed", address, e);
+				Platform.runLater(() -> {
+					Alert alert = new Alert(Alert.AlertType.ERROR);
+					alert.setTitle("Connection failed");
+					alert.setHeaderText("Could not connect to " + address);
+					alert.setContentText(e.getMessage());
+					alert.initOwner(BSAppUI.getStage());
+					alert.showAndWait();
+				});
+			}
+		}, "meshcore-connect").start();
+	}
+
+	private void connectTcp(String host, int port) {
+		new Thread(() -> {
+			MeshcoreCompanionBase created = null;
+			try {
+				TCPMeshcoreCompanion c = new TCPMeshcoreCompanion("BSMeshcoreCompanion", host, port);
+				created = c;
 				c.awaitAvailable(2000L);
 				c.addAvailabilityListener(new MeshcoreCompanionBase.AvailabilityListener() {
 					public void onAvailable(MeshcoreCompanionBase companion) {
@@ -197,8 +375,54 @@ public class ConnectionManager {
 				c.installAutosyncMessages();
 				companion = c;
 
-				// Auto-save/update device by pubkey
-				autoSaveDevice(c, portName);
+				String hint = host + ":" + port;
+				autoSaveDevice(c, hint, "tcp");
+				String deviceLabel = buildDeviceLabel(c, hint);
+
+				Platform.runLater(() -> {
+					connected.set(true);
+					connectedDevice.set(deviceLabel);
+					Context.getCurrentContext().put(MeshcoreCompanion.class, c);
+					BSAppUI.showStatusMessage("Connected to " + hint);
+					log.info("Connected to {}", hint);
+				});
+			} catch (TimeoutException | InterruptedException | IOException e) {
+				if (created != null)
+					created.close();
+				String hint = host + ":" + port;
+				log.error("Connection to {} failed", hint, e);
+				Platform.runLater(() -> {
+					Alert alert = new Alert(Alert.AlertType.ERROR);
+					alert.setTitle("Connection failed");
+					alert.setHeaderText("Could not connect to " + hint);
+					alert.setContentText(e.getMessage());
+					alert.initOwner(BSAppUI.getStage());
+					alert.showAndWait();
+				});
+			}
+		}, "meshcore-connect").start();
+	}
+
+	private void connectSerial(String portName, int baud, boolean unused) {
+		new Thread(() -> {
+			MeshcoreCompanionBase created = null;
+			try {
+				SerialMeshcoreCompanion c = new SerialMeshcoreCompanion("BSMeshcoreCompanion", portName, baud);
+				created = c;
+				c.awaitAvailable(2000L);
+				c.addAvailabilityListener(new MeshcoreCompanionBase.AvailabilityListener() {
+					public void onAvailable(MeshcoreCompanionBase companion) {
+						Platform.runLater(() -> reconnecting.set(false));
+					}
+
+					public void onUnavailable(MeshcoreCompanionBase companion) {
+						Platform.runLater(() -> reconnecting.set(true));
+					}
+				});
+				c.installAutosyncMessages();
+				companion = c;
+
+				autoSaveDevice(c, portName, "usb");
 				String deviceLabel = buildDeviceLabel(c, portName);
 
 				Platform.runLater(() -> {
@@ -209,6 +433,8 @@ public class ConnectionManager {
 					log.info("Connected to {}", portName);
 				});
 			} catch (TimeoutException | InterruptedException | IOException e) {
+				if (created != null)
+					created.close();
 				log.error("Connection to {} failed", portName, e);
 				Platform.runLater(() -> {
 					Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -222,21 +448,21 @@ public class ConnectionManager {
 		}, "meshcore-connect").start();
 	}
 
-	private void autoSaveDevice(SerialMeshcoreCompanion c, String portName) {
+	private void autoSaveDevice(MeshcoreCompanion c, String hint, String transport) {
 		var si = c.getSelfInfo();
 		if (si == null)
 			return;
 		String pubHex = MeshcoreUtils.hex(Arrays.copyOf(si.getPubkey(), 6));
 		String nodeName = si.getNodeName();
 		String name = (nodeName != null && !nodeName.isBlank()) ? nodeName : pubHex;
-		DeviceRegistry.addOrUpdate(new SavedDevice(name, pubHex, portName));
-		log.info("Device saved: {} [{}] on {}", name, pubHex, portName);
+		DeviceRegistry.addOrUpdate(new SavedDevice(name, pubHex, hint, transport));
+		log.info("Device saved: {} [{}] via {} on {}", name, pubHex, transport, hint);
 	}
 
-	private String buildDeviceLabel(SerialMeshcoreCompanion c, String portName) {
+	private String buildDeviceLabel(MeshcoreCompanion c, String hint) {
 		var si = c.getSelfInfo();
 		if (si == null)
-			return portName;
+			return hint;
 		String pubHex = MeshcoreUtils.hex(Arrays.copyOf(si.getPubkey(), 6));
 		String nodeName = si.getNodeName();
 		String name = (nodeName != null && !nodeName.isBlank()) ? nodeName : pubHex;
