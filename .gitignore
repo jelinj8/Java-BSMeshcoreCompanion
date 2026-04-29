@@ -2,5 +2,7 @@
 /data
 .project
 .claude
+.factorypath
+.classpath
 .BSMeshcoreCompanion
 /log
