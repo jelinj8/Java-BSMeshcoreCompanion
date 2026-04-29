@@ -228,9 +228,16 @@ public class GroupChatPane extends VBox {
 			observedProp.addListener(unreadListener);
 			refresh();
 			setGraphic(graphic);
+			javafx.scene.control.MenuItem copyKeyItem = new javafx.scene.control.MenuItem("Copy key");
+			copyKeyItem.setOnAction(e -> {
+				javafx.scene.input.ClipboardContent cc = new javafx.scene.input.ClipboardContent();
+				cc.putString(cz.bliksoft.meshcore.utils.MeshcoreUtils.hex(item.getPubkey()));
+				javafx.scene.input.Clipboard.getSystemClipboard().setContent(cc);
+			});
 			javafx.scene.control.MenuItem clearItem = new javafx.scene.control.MenuItem("Clear history");
 			clearItem.setOnAction(e -> onClearHistory.accept(item));
-			setContextMenu(new javafx.scene.control.ContextMenu(clearItem));
+			setContextMenu(new javafx.scene.control.ContextMenu(copyKeyItem,
+					new javafx.scene.control.SeparatorMenuItem(), clearItem));
 		}
 
 		private void refresh() {

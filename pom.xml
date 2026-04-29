@@ -5,9 +5,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>cz.bliksoft.meshcorecompanion</groupId>
 	<artifactId>bsmeshcorecompanion-desktop</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>${revision}</version>
 
 	<properties>
+		<revision>0.0.1-SNAPSHOT</revision>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.release>21</maven.compiler.release>
 		<main.class>cz.bliksoft.meshcorecompanion.Main</main.class>
@@ -34,7 +35,7 @@
 			<dependency>
 				<groupId>cz.bliksoft.java</groupId>
 				<artifactId>dependency-management</artifactId>
-				<version>1.21.1-SNAPSHOT</version>
+				<version>1.21.1</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -50,20 +51,14 @@
 
 		<dependency>
 			<groupId>cz.bliksoft.java</groupId>
-			<artifactId>common-java-utils</artifactId>
-			<version>0.6-SNAPSHOT</version>
-		</dependency>
-
-		<dependency>
-			<groupId>cz.bliksoft.java</groupId>
 			<artifactId>common-java-utils-jfx</artifactId>
-			<version>0.1-SNAPSHOT</version>
+			<version>0.2-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
 			<groupId>cz.bliksoft.meshcore</groupId>
 			<artifactId>meshcore-companion</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.0.2-SNAPSHOT</version>
 		</dependency>
 
 		<!-- https://github.com/Fazecast/jSerialComm -->
@@ -119,6 +114,49 @@
 						</manifest>
 					</archive>
 				</configuration>
+			</plugin>
+
+			<!-- copy runtime dependencies to target/app/lib -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.6.1</version>
+				<executions>
+					<execution>
+						<id>copy-runtime-deps</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<includeScope>runtime</includeScope>
+							<outputDirectory>${project.build.directory}/app/lib</outputDirectory>
+							<excludeTypes>pom</excludeTypes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- assemble distributable zip: app.jar + lib + scripts + config + icons -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.7.1</version>
+				<executions>
+					<execution>
+						<id>make-zip</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptors>
+								<descriptor>src/assembly/app.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 
 			<plugin>
@@ -183,6 +221,15 @@
 					<outputDirectory>
 						${project.build.directory}/generated-sources/versioninfo
 					</outputDirectory>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>net.revelc.code.formatter</groupId>
+				<artifactId>formatter-maven-plugin</artifactId>
+				<version>2.24.1</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
+					<configFile>src/formatter/EclipseFormatter.xml</configFile>
 				</configuration>
 			</plugin>
 		</plugins>

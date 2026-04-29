@@ -38,6 +38,8 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -476,6 +478,7 @@ public class ContactChatPane extends VBox {
 			}
 			currentContact = contact;
 			if (empty || contact == null) {
+				getStyleClass().removeAll("contact-type-chat", "contact-type-room", "contact-type-repeater");
 				setGraphic(null);
 				setContextMenu(null);
 				return;
@@ -538,6 +541,13 @@ public class ContactChatPane extends VBox {
 			MenuItem clearHistoryItem = new MenuItem("Clear history");
 			clearHistoryItem.setOnAction(e -> onClearHistory.accept(contact));
 
+			MenuItem copyKeyItem = new MenuItem("Copy key");
+			copyKeyItem.setOnAction(e -> {
+				ClipboardContent cc = new ClipboardContent();
+				cc.putString(MeshcoreUtils.hex(contact.getPubkey()));
+				Clipboard.getSystemClipboard().setContent(cc);
+			});
+
 			MenuItem detailsItem = new MenuItem("Show details");
 			detailsItem.setOnAction(e -> onDetails.accept(contact));
 
@@ -545,7 +555,7 @@ public class ContactChatPane extends VBox {
 			if (isRoomRepeater)
 				menu.getItems().add(loginItem);
 			menu.getItems().addAll(new SeparatorMenuItem(), resetPathItem, resyncItem, clearHistoryItem,
-					new SeparatorMenuItem(), detailsItem);
+					new SeparatorMenuItem(), copyKeyItem, detailsItem);
 			return menu;
 		}
 	}

@@ -671,6 +671,8 @@ public class ChatManager {
 			try {
 				c.getConfig().removeContact(contact.getPubkey());
 				log.info("Removed contact {}", contact.getName());
+				String hex = MeshcoreUtils.hex(contact.getPubkey());
+				Platform.runLater(() -> contacts.removeIf(ct -> MeshcoreUtils.hex(ct.getPubkey()).equals(hex)));
 			} catch (Exception e) {
 				log.error("Failed to remove contact {}", contact.getName(), e);
 			}

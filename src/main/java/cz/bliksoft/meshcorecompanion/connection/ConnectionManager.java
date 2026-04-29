@@ -38,6 +38,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -124,6 +125,20 @@ public class ConnectionManager {
 		dialog.getDialogPane().setContent(content);
 		dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
 		dialog.initOwner(BSAppUI.getStage());
+
+		listView.setOnMouseClicked(e -> {
+			if (e.getClickCount() == 2 && !connectBtn.isDisabled())
+				connectBtn.fire();
+		});
+		listView.setOnKeyPressed(e -> {
+			if (e.getCode() == KeyCode.ENTER && !connectBtn.isDisabled()) {
+				connectBtn.fire();
+				e.consume();
+			} else if (e.getCode() == KeyCode.ESCAPE) {
+				dialog.close();
+				e.consume();
+			}
+		});
 
 		forgetBtn.setOnAction(e -> {
 			SavedDevice selected = listView.getSelectionModel().getSelectedItem();
@@ -273,7 +288,7 @@ public class ConnectionManager {
 			} catch (IOException e) {
 				error.set(e);
 			}
-		}, "Add BLE Companion", "Scanning for devices…");
+		}, "Add BLE Companion", "Scanning for devices…", null);
 
 		showBleDeviceSelectionDialog(result.get(), error.get());
 	}
@@ -311,49 +326,54 @@ public class ConnectionManager {
 	}
 
 	private void connectBle(String address) {
-		new Thread(() -> {
-			MeshcoreCompanionBase created = null;
+		AtomicReference<BleMeshcoreCompanion> result = new AtomicReference<>();
+		AtomicReference<Exception> error = new AtomicReference<>();
+
+		BSAppUI.executeWaiting(() -> {
+			BleMeshcoreCompanion c = null;
 			try {
-				BleMeshcoreCompanion c = new BleMeshcoreCompanion("BSMeshcoreCompanion", address);
-				created = c;
+				c = new BleMeshcoreCompanion("BSMeshcoreCompanion", address);
 				// BLE connect includes an internal 5-second scan; allow extra time
 				c.awaitAvailable(12000L);
-				c.addAvailabilityListener(new MeshcoreCompanionBase.AvailabilityListener() {
-					public void onAvailable(MeshcoreCompanionBase companion) {
-						Platform.runLater(() -> reconnecting.set(false));
-					}
-
-					public void onUnavailable(MeshcoreCompanionBase companion) {
-						Platform.runLater(() -> reconnecting.set(true));
-					}
-				});
-				c.installAutosyncMessages();
-				companion = c;
-
-				autoSaveDevice(c, address, "ble");
-				String deviceLabel = buildDeviceLabel(c, address);
-
-				Platform.runLater(() -> {
-					connected.set(true);
-					connectedDevice.set(deviceLabel);
-					Context.getCurrentContext().put(MeshcoreCompanion.class, c);
-					BSAppUI.showStatusMessage("Connected to " + address);
-					log.info("BLE connected to {}", address);
-				});
+				result.set(c);
 			} catch (TimeoutException | InterruptedException e) {
-				if (created != null)
-					created.close();
-				log.error("BLE connection to {} failed", address, e);
-				Platform.runLater(() -> {
-					Alert alert = new Alert(Alert.AlertType.ERROR);
-					alert.setTitle("Connection failed");
-					alert.setHeaderText("Could not connect to " + address);
-					alert.setContentText(e.getMessage());
-					alert.initOwner(BSAppUI.getStage());
-					alert.showAndWait();
-				});
+				if (c != null)
+					c.close();
+				error.set(e);
 			}
-		}, "meshcore-connect").start();
+		}, null, "Connecting…", address);
+
+		Exception e = error.get();
+		if (e != null) {
+			log.error("BLE connection to {} failed", address, e);
+			Alert alert = new Alert(Alert.AlertType.ERROR);
+			alert.setTitle("Connection failed");
+			alert.setHeaderText("Could not connect to " + address);
+			alert.setContentText(e.getMessage());
+			alert.initOwner(BSAppUI.getStage());
+			alert.showAndWait();
+			return;
+		}
+
+		BleMeshcoreCompanion c = result.get();
+		c.addAvailabilityListener(new MeshcoreCompanionBase.AvailabilityListener() {
+			public void onAvailable(MeshcoreCompanionBase companion) {
+				Platform.runLater(() -> reconnecting.set(false));
+			}
+
+			public void onUnavailable(MeshcoreCompanionBase companion) {
+				Platform.runLater(() -> reconnecting.set(true));
+			}
+		});
+		c.installAutosyncMessages();
+		companion = c;
+		autoSaveDevice(c, address, "ble");
+		String deviceLabel = buildDeviceLabel(c, address);
+		connected.set(true);
+		connectedDevice.set(deviceLabel);
+		Context.getCurrentContext().put(MeshcoreCompanion.class, c);
+		BSAppUI.showStatusMessage("Connected to " + address);
+		log.info("BLE connected to {}", address);
 	}
 
 	private void connectTcp(String host, int port) {

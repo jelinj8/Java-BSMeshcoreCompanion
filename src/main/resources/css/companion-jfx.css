@@ -211,16 +211,20 @@
     -fx-text-fill: -danger-color;
 }
 
-.settings-danger-btn {
+.button.settings-danger-btn {
     -fx-background-color: -danger-color;
     -fx-text-fill: -danger-btn-text;
     -fx-border-color: derive(-danger-color, -15%);
 }
 
-.settings-danger-btn:hover {
+.button.settings-danger-btn:hover {
     -fx-background-color: derive(-danger-color, +10%);
 }
 
-.settings-danger-btn:pressed {
+.button.settings-danger-btn:pressed {
     -fx-background-color: derive(-danger-color, -10%);
+}
+
+.button.settings-danger-btn:focused {
+    -fx-border-color: derive(-danger-color, -25%);
 }

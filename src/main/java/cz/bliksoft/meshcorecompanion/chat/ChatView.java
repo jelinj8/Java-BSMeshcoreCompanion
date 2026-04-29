@@ -160,7 +160,7 @@ class ChatView extends VBox {
 
 		sendBar = new HBox(4, inputContainer, cliToggle, modeBox, sendBtn);
 		sendBar.setPadding(new Insets(4));
-		sendBar.setAlignment(Pos.BOTTOM_LEFT);
+		sendBar.setAlignment(Pos.TOP_LEFT);
 
 		getChildren().addAll(listView, sendBar);
 		setDisable(true);
