@@ -28,6 +28,10 @@
       <source>${project.basedir}/bin/libsimplejavable.so</source>
       <outputDirectory>/</outputDirectory>
     </file>
+    <file>
+      <source>${project.basedir}/LICENSE</source>
+      <outputDirectory>/</outputDirectory>
+    </file>
   </files>
 
   <fileSets>

@@ -4,24 +4,43 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status
 
-**BSMeshcoreCompanion desktop** is a JavaFX desktop chat application for Meshcore radio. The project is currently in the initial implementation phase — the source tree does not yet exist and must be scaffolded following the patterns of `../StorageManager/StorageManagerDesktopClient2`.
+**BSMeshcoreCompanion desktop** is a JavaFX desktop chat application for Meshcore radio. The core implementation is substantially complete.
+
+**Implemented:**
+- Main UI: tabbed pane (contact chats, group chats, log window), push-in settings pane, toolbar with connect/disconnect/settings/save/close actions
+- Status bar: live contacts count/capacity, groups count/capacity
+- Connection: USB/serial (`SerialMeshcoreCompanion`), BLE (`BleMeshcoreCompanion`), TCP (`TCPMeshcoreCompanion`); saved device registry; connect dialog
+- Contact chat: unread indicators, favourites, add by pubkey or from advert frames, remove, ROOM/REPEATER login
+- Group chat: Public / Hash / Private groups; unread indicators, add/remove
+- ChatView: message list + compose bar; send modes (Async/Sync/Retry); outgoing status indicators; SNR/RSSI from paired `LOG_RX_DATA`
+- ChatManager: full lifecycle, message persistence (`ChatStore`, JSON per device/conversation), `setLogFramePairing(true)` for SNR/RSSI pairing
+- Settings: theme (Default/System/Light/Dark), log history size, radio config (freq/BW/SF/CR/TX power/repeat), backup/restore
+- Log window: live PUSH frame stream
+
+**Pending:**
+- Device time sync on connect
+- Reply-to message (quote + message hash from LOG_RX_DATA)
+- Log window frame type filter
+- BLE transport UI (backend exists, dialog not wired)
+- QR code for contact sharing
+- ROOM/REPEATER remote admin (command line, telemetry)
 
 ## Build Commands
 
-This project uses Maven. Once scaffolded, standard commands are:
-
 ```bash
-# Build
+# Build distributable zip (output: target/bsmeshcorecompanion-desktop-<version>.zip)
 mvn package
 
-# Run
+# Run during development (no zip needed)
 mvn javafx:run
 
 # Run single test
 mvn test -Dtest=ClassName#methodName
 ```
 
-The private Maven repository is at `https://mvn.bliksoft.cz/` (snapshots and releases). All `cz.bliksoft.*` dependencies resolve from there.
+Distribution zip contains `run.bat` (Windows, no console window), `run.sh` (Linux), `run-mac.sh` (macOS), plus `lib/`, `config/`, `icons/`.
+
+All `cz.bliksoft.*` dependencies are published to Maven Central — no private repository needed.
 
 ## Architecture Overview
 
@@ -67,7 +86,7 @@ Follow this project's patterns for:
 - `pom.xml` plugin configuration (JavaFX Maven plugin, git-commit-id, build-helper, templating)
 - Resource layout: `config/`, `icons/`, `log/` directories alongside the JAR
 
-### Application Structure to Implement
+### Application Structure
 
 ```
 src/main/java/cz/bliksoft/meshcorecompanion/

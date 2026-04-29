@@ -15,21 +15,6 @@
 		<skipGitInfo>false</skipGitInfo>
 	</properties>
 
-	<repositories>
-		<repository>
-			<id>bliksoft-private</id>
-			<url>https://mvn.bliksoft.cz/private</url>
-		</repository>
-		<repository>
-			<id>bliksoft-private-snapshots</id>
-			<url>https://mvn.bliksoft.cz/private-snapshots</url>
-		</repository>
-		<repository>
-			<id>bliksoft-thirdparty</id>
-			<url>https://mvn.bliksoft.cz/thirdparty</url>
-		</repository>
-	</repositories>
-
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
