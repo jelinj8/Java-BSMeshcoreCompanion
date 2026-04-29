@@ -27,8 +27,8 @@ class RadioConfigSection extends VBox {
 
 	private static final Logger log = LogManager.getLogger(RadioConfigSection.class);
 
-	private static final long[] BW_OPTIONS_HZ = { 125000, 250000, 500000 };
-	private static final String[] BW_LABELS = { "125 kHz", "250 kHz", "500 kHz" };
+	private static final long[] BW_OPTIONS_HZ = { 62500, 125000, 250000 };
+	private static final String[] BW_LABELS = { "62.5 kHz", "125 kHz", "250 kHz" };
 
 	private final TextField nodeNameField = new TextField();
 	private final TextField freqField = new TextField();
