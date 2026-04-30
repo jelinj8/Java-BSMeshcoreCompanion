@@ -86,12 +86,7 @@ public class ConnectionManager {
 	// ── Connect dialog ───────────────────────────────────────────────────────
 
 	public void openConnectDialog() {
-		List<SavedDevice> saved = DeviceRegistry.load();
-		if (saved.isEmpty()) {
-			pickNewSerialPort();
-		} else {
-			showConnectDialog(saved);
-		}
+		showConnectDialog(DeviceRegistry.load());
 	}
 
 	private void showConnectDialog(List<SavedDevice> initialDevices) {
