@@ -7,5 +7,5 @@ java \
   --add-modules javafx.controls \
   -Djava.library.path="$DIR" \
   -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager \
-  -cp "$DIR/config:$DIR/app.jar" \
+  -cp "$DIR/config:$DIR/app.jar:$DIR/lib/*" \
   cz.bliksoft.meshcorecompanion.AppLauncher "$@"
