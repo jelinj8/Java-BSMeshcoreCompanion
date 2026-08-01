@@ -1,0 +1,22 @@
+# For Bliksoft-public/* repos (pull mirrors of GitHub): forces an immediate pull sync instead of
+# waiting for Forgejo's periodic mirror interval, so a maven-snapshot-deploy.yml run can be
+# triggered right after new GitHub commits land. Not applicable/testable against a non-mirror
+# repo like SYS/java-library-sample - untested against a real mirror as of 2026-08-01, confirm
+# it works the first time it's actually needed.
+#
+# Needs a Forgejo API token with repo-write scope (NOT the same as ORG_PACKAGES_TOKEN, which is
+# package-scoped only) - not yet created for Bliksoft-public. Set MIRROR_SYNC_TOKEN as an org
+# secret there before using this for real.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  mirror-sync:
+    runs-on: docker
+    steps:
+      - name: Trigger pull mirror sync
+        run: |
+          curl -sf -X POST \
+            -H "Authorization: token ${{ secrets.MIRROR_SYNC_TOKEN }}" \
+            "https://${{ vars.REGISTRY_URL }}/api/v1/repos/${{ github.repository }}/mirror-sync"

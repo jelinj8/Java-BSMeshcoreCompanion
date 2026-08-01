@@ -1,0 +1,97 @@
+# Publishes a Maven library snapshot to Forgejo's own package registry on every push. Adapted
+# from SYS/devenv's samples/maven-snapshot-deploy.yml for this repo.
+#
+# Depends on cz.bliksoft.java:common-java-utils-jfx:0.2-SNAPSHOT (Java-BSToolbox-jfx) and
+# cz.bliksoft.meshcore:meshcore-companion:0.0.2-SNAPSHOT (Java-Meshcore) - both published under
+# this same Bliksoft-public org, so one EXTRA_MAVEN_OWNERS entry covers reading both.
+# cz.bliksoft.java:dependency-management:1.21.1 (import-scope BOM) is a real release version,
+# already published to Maven Central via the existing GitHub+signing pipeline - resolves from
+# Central by default, no extra repository needed for that one.
+#
+# This file lives on GitHub (the real source of truth, which Forgejo pull-mirrors) rather than
+# being pushed directly to the Forgejo side - a commit made only on the Forgejo side of a pull
+# mirror would very likely be silently discarded on the next sync from GitHub.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  snapshot-deploy:
+    runs-on: maven-jdk
+    env:
+      MAVEN_OPTS: "-Dmaven.repo.local=/tmp/m2-repo"
+      EXTRA_MAVEN_OWNERS: "Bliksoft-public"
+    steps:
+      - name: Clone repository
+        run: |
+          git clone --depth 1 --branch "${{ github.ref_name }}" \
+            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@${{ vars.REGISTRY_URL }}/${{ github.repository }}.git" src
+
+      - name: Write Maven settings.xml
+        run: |
+          cat > settings.xml <<'PART1'
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+            <servers>
+              <server>
+                <id>forgejo-deploy</id>
+                <username>bot</username>
+                <password>${env.MVN_TOKEN}</password>
+              </server>
+          PART1
+
+          for OWNER in $EXTRA_MAVEN_OWNERS; do
+            echo "      <server><id>forgejo-$OWNER</id><username>bot</username><password>\${env.MVN_TOKEN}</password></server>" >> settings.xml
+          done
+
+          cat >> settings.xml <<'PART2'
+            </servers>
+            <profiles>
+              <profile>
+                <id>extra-repos</id>
+                <activation><activeByDefault>true</activeByDefault></activation>
+                <repositories>
+          PART2
+
+          for OWNER in $EXTRA_MAVEN_OWNERS; do
+            echo "          <repository><id>forgejo-$OWNER</id><url>https://${{ vars.REGISTRY_URL }}/api/packages/$OWNER/maven</url></repository>" >> settings.xml
+          done
+
+          cat >> settings.xml <<'PART3'
+                </repositories>
+              </profile>
+            </profiles>
+            <activeProfiles><activeProfile>extra-repos</activeProfile></activeProfiles>
+          </settings>
+          PART3
+
+      - name: Build and test
+        working-directory: src
+        run: mvn -B -U verify -s ../settings.xml
+        env:
+          MVN_TOKEN: ${{ secrets.ORG_PACKAGES_TOKEN }}
+
+      - name: Determine current version/coordinates
+        working-directory: src
+        run: |
+          echo "VERSION=$(mvn -B -q help:evaluate -Dexpression=revision -DforceStdout)" >> "$GITHUB_ENV"
+          echo "ARTIFACT_ID=$(mvn -B -q help:evaluate -Dexpression=project.artifactId -DforceStdout)" >> "$GITHUB_ENV"
+
+      - name: Deploy
+        working-directory: src
+        run: |
+          mvn -B -U -s ../settings.xml deploy -DskipTests \
+            -DaltDeploymentRepository=forgejo-deploy::default::https://${{ vars.REGISTRY_URL }}/api/packages/${{ github.repository_owner }}/maven
+        env:
+          MVN_TOKEN: ${{ secrets.ORG_PACKAGES_TOKEN }}
+
+      - name: Link package to this repo (best-effort, cosmetic only)
+        run: |
+          OWNER=$(echo "${{ github.repository }}" | cut -d/ -f1)
+          REPO_NAME=$(echo "${{ github.repository }}" | cut -d/ -f2)
+          PKG_NAME=$(curl -sf -u "bot:${{ secrets.ORG_PACKAGES_TOKEN }}" \
+            "https://${{ vars.REGISTRY_URL }}/api/v1/packages/$OWNER?type=maven" \
+            | jq -r --arg a "$ARTIFACT_ID" '.[] | select(.name | contains($a)) | .name' | head -1)
+          curl -s -w 'link status=%{http_code}\n' -u "bot:${{ secrets.ORG_PACKAGES_TOKEN }}" -X POST \
+            "https://${{ vars.REGISTRY_URL }}/api/v1/packages/$OWNER/maven/$PKG_NAME/-/link/$REPO_NAME"
