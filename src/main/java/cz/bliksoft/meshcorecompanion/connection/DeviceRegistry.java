@@ -3,11 +3,11 @@ package cz.bliksoft.meshcorecompanion.connection;
 import java.util.ArrayList;
 import java.util.List;
 
-import cz.bliksoft.javautils.app.BSApp;
-import cz.bliksoft.javautils.app.exceptions.ViewableException;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import cz.bliksoft.javautils.app.BSAppJFX;
+import cz.bliksoft.javautils.exceptions.ViewableException;
 
 public class DeviceRegistry {
 
@@ -41,18 +41,18 @@ public class DeviceRegistry {
 		// Don't clear old entries with null — ConcurrentHashMap rejects null values.
 		// Orphaned entries beyond the new count are harmless; load() uses count as
 		// limit.
-		BSApp.setLocalProperty(KEY_COUNT, String.valueOf(devices.size()));
+		BSAppJFX.setLocalProperty(KEY_COUNT, String.valueOf(devices.size()));
 		for (int i = 0; i < devices.size(); i++) {
-			BSApp.setLocalProperty(String.format(KEY_NAME, i), devices.get(i).getName());
-			BSApp.setLocalProperty(String.format(KEY_PUBKEY, i), devices.get(i).getPubkeyHex());
+			BSAppJFX.setLocalProperty(String.format(KEY_NAME, i), devices.get(i).getName());
+			BSAppJFX.setLocalProperty(String.format(KEY_PUBKEY, i), devices.get(i).getPubkeyHex());
 			String portHint = devices.get(i).getPortHint();
 			if (portHint != null) {
-				BSApp.setLocalProperty(String.format(KEY_PORTHINT, i), portHint);
+				BSAppJFX.setLocalProperty(String.format(KEY_PORTHINT, i), portHint);
 			}
-			BSApp.setLocalProperty(String.format(KEY_TRANSPORT, i), devices.get(i).getTransport());
+			BSAppJFX.setLocalProperty(String.format(KEY_TRANSPORT, i), devices.get(i).getTransport());
 		}
 		try {
-			BSApp.saveLocalProperties();
+			BSAppJFX.saveLocalProperties();
 		} catch (ViewableException e) {
 			log.warn("Failed to persist device registry", e);
 		}
@@ -73,7 +73,7 @@ public class DeviceRegistry {
 	}
 
 	private static int intProp(String key, int defaultVal) {
-		Object v = BSApp.getProperty(key);
+		Object v = BSAppJFX.getProperty(key);
 		if (v == null)
 			return defaultVal;
 		try {
@@ -84,7 +84,7 @@ public class DeviceRegistry {
 	}
 
 	private static String strProp(String key, String defaultVal) {
-		Object v = BSApp.getProperty(key);
+		Object v = BSAppJFX.getProperty(key);
 		return v != null ? v.toString() : defaultVal;
 	}
 }

@@ -13,7 +13,7 @@ import com.fazecast.jSerialComm.SerialPort;
 
 import cz.bliksoft.javautils.app.ui.BSAppUI;
 import cz.bliksoft.javautils.context.Context;
-import cz.bliksoft.meshcore.companion.BleMeshcoreCompanion;
+//import cz.bliksoft.meshcore.companion.BleMeshcoreCompanion;
 import cz.bliksoft.meshcore.companion.MeshcoreCompanion;
 import cz.bliksoft.meshcore.companion.MeshcoreCompanionBase;
 import cz.bliksoft.meshcore.companion.SerialMeshcoreCompanion;
@@ -107,9 +107,9 @@ public class ConnectionManager {
 
 		Button newUsbBtn = new Button("USB…");
 		Button newTcpBtn = new Button("TCP…");
-		Button newBleBtn = new Button("BLE…");
+		//Button newBleBtn = new Button("BLE…");
 
-		HBox buttons = new HBox(4, new Label("Connect new:"), newUsbBtn, newTcpBtn, newBleBtn);
+		HBox buttons = new HBox(4, new Label("Connect new:"), newUsbBtn, newTcpBtn/*, newBleBtn*/);
 		buttons.setAlignment(Pos.CENTER_LEFT);
 
 		VBox content = new VBox(8, new Label("Known devices:"), listView, savedButtons, new Separator(), buttons);
@@ -164,12 +164,12 @@ public class ConnectionManager {
 				} else {
 					showTcpDialog();
 				}
-			} else if ("ble".equals(selected.getTransport())) {
+			/*} else if ("ble".equals(selected.getTransport())) {
 				if (portHint != null && !portHint.isBlank()) {
 					connectBle(portHint);
 				} else {
 					pickNewBleDevice();
-				}
+				}*/
 			} else {
 				if (portHint != null && !portHint.isBlank()) {
 					connectSerial(portHint, 115200, false);
@@ -189,10 +189,10 @@ public class ConnectionManager {
 			Platform.runLater(this::showTcpDialog);
 		});
 
-		newBleBtn.setOnAction(e -> {
+		/*newBleBtn.setOnAction(e -> {
 			dialog.close();
 			Platform.runLater(this::pickNewBleDevice);
-		});
+		});*/
 
 		dialog.showAndWait();
 	}
@@ -272,7 +272,7 @@ public class ConnectionManager {
 
 		dialog.showAndWait();
 	}
-
+/*
 	private void pickNewBleDevice() {
 		AtomicReference<List<String>> result = new AtomicReference<>(List.of());
 		AtomicReference<IOException> error = new AtomicReference<>();
@@ -370,6 +370,7 @@ public class ConnectionManager {
 		BSAppUI.showStatusMessage("Connected to " + address);
 		log.info("BLE connected to {}", address);
 	}
+*/
 
 	private void connectTcp(String host, int port) {
 		new Thread(() -> {

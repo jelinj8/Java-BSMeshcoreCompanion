@@ -3,9 +3,9 @@ package cz.bliksoft.meshcorecompanion.settings;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import cz.bliksoft.javautils.app.BSApp;
-import cz.bliksoft.javautils.app.exceptions.ViewableException;
+import cz.bliksoft.javautils.app.BSAppJFX;
 import cz.bliksoft.javautils.app.ui.BSAppUI;
+import cz.bliksoft.javautils.exceptions.ViewableException;
 import cz.bliksoft.javautils.fx.tools.Styling;
 import cz.bliksoft.meshcorecompanion.events.meshcore.MeshcorePushBridge;
 import javafx.geometry.Insets;
@@ -39,11 +39,11 @@ class AppSettingsSection extends VBox {
 	AppSettingsSection(Runnable onModified) {
 		this.onModified = onModified;
 
-		Object themeObj = BSApp.getProperty(BSAppUI.PROP_THEME);
+		Object themeObj = BSAppJFX.getProperty(BSAppUI.PROP_THEME);
 		originalTheme = themeObj != null ? capitalise(themeObj.toString()) : "Default";
 		pendingTheme = originalTheme;
 		originalLogSize = MeshcorePushBridge.getInstance().getMaxLogEntries();
-		originalEnterSends = "true".equals(BSApp.getProperty(PROP_ENTER_SENDS));
+		originalEnterSends = "true".equals(BSAppJFX.getProperty(PROP_ENTER_SENDS));
 		enterSendsBox.setSelected(originalEnterSends);
 		enterSendsBox.setOnAction(e -> markDirty());
 
@@ -89,13 +89,13 @@ class AppSettingsSection extends VBox {
 
 	void save() {
 		if ("Default".equals(pendingTheme)) {
-			BSApp.removeLocalProperty(BSAppUI.PROP_THEME);
+			BSAppJFX.removeLocalProperty(BSAppUI.PROP_THEME);
 		} else {
-			BSApp.setLocalProperty(BSAppUI.PROP_THEME, pendingTheme.toUpperCase());
+			BSAppJFX.setLocalProperty(BSAppUI.PROP_THEME, pendingTheme.toUpperCase());
 		}
-		BSApp.setLocalProperty(PROP_ENTER_SENDS, String.valueOf(enterSendsBox.isSelected()));
+		BSAppJFX.setLocalProperty(PROP_ENTER_SENDS, String.valueOf(enterSendsBox.isSelected()));
 		try {
-			BSApp.saveLocalProperties();
+			BSAppJFX.saveLocalProperties();
 		} catch (ViewableException e) {
 			log.warn("Failed to save app settings", e);
 		}

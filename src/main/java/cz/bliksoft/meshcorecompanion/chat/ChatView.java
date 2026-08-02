@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import cz.bliksoft.javautils.app.BSApp;
+import cz.bliksoft.javautils.app.BSAppJFX;
 import cz.bliksoft.meshcore.frames.FrameConstants.MessageTextType;
 import cz.bliksoft.meshcore.frames.cmd.CmdSendTxtMsg;
 import cz.bliksoft.meshcore.otaframe.OtaFrame;
@@ -144,7 +144,7 @@ class ChatView extends VBox {
 		inputField.setOnKeyPressed(e -> {
 			if (e.getCode() != KeyCode.ENTER)
 				return;
-			boolean enterSends = "true".equals(BSApp.getProperty("chat.enterSends"));
+			boolean enterSends = "true".equals(BSAppJFX.getProperty("chat.enterSends"));
 			if (enterSends) {
 				if (!e.isShiftDown() && !e.isControlDown()) {
 					e.consume();

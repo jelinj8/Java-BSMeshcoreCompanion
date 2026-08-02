@@ -53,11 +53,11 @@
 			<version>[2.0.0,3.0.0)</version>
 		</dependency>
 
-		<dependency>
+		<!--<dependency>
 			<groupId>org.simplejavable</groupId>
 			<artifactId>simplejavable</artifactId>
 			<version>0.12.1</version>
-		</dependency>
+		</dependency>-->
 
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>

@@ -3,8 +3,9 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://bliksoft.cz/XmlFilesystem https://bliksoft.cz/schemas/XmlFilesystem.xsd">
 
-	<file name="AppUI">
-		<attribute name="root" value="main" />
+	<file name="core">
+		<file name="ui">
+		<attribute name="main" value="main" />
 		<file name="main" type="UIPane">
 			<attribute name="theme" value="system" />
 			<attribute name="title" value="BSMeshcoreCompanion" />
@@ -81,6 +82,7 @@
 					<attribute name="FXclass" value="bevel-lowered" />
 				</file>
 			</file>
+		</file>
 		</file>
 	</file>
 

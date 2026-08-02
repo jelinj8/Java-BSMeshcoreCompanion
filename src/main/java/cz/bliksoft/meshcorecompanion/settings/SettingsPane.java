@@ -11,15 +11,15 @@ import java.util.Properties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import cz.bliksoft.javautils.app.BSApp;
-import cz.bliksoft.javautils.app.exceptions.ViewableException;
-import cz.bliksoft.meshcorecompanion.chat.ChatManager;
+import cz.bliksoft.javautils.app.BSAppJFX;
 import cz.bliksoft.javautils.app.ui.BSAppUI;
 import cz.bliksoft.javautils.app.ui.actions.interfaces.IClose;
 import cz.bliksoft.javautils.app.ui.actions.interfaces.ISave;
 import cz.bliksoft.javautils.context.IContextProvider;
+import cz.bliksoft.javautils.exceptions.ViewableException;
 import cz.bliksoft.meshcore.companion.MeshcoreCompanion;
 import cz.bliksoft.meshcore.frames.resp.SelfInfo;
+import cz.bliksoft.meshcorecompanion.chat.ChatManager;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
@@ -203,7 +203,7 @@ public class SettingsPane extends VBox implements IContextProvider, IClose, ISav
 		chooser.setTitle("Save device backup");
 		chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Properties", "*.properties"));
 
-		String lastDir = (String) BSApp.getProperty(PROP_BACKUP_LAST_DIR);
+		String lastDir = (String) BSAppJFX.getProperty(PROP_BACKUP_LAST_DIR);
 		if (lastDir != null) {
 			File dir = new File(lastDir);
 			if (dir.isDirectory())
@@ -221,9 +221,9 @@ public class SettingsPane extends VBox implements IContextProvider, IClose, ISav
 		if (file == null)
 			return;
 
-		BSApp.setLocalProperty(PROP_BACKUP_LAST_DIR, file.getParent());
+		BSAppJFX.setLocalProperty(PROP_BACKUP_LAST_DIR, file.getParent());
 		try {
-			BSApp.saveLocalProperties();
+			BSAppJFX.saveLocalProperties();
 		} catch (ViewableException e) {
 			log.warn("Could not save backup dir preference", e);
 		}
@@ -262,7 +262,7 @@ public class SettingsPane extends VBox implements IContextProvider, IClose, ISav
 		chooser.setTitle("Open device backup");
 		chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Properties", "*.properties"));
 
-		String lastDir = (String) BSApp.getProperty(PROP_BACKUP_LAST_DIR);
+		String lastDir = (String) BSAppJFX.getProperty(PROP_BACKUP_LAST_DIR);
 		if (lastDir != null) {
 			File dir = new File(lastDir);
 			if (dir.isDirectory())
@@ -273,9 +273,9 @@ public class SettingsPane extends VBox implements IContextProvider, IClose, ISav
 		if (file == null)
 			return;
 
-		BSApp.setLocalProperty(PROP_BACKUP_LAST_DIR, file.getParent());
+		BSAppJFX.setLocalProperty(PROP_BACKUP_LAST_DIR, file.getParent());
 		try {
-			BSApp.saveLocalProperties();
+			BSAppJFX.saveLocalProperties();
 		} catch (ViewableException e) {
 			log.warn("Could not save backup dir preference", e);
 		}

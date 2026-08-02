@@ -2,14 +2,14 @@ package cz.bliksoft.meshcorecompanion;
 
 import java.util.Optional;
 
-import cz.bliksoft.javautils.app.BSApp;
+import cz.bliksoft.javautils.app.BSAppJFX;
 import cz.bliksoft.javautils.app.events.AppClosedEvent;
 import cz.bliksoft.javautils.app.events.TryCloseEvent;
-import cz.bliksoft.javautils.app.exceptions.ViewableException;
 import cz.bliksoft.javautils.app.ui.BSAppUI;
 import cz.bliksoft.javautils.app.ui.utils.state.binders.StageStateBinder;
 import cz.bliksoft.javautils.context.Context;
 import cz.bliksoft.javautils.context.events.EventListener;
+import cz.bliksoft.javautils.exceptions.ViewableException;
 import cz.bliksoft.javautils.modules.ModuleBase;
 import cz.bliksoft.meshcorecompanion.chat.ChatManager;
 import cz.bliksoft.meshcorecompanion.chat.MainPane;
@@ -51,7 +51,7 @@ public class BSMeshcoreCompanionModule extends ModuleBase {
 						if (result.isPresent() && result.get() == ButtonType.OK) {
 							StageStateBinder.save(BSAppUI.getStage(), "@main");
 							try {
-								BSApp.saveLocalProperties();
+								BSAppJFX.saveLocalProperties();
 							} catch (ViewableException e) {
 							}
 						} else {
