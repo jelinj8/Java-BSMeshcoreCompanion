@@ -1,9 +1,13 @@
 package cz.bliksoft.meshcorecompanion.chat;
 
+import cz.bliksoft.javautils.app.ui.actions.IconBinder;
+import cz.bliksoft.javautils.fx.tools.IconspecUtils;
+import cz.bliksoft.javautils.fx.tools.ImageUtils;
 import cz.bliksoft.meshcorecompanion.events.meshcore.MeshcorePushBridge;
 import cz.bliksoft.meshcorecompanion.model.LogEntry;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -13,116 +17,115 @@ import javafx.scene.control.ScrollBar;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToolBar;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 public class LogPane extends VBox {
 
-    private static final String ALL_TYPES = "All";
+	private static final String ALL_TYPES = "All";
 
-    private final FilteredList<LogEntry> filteredEntries;
-    private final ComboBox<String> typeFilter = new ComboBox<>();
-    private final TextField textFilter = new TextField();
+	private final FilteredList<LogEntry> filteredEntries;
+	private final ComboBox<String> typeFilter = new ComboBox<>();
+	private final TextField textFilter = new TextField();
 
-    private boolean atBottom = true;
+	private boolean atBottom = true;
 
-    public LogPane() {
-        filteredEntries = new FilteredList<>(MeshcorePushBridge.getInstance().getLogEntries());
+	public LogPane() {
+		filteredEntries = new FilteredList<>(MeshcorePushBridge.getInstance().getLogEntries());
 
-        typeFilter.getItems().add(ALL_TYPES);
-        typeFilter.getSelectionModel().selectFirst();
-        typeFilter.setOnAction(e -> updateFilter());
+		typeFilter.getItems().add(ALL_TYPES);
+		typeFilter.getSelectionModel().selectFirst();
+		typeFilter.setOnAction(e -> updateFilter());
 
-        textFilter.setPromptText("Filter text…");
-        textFilter.textProperty().addListener((obs, o, n) -> updateFilter());
+		textFilter.setPromptText("Filter text…");
+		textFilter.textProperty().addListener((obs, o, n) -> updateFilter());
 
-        Button markBtn = new Button("Mark");
-        markBtn.setOnAction(e -> MeshcorePushBridge.getInstance().addMark());
+		Button markBtn = new Button("Mark");
+		markBtn.setOnAction(e -> MeshcorePushBridge.getInstance().addMark());
 
-        Button clearBtn = new Button("Clear");
-        clearBtn.setOnAction(e -> {
-            MeshcorePushBridge.getInstance().clear();
-            typeFilter.getItems().setAll(ALL_TYPES);
-            typeFilter.getSelectionModel().selectFirst();
-        });
+		Button clearBtn = new Button("Clear");
+		clearBtn.setOnAction(e -> {
+			MeshcorePushBridge.getInstance().clear();
+			typeFilter.getItems().setAll(ALL_TYPES);
+			typeFilter.getSelectionModel().selectFirst();
+		});
 
-        HBox spacer = new HBox();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+		HBox spacer = new HBox();
+		HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        ToolBar filterBar = new ToolBar(
-                new Label("Type:"), typeFilter,
-                spacer,
-                new Label("Filter:"), textFilter,
-                new Separator(),
-                markBtn, clearBtn
-        );
+		Node filterIcon = ImageUtils.getIconNode(IconspecUtils.getIconspec("action/filter"));
+		IconBinder.enforceIconSize(filterIcon, IconspecUtils.getIconspecSize("button-size", 16));
+		Tooltip.install(filterIcon, new Tooltip("Filter"));
 
-        ListView<LogEntry> listView = new ListView<>(filteredEntries);
-        listView.setCellFactory(lv -> new ListCell<>() {
-            @Override
-            protected void updateItem(LogEntry item, boolean empty) {
-                super.updateItem(item, empty);
-                getStyleClass().removeAll("log-push", "log-other", "log-mark");
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(item.toString());
-                    if (item.isMarker()) {
-                        getStyleClass().add("log-mark");
-                    } else {
-                        getStyleClass().add(item.getFrameType().startsWith("PUSH_") ? "log-push" : "log-other");
-                    }
-                }
-            }
-        });
-        VBox.setVgrow(listView, Priority.ALWAYS);
+		ToolBar filterBar = new ToolBar(new Label("Type:"), typeFilter, spacer, filterIcon, textFilter, new Separator(),
+				markBtn, clearBtn);
 
-        listView.skinProperty().addListener((obs, o, skin) -> {
-            if (skin == null) return;
-            ScrollBar sb = (ScrollBar) listView.lookup(".scroll-bar:vertical");
-            if (sb != null) {
-                sb.valueProperty().addListener((sObs, sO, sN) -> {
-                    double max = sb.getMax();
-                    atBottom = max <= 0 || sN.doubleValue() >= max - sb.getVisibleAmount() / 2;
-                });
-            }
-        });
+		ListView<LogEntry> listView = new ListView<>(filteredEntries);
+		listView.setCellFactory(lv -> new ListCell<>() {
+			@Override
+			protected void updateItem(LogEntry item, boolean empty) {
+				super.updateItem(item, empty);
+				getStyleClass().removeAll("log-push", "log-other", "log-mark");
+				if (empty || item == null) {
+					setText(null);
+				} else {
+					setText(item.toString());
+					if (item.isMarker()) {
+						getStyleClass().add("log-mark");
+					} else {
+						getStyleClass().add(item.getFrameType().startsWith("PUSH_") ? "log-push" : "log-other");
+					}
+				}
+			}
+		});
+		VBox.setVgrow(listView, Priority.ALWAYS);
 
-        MeshcorePushBridge.getInstance().getLogEntries().addListener(
-                (javafx.collections.ListChangeListener<LogEntry>) change -> {
-                    updateTypeFilter();
-                    if (atBottom && !filteredEntries.isEmpty()) {
-                        listView.scrollTo(filteredEntries.size() - 1);
-                    }
-                });
+		listView.skinProperty().addListener((obs, o, skin) -> {
+			if (skin == null)
+				return;
+			ScrollBar sb = (ScrollBar) listView.lookup(".scroll-bar:vertical");
+			if (sb != null) {
+				sb.valueProperty().addListener((sObs, sO, sN) -> {
+					double max = sb.getMax();
+					atBottom = max <= 0 || sN.doubleValue() >= max - sb.getVisibleAmount() / 2;
+				});
+			}
+		});
 
-        getChildren().addAll(filterBar, listView);
-        setPadding(new Insets(0));
-    }
+		MeshcorePushBridge.getInstance().getLogEntries()
+				.addListener((javafx.collections.ListChangeListener<LogEntry>) change -> {
+					updateTypeFilter();
+					if (atBottom && !filteredEntries.isEmpty()) {
+						listView.scrollTo(filteredEntries.size() - 1);
+					}
+				});
 
-    private void updateTypeFilter() {
-        for (LogEntry e : MeshcorePushBridge.getInstance().getLogEntries()) {
-            if (!typeFilter.getItems().contains(e.getFrameType())) {
-                typeFilter.getItems().add(e.getFrameType());
-            }
-        }
-    }
+		getChildren().addAll(filterBar, listView);
+		setPadding(new Insets(0));
+	}
 
-    private void updateFilter() {
-        String selectedType = typeFilter.getValue();
-        String text = textFilter.getText();
-        filteredEntries.setPredicate(entry -> {
-            if (selectedType != null && !ALL_TYPES.equals(selectedType)
-                    && !selectedType.equals(entry.getFrameType())) {
-                return false;
-            }
-            if (text != null && !text.isBlank()
-                    && !entry.getSummary().contains(text)
-                    && !entry.getFrameType().contains(text)) {
-                return false;
-            }
-            return true;
-        });
-    }
+	private void updateTypeFilter() {
+		for (LogEntry e : MeshcorePushBridge.getInstance().getLogEntries()) {
+			if (!typeFilter.getItems().contains(e.getFrameType())) {
+				typeFilter.getItems().add(e.getFrameType());
+			}
+		}
+	}
+
+	private void updateFilter() {
+		String selectedType = typeFilter.getValue();
+		String text = textFilter.getText();
+		filteredEntries.setPredicate(entry -> {
+			if (selectedType != null && !ALL_TYPES.equals(selectedType) && !selectedType.equals(entry.getFrameType())) {
+				return false;
+			}
+			if (text != null && !text.isBlank() && !entry.getSummary().contains(text)
+					&& !entry.getFrameType().contains(text)) {
+				return false;
+			}
+			return true;
+		});
+	}
 }

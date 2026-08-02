@@ -9,6 +9,7 @@
 		<file name="main" type="UIPane">
 			<attribute name="theme" value="system" />
 			<attribute name="title" value="BSMeshcoreCompanion" />
+			<attribute name="iconBase" value="/icons/mesh.svg|${size}|||add8e6" />
 			<attribute name="minWidth" value="800" />
 			<attribute name="minHeight" value="500" />
 
@@ -99,6 +100,53 @@
 				name="cz.bliksoft.meshcorecompanion.actions.DisconnectAction" />
 			<file
 				name="cz.bliksoft.meshcorecompanion.actions.OpenSettingsAction" />
+		</file>
+
+		<file name="iconspec">
+			<file name="action">
+				<file name="settings">
+					<attribute name="iconspec">svg/settings.svg|${toolbar-size}|||${stroke-button}</attribute>
+					<attribute name="menu-iconspec">svg/settings.svg|${menu-icon-size}|||${stroke-button}</attribute>
+				</file>
+				<file name="advert">
+					<attribute name="iconspec">/icons/advert.svg|${toolbar-size}|||${stroke-button}</attribute>
+				</file>
+				<file name="connect">
+					<attribute name="iconspec">/icons/link.svg|${toolbar-size}|||${stroke-button}</attribute>
+				</file>
+				<file name="disconnect">
+					<attribute name="iconspec">/icons/unlink.svg|${toolbar-size}|||${stroke-button}</attribute>
+				</file>
+				<file name="usb">
+					<attribute name="iconspec">/icons/usb.svg|${button-size}|||${stroke-button}</attribute>
+				</file>
+				<file name="network">
+					<attribute name="iconspec">/icons/network.svg|${button-size}|||${stroke-button}</attribute>
+				</file>
+				<file name="bluetooth">
+					<attribute name="iconspec">/icons/bluetooth.svg|${button-size}|||${stroke-button}</attribute>
+				</file>
+				<file name="send">
+					<attribute name="iconspec">/icons/send.svg|${button-size}|||${stroke-add}</attribute>
+				</file>
+				<file name="import">
+					<attribute name="iconspec">/icons/import.svg|${button-size}|||${stroke-add}</attribute>
+				</file>
+				<file name="filter">
+					<attribute name="iconspec">/icons/filter.svg|${button-size}|||${stroke-button}</attribute>
+				</file>
+			</file>
+			<file name="tab">
+				<file name="contact-chats">
+					<attribute name="iconspec">/icons/user.svg|${tab-icon-size}|||${stroke-button}</attribute>
+				</file>
+				<file name="group-chats">
+					<attribute name="iconspec">/icons/users.svg|${tab-icon-size}|||${stroke-button}</attribute>
+				</file>
+				<file name="log">
+					<attribute name="iconspec">/icons/log.svg|${tab-icon-size}|||${stroke-button}</attribute>
+				</file>
+			</file>
 		</file>
 	</file>
 

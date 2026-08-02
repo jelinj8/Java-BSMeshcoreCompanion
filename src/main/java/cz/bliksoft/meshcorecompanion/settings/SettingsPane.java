@@ -51,6 +51,7 @@ public class SettingsPane extends VBox implements IContextProvider, IClose, ISav
 	private final AutoaddSection autoaddSection;
 	private final TuningSection tuningSection;
 	private final SecuritySection securitySection;
+	private final FloodScopeSection floodScopeSection;
 
 	public SettingsPane() {
 		appSection = new AppSettingsSection(this::markModified);
@@ -60,11 +61,12 @@ public class SettingsPane extends VBox implements IContextProvider, IClose, ISav
 		autoaddSection = new AutoaddSection(this::markModified);
 		tuningSection = new TuningSection(this::markModified);
 		securitySection = new SecuritySection();
+		floodScopeSection = new FloodScopeSection();
 
 		VBox content = new VBox(12, appSection, new Separator(), radioSection, new Separator(), locationSection,
 				new Separator(), behaviourSection, new Separator(), autoaddSection, new Separator(), tuningSection,
-				new Separator(), securitySection, new Separator(), buildBackupSection(), new Separator(),
-				buildDangerZoneSection());
+				new Separator(), securitySection, new Separator(), floodScopeSection, new Separator(),
+				buildBackupSection(), new Separator(), buildDangerZoneSection());
 		content.setPadding(new Insets(16));
 
 		ScrollPane scroll = new ScrollPane(content);

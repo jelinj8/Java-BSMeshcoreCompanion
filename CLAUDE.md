@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Group chat: Public / Hash / Private groups; unread indicators, add/remove
 - ChatView: message list + compose bar; send modes (Async/Sync/Retry); outgoing status indicators; SNR/RSSI from paired `LOG_RX_DATA`
 - ChatManager: full lifecycle, message persistence (`ChatStore`, JSON per device/conversation), `setLogFramePairing(true)` for SNR/RSSI pairing
-- Settings: theme (Default/System/Light/Dark), log history size, radio config (freq/BW/SF/CR/TX power/repeat), backup/restore
+- Settings: theme (Default/System/Light/Dark), log history size, radio config (freq/BW/SF/CR/TX power/repeat), flood scope / regions (persisted default scope, session override, force-unscoped), backup/restore
 - Log window: live PUSH frame stream
 
 **Pending:**
@@ -47,7 +47,7 @@ All `cz.bliksoft.*` dependencies are published to Maven Central — no private r
 ### Dependencies and Java Version
 
 - **Java 21**, JavaFX 21.0.9
-- `cz.bliksoft.meshcore:meshcore-companion:0.0.1-SNAPSHOT` — radio protocol library (`../Meshcore`)
+- `cz.bliksoft.meshcore:meshcore-companion:0.0.2-SNAPSHOT` — radio protocol library (`../Meshcore`)
 - `cz.bliksoft.java:common-java-utils-jfx:0.1-SNAPSHOT` — application/GUI framework (`../BSToolbox-jfx`)
 - `cz.bliksoft.java:common-java-utils:0.6-SNAPSHOT` — base utilities
 - `cz.bliksoft.java:dependency-management:1.21.1-SNAPSHOT` — BOM for transitive deps

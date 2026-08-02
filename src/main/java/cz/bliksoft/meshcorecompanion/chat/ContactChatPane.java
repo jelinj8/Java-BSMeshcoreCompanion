@@ -7,6 +7,9 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import cz.bliksoft.javautils.app.ui.BSAppUI;
+import cz.bliksoft.javautils.app.ui.actions.IconBinder;
+import cz.bliksoft.javautils.fx.tools.IconspecUtils;
+import cz.bliksoft.javautils.fx.tools.ImageUtils;
 import javafx.application.Platform;
 import cz.bliksoft.meshcore.frames.cmd.CmdSendTxtMsg;
 import cz.bliksoft.meshcore.frames.FrameConstants.AdvertType;
@@ -21,6 +24,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -172,7 +176,10 @@ public class ContactChatPane extends VBox {
 		// ── Management toolbar ────────────────────────────────────────────────
 		Button addBtn = new Button("+");
 		Button removeBtn = new Button("−");
-		Button importBtn = new Button("↓ Import");
+		Button importBtn = new Button("Import");
+		Node importIcon = ImageUtils.getIconNode(IconspecUtils.getIconspec("action/import"));
+		IconBinder.enforceIconSize(importIcon, IconspecUtils.getIconspecSize("button-size", 16));
+		importBtn.setGraphic(importIcon);
 
 		addBtn.setTooltip(new Tooltip("Add contact by pubkey"));
 		removeBtn.setTooltip(new Tooltip("Remove selected contact"));

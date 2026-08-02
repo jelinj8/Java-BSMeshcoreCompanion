@@ -15,6 +15,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cz.bliksoft.javautils.app.BSAppJFX;
+import cz.bliksoft.javautils.app.ui.actions.IconBinder;
+import cz.bliksoft.javautils.fx.tools.IconspecUtils;
+import cz.bliksoft.javautils.fx.tools.ImageUtils;
 import cz.bliksoft.meshcore.frames.FrameConstants.MessageTextType;
 import cz.bliksoft.meshcore.frames.cmd.CmdSendTxtMsg;
 import cz.bliksoft.meshcore.otaframe.OtaFrame;
@@ -24,6 +27,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
@@ -140,6 +144,9 @@ class ChatView extends VBox {
 		HBox.setHgrow(inputContainer, Priority.ALWAYS);
 
 		Button sendBtn = new Button("Send");
+		Node sendIcon = ImageUtils.getIconNode(IconspecUtils.getIconspec("action/send"));
+		IconBinder.enforceIconSize(sendIcon, IconspecUtils.getIconspecSize("button-size", 16));
+		sendBtn.setGraphic(sendIcon);
 		sendBtn.setOnAction(e -> doSend());
 		inputField.setOnKeyPressed(e -> {
 			if (e.getCode() != KeyCode.ENTER)

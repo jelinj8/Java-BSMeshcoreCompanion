@@ -1,5 +1,9 @@
 package cz.bliksoft.meshcorecompanion.chat;
 
+import cz.bliksoft.javautils.app.ui.actions.IconBinder;
+import cz.bliksoft.javautils.fx.tools.IconspecUtils;
+import cz.bliksoft.javautils.fx.tools.ImageUtils;
+import javafx.scene.Node;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
@@ -12,6 +16,11 @@ public class MainPane extends TabPane {
 		Tab groupsTab = new Tab("Group Chats", new GroupChatPane());
 		Tab logTab = new Tab("Log", new LogPane());
 
+		double tabIconSize = IconspecUtils.getIconspecSize("tab-icon-size", 16);
+		contactsTab.setGraphic(sizedIcon("tab/contact-chats", tabIconSize));
+		groupsTab.setGraphic(sizedIcon("tab/group-chats", tabIconSize));
+		logTab.setGraphic(sizedIcon("tab/log", tabIconSize));
+
 		getTabs().addAll(contactsTab, groupsTab, logTab);
 
 		ChatManager mgr = ChatManager.getInstance();
@@ -23,5 +32,11 @@ public class MainPane extends TabPane {
 			int t = n.intValue();
 			groupsTab.setText(t > 0 ? "Group Chats (" + t + ")" : "Group Chats");
 		});
+	}
+
+	private static Node sizedIcon(String iconKey, double sizePx) {
+		Node icon = ImageUtils.getIconNode(IconspecUtils.getIconspec(iconKey));
+		IconBinder.enforceIconSize(icon, sizePx);
+		return icon;
 	}
 }

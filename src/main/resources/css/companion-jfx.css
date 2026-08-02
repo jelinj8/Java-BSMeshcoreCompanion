@@ -131,6 +131,12 @@
     -fx-font-weight: bold;
 }
 
+.contact-type-chat {
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 4 8 4 5;
+}
+
 .contact-type-room {
     -fx-border-color: transparent transparent transparent -room-accent;
     -fx-border-width: 0 0 0 3;

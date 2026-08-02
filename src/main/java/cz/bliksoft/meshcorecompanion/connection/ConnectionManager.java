@@ -12,7 +12,10 @@ import org.apache.logging.log4j.Logger;
 import com.fazecast.jSerialComm.SerialPort;
 
 import cz.bliksoft.javautils.app.ui.BSAppUI;
+import cz.bliksoft.javautils.app.ui.actions.IconBinder;
 import cz.bliksoft.javautils.context.Context;
+import cz.bliksoft.javautils.fx.tools.IconspecUtils;
+import cz.bliksoft.javautils.fx.tools.ImageUtils;
 //import cz.bliksoft.meshcore.companion.BleMeshcoreCompanion;
 import cz.bliksoft.meshcore.companion.MeshcoreCompanion;
 import cz.bliksoft.meshcore.companion.MeshcoreCompanionBase;
@@ -29,12 +32,15 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBase;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
@@ -83,6 +89,25 @@ public class ConnectionManager {
 		return companion;
 	}
 
+	private static Node sizedIcon(String iconKey) {
+		Node icon = ImageUtils.getIconNode(IconspecUtils.getIconspec(iconKey));
+		IconBinder.enforceIconSize(icon, IconspecUtils.getIconspecSize("button-size", 16));
+		return icon;
+	}
+
+	private static void applyIcon(ButtonBase btn, String iconKey) {
+		btn.setGraphic(sizedIcon(iconKey));
+	}
+
+	private static Node transportIcon(String transport) {
+		String iconKey = switch (transport) {
+		case "tcp" -> "action/network";
+		case "ble" -> "action/bluetooth";
+		default -> "action/usb";
+		};
+		return sizedIcon(iconKey);
+	}
+
 	// ── Connect dialog ───────────────────────────────────────────────────────
 
 	public void openConnectDialog() {
@@ -94,6 +119,19 @@ public class ConnectionManager {
 
 		ListView<SavedDevice> listView = new ListView<>(devices);
 		listView.setPrefHeight(160);
+		listView.setCellFactory(lv -> new ListCell<>() {
+			@Override
+			protected void updateItem(SavedDevice device, boolean empty) {
+				super.updateItem(device, empty);
+				if (empty || device == null) {
+					setText(null);
+					setGraphic(null);
+					return;
+				}
+				setText(device.getName() + "  [" + device.getPubkeyHex() + "]");
+				setGraphic(transportIcon(device.getTransport()));
+			}
+		});
 
 		Button connectBtn = new Button("Connect");
 		connectBtn.setDefaultButton(true);
@@ -106,10 +144,13 @@ public class ConnectionManager {
 		savedButtons.setAlignment(Pos.CENTER_LEFT);
 
 		Button newUsbBtn = new Button("USB…");
+		applyIcon(newUsbBtn, "action/usb");
 		Button newTcpBtn = new Button("TCP…");
-		//Button newBleBtn = new Button("BLE…");
+		applyIcon(newTcpBtn, "action/network");
+		// Button newBleBtn = new Button("BLE…");
+		// applyIcon(newBleBtn, "action/bluetooth");
 
-		HBox buttons = new HBox(4, new Label("Connect new:"), newUsbBtn, newTcpBtn/*, newBleBtn*/);
+		HBox buttons = new HBox(4, new Label("Connect new:"), newUsbBtn, newTcpBtn/* , newBleBtn */);
 		buttons.setAlignment(Pos.CENTER_LEFT);
 
 		VBox content = new VBox(8, new Label("Known devices:"), listView, savedButtons, new Separator(), buttons);
@@ -164,12 +205,10 @@ public class ConnectionManager {
 				} else {
 					showTcpDialog();
 				}
-			/*} else if ("ble".equals(selected.getTransport())) {
-				if (portHint != null && !portHint.isBlank()) {
-					connectBle(portHint);
-				} else {
-					pickNewBleDevice();
-				}*/
+				/*
+				 * } else if ("ble".equals(selected.getTransport())) { if (portHint != null &&
+				 * !portHint.isBlank()) { connectBle(portHint); } else { pickNewBleDevice(); }
+				 */
 			} else {
 				if (portHint != null && !portHint.isBlank()) {
 					connectSerial(portHint, 115200, false);
@@ -189,10 +228,10 @@ public class ConnectionManager {
 			Platform.runLater(this::showTcpDialog);
 		});
 
-		/*newBleBtn.setOnAction(e -> {
-			dialog.close();
-			Platform.runLater(this::pickNewBleDevice);
-		});*/
+		/*
+		 * newBleBtn.setOnAction(e -> { dialog.close();
+		 * Platform.runLater(this::pickNewBleDevice); });
+		 */
 
 		dialog.showAndWait();
 	}
@@ -272,105 +311,69 @@ public class ConnectionManager {
 
 		dialog.showAndWait();
 	}
-/*
-	private void pickNewBleDevice() {
-		AtomicReference<List<String>> result = new AtomicReference<>(List.of());
-		AtomicReference<IOException> error = new AtomicReference<>();
-
-		BSAppUI.executeWaiting(() -> {
-			try {
-				result.set(BleMeshcoreCompanion.scanForNusDevices(5000));
-			} catch (IOException e) {
-				error.set(e);
-			}
-		}, "Add BLE Companion", "Scanning for devices…", null);
-
-		showBleDeviceSelectionDialog(result.get(), error.get());
-	}
-
-	private void showBleDeviceSelectionDialog(List<String> devices, IOException scanError) {
-		if (scanError != null) {
-			Alert alert = new Alert(Alert.AlertType.ERROR);
-			alert.setTitle("BLE Scan");
-			alert.setHeaderText("Bluetooth scan failed");
-			alert.setContentText(scanError.getMessage());
-			alert.initOwner(BSAppUI.getStage());
-			alert.showAndWait();
-			return;
-		}
-		if (devices.isEmpty()) {
-			Alert alert = new Alert(Alert.AlertType.WARNING);
-			alert.setTitle("BLE Scan");
-			alert.setHeaderText("No BLE devices found");
-			alert.initOwner(BSAppUI.getStage());
-			alert.showAndWait();
-			return;
-		}
-
-		ChoiceDialog<String> dialog = new ChoiceDialog<>(devices.get(0), devices);
-		dialog.setTitle("New BLE connection");
-		dialog.setHeaderText("Select BLE device");
-		dialog.setContentText("Device:");
-		dialog.initOwner(BSAppUI.getStage());
-
-		dialog.showAndWait().ifPresent(choice -> {
-			// format: "AA:BB:CC:DD:EE:FF (name)"
-			String address = choice.contains(" ") ? choice.substring(0, choice.indexOf(' ')).trim() : choice.trim();
-			connectBle(address);
-		});
-	}
-
-	private void connectBle(String address) {
-		AtomicReference<BleMeshcoreCompanion> result = new AtomicReference<>();
-		AtomicReference<Exception> error = new AtomicReference<>();
-
-		BSAppUI.executeWaiting(() -> {
-			BleMeshcoreCompanion c = null;
-			try {
-				c = new BleMeshcoreCompanion("BSMeshcoreCompanion", address);
-				// BLE connect includes an internal 5-second scan; allow extra time
-				c.awaitAvailable(12000L);
-				result.set(c);
-			} catch (TimeoutException | InterruptedException e) {
-				if (c != null)
-					c.close();
-				error.set(e);
-			}
-		}, null, "Connecting…", address);
-
-		Exception e = error.get();
-		if (e != null) {
-			log.error("BLE connection to {} failed", address, e);
-			Alert alert = new Alert(Alert.AlertType.ERROR);
-			alert.setTitle("Connection failed");
-			alert.setHeaderText("Could not connect to " + address);
-			alert.setContentText(e.getMessage());
-			alert.initOwner(BSAppUI.getStage());
-			alert.showAndWait();
-			return;
-		}
-
-		BleMeshcoreCompanion c = result.get();
-		c.addAvailabilityListener(new MeshcoreCompanionBase.AvailabilityListener() {
-			public void onAvailable(MeshcoreCompanionBase companion) {
-				Platform.runLater(() -> reconnecting.set(false));
-			}
-
-			public void onUnavailable(MeshcoreCompanionBase companion) {
-				Platform.runLater(() -> reconnecting.set(true));
-			}
-		});
-		c.installAutosyncMessages();
-		companion = c;
-		autoSaveDevice(c, address, "ble");
-		String deviceLabel = buildDeviceLabel(c, address);
-		connected.set(true);
-		connectedDevice.set(deviceLabel);
-		Context.getCurrentContext().put(MeshcoreCompanion.class, c);
-		BSAppUI.showStatusMessage("Connected to " + address);
-		log.info("BLE connected to {}", address);
-	}
-*/
+	/*
+	 * private void pickNewBleDevice() { AtomicReference<List<String>> result = new
+	 * AtomicReference<>(List.of()); AtomicReference<IOException> error = new
+	 * AtomicReference<>();
+	 *
+	 * BSAppUI.executeWaiting(() -> { try {
+	 * result.set(BleMeshcoreCompanion.scanForNusDevices(5000)); } catch
+	 * (IOException e) { error.set(e); } }, "Add BLE Companion",
+	 * "Scanning for devices…", null);
+	 *
+	 * showBleDeviceSelectionDialog(result.get(), error.get()); }
+	 *
+	 * private void showBleDeviceSelectionDialog(List<String> devices, IOException
+	 * scanError) { if (scanError != null) { Alert alert = new
+	 * Alert(Alert.AlertType.ERROR); alert.setTitle("BLE Scan");
+	 * alert.setHeaderText("Bluetooth scan failed");
+	 * alert.setContentText(scanError.getMessage());
+	 * alert.initOwner(BSAppUI.getStage()); alert.showAndWait(); return; } if
+	 * (devices.isEmpty()) { Alert alert = new Alert(Alert.AlertType.WARNING);
+	 * alert.setTitle("BLE Scan"); alert.setHeaderText("No BLE devices found");
+	 * alert.initOwner(BSAppUI.getStage()); alert.showAndWait(); return; }
+	 *
+	 * ChoiceDialog<String> dialog = new ChoiceDialog<>(devices.get(0), devices);
+	 * dialog.setTitle("New BLE connection");
+	 * dialog.setHeaderText("Select BLE device"); dialog.setContentText("Device:");
+	 * dialog.initOwner(BSAppUI.getStage());
+	 *
+	 * dialog.showAndWait().ifPresent(choice -> { // format:
+	 * "AA:BB:CC:DD:EE:FF (name)" String address = choice.contains(" ") ?
+	 * choice.substring(0, choice.indexOf(' ')).trim() : choice.trim();
+	 * connectBle(address); }); }
+	 *
+	 * private void connectBle(String address) {
+	 * AtomicReference<BleMeshcoreCompanion> result = new AtomicReference<>();
+	 * AtomicReference<Exception> error = new AtomicReference<>();
+	 *
+	 * BSAppUI.executeWaiting(() -> { BleMeshcoreCompanion c = null; try { c = new
+	 * BleMeshcoreCompanion("BSMeshcoreCompanion", address); // BLE connect includes
+	 * an internal 5-second scan; allow extra time c.awaitAvailable(12000L);
+	 * result.set(c); } catch (TimeoutException | InterruptedException e) { if (c !=
+	 * null) c.close(); error.set(e); } }, null, "Connecting…", address);
+	 *
+	 * Exception e = error.get(); if (e != null) {
+	 * log.error("BLE connection to {} failed", address, e); Alert alert = new
+	 * Alert(Alert.AlertType.ERROR); alert.setTitle("Connection failed");
+	 * alert.setHeaderText("Could not connect to " + address);
+	 * alert.setContentText(e.getMessage()); alert.initOwner(BSAppUI.getStage());
+	 * alert.showAndWait(); return; }
+	 *
+	 * BleMeshcoreCompanion c = result.get(); c.addAvailabilityListener(new
+	 * MeshcoreCompanionBase.AvailabilityListener() { public void
+	 * onAvailable(MeshcoreCompanionBase companion) { Platform.runLater(() ->
+	 * reconnecting.set(false)); }
+	 *
+	 * public void onUnavailable(MeshcoreCompanionBase companion) {
+	 * Platform.runLater(() -> reconnecting.set(true)); } });
+	 * c.installAutosyncMessages(); companion = c; autoSaveDevice(c, address,
+	 * "ble"); String deviceLabel = buildDeviceLabel(c, address);
+	 * connected.set(true); connectedDevice.set(deviceLabel);
+	 * Context.getCurrentContext().put(MeshcoreCompanion.class, c);
+	 * BSAppUI.showStatusMessage("Connected to " + address);
+	 * log.info("BLE connected to {}", address); }
+	 */
 
 	private void connectTcp(String host, int port) {
 		new Thread(() -> {
