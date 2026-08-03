@@ -53,11 +53,11 @@
 			<version>2.11.4</version>
 		</dependency>
 
-		<!--<dependency>
-			<groupId>org.simplejavable</groupId>
-			<artifactId>simplejavable</artifactId>
-			<version>0.12.1</version>
-		</dependency>-->
+		<dependency>
+			<groupId>cz.bliksoft.java</groupId>
+			<artifactId>common-java-utils-ble</artifactId>
+			<version>0.1.0-SNAPSHOT</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
