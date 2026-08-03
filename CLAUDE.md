@@ -21,7 +21,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Device time sync on connect
 - Reply-to message (quote + message hash from LOG_RX_DATA)
 - Log window frame type filter
-- BLE transport UI (backend exists, dialog not wired)
 - QR code for contact sharing
 - ROOM/REPEATER remote admin (command line, telemetry)
 
@@ -52,7 +51,7 @@ All `cz.bliksoft.*` dependencies are published to Maven Central — no private r
 - `cz.bliksoft.java:common-java-utils:0.6-SNAPSHOT` — base utilities
 - `cz.bliksoft.java:dependency-management:1.21.1-SNAPSHOT` — BOM for transitive deps
 - `com.fazecast:jSerialComm:[2.0.0,3.0.0)` — USB serial transport
-- `org.simplejavable:simplejavable:0.12.1` — BLE transport (SimpleBLE)
+- `cz.bliksoft.java:common-java-utils-ble:0.1.0-SNAPSHOT` — BLE transport (`../BSToolbox-BLE`)
 
 ### BSToolbox-jfx Framework (`../BSToolbox-jfx`)
 
