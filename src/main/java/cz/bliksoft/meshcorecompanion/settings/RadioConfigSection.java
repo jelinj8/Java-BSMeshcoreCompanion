@@ -1,5 +1,7 @@
 package cz.bliksoft.meshcorecompanion.settings;
 
+import java.util.Locale;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -190,7 +192,7 @@ class RadioConfigSection extends VBox {
 		};
 
 		nodeNameField.setText(si.getNodeName());
-		freqField.setText(String.format("%.4f", si.getFreq() / 1_000_000.0));
+		freqField.setText(String.format(Locale.ROOT, "%.4f", si.getFreq() / 1_000_000.0));
 
 		long bw = si.getBw();
 		String bwLabel = BW_LABELS[0];
@@ -228,7 +230,7 @@ class RadioConfigSection extends VBox {
 			c.getConfig().setAdvertName(name);
 		}
 
-		double freqMhz = Double.parseDouble(freqField.getText().strip());
+		double freqMhz = Double.parseDouble(freqField.getText().strip().replace(',', '.'));
 		long freq = Math.round(freqMhz * 1_000_000);
 		int bwIdx = bwBox.getItems().indexOf(bwBox.getValue());
 		long bw = bwIdx >= 0 ? BW_OPTIONS_HZ[bwIdx] : BW_OPTIONS_HZ[0];

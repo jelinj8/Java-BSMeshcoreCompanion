@@ -105,6 +105,17 @@ public class ChatManager {
 		this.onAuthChanged = callback;
 	}
 
+	/** Concise "message — caused by: message — caused by: ..." summary of an exception chain. */
+	private static String causeChain(Throwable t) {
+		StringBuilder sb = new StringBuilder();
+		for (Throwable cur = t; cur != null; cur = cur.getCause()) {
+			if (sb.length() > 0)
+				sb.append(" — caused by: ");
+			sb.append(cur.getMessage() != null ? cur.getMessage() : cur.getClass().getSimpleName());
+		}
+		return sb.toString();
+	}
+
 	// ── Connection lifecycle ─────────────────────────────────────────────────
 
 	private void onCompanionConnected(MeshcoreCompanion companion) {
@@ -132,7 +143,7 @@ public class ChatManager {
 			} catch (IllegalStateException e) {
 				log.debug("Device time check aborted — disconnected mid-flight");
 			} catch (Exception e) {
-				log.warn("Failed to check/set device time", e);
+				log.warn("Failed to check/set device time: {}", causeChain(e));
 			}
 		}, "meshcore-settime").start();
 
