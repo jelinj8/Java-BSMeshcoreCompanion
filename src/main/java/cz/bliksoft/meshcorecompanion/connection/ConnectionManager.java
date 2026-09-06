@@ -207,7 +207,10 @@ public class ConnectionManager {
 				}
 			} else if ("ble".equals(selected.getTransport())) {
 				if (portHint != null && !portHint.isBlank()) {
-					connectBle(portHint);
+					// connectBle() shows its own modal wait dialog via BSAppUI.executeWaiting();
+					// deferring lets this dialog finish closing first, same as the "new BLE..."
+					// path below - opening it in the same pulse produced a stuck, unpainted dialog.
+					Platform.runLater(() -> connectBle(portHint));
 				} else {
 					pickNewBleDevice();
 				}
@@ -535,11 +538,6 @@ public class ConnectionManager {
 		MeshcoreCompanion c = companion;
 		if (c == null)
 			return;
-		try {
-			c.close();
-		} catch (Exception e) {
-			log.warn("Error during disconnect", e);
-		}
 		companion = null;
 		connected.set(false);
 		reconnecting.set(false);
@@ -547,5 +545,20 @@ public class ConnectionManager {
 		Context.getCurrentContext().remove(MeshcoreCompanion.class);
 		BSAppUI.showStatusMessage("Disconnected");
 		log.info("Disconnected");
+		// c.close() can block for several seconds on a BLE round-trip to the sidecar (see
+		// BlePeripheral's CONNECT_TIMEOUT_MS) - disconnect() is often called on the FX thread
+		// (including app shutdown via AppClosedEvent), so run the close off-thread rather than
+		// freezing the UI on it. Daemon so it can't hold up JVM exit either; the sidecar process
+		// exits on its own once the JVM's end of its stdin pipe closes, even if this doesn't
+		// finish first.
+		Thread closer = new Thread(() -> {
+			try {
+				c.close();
+			} catch (Exception e) {
+				log.warn("Error during disconnect", e);
+			}
+		}, "meshcore-disconnect");
+		closer.setDaemon(true);
+		closer.start();
 	}
 }
