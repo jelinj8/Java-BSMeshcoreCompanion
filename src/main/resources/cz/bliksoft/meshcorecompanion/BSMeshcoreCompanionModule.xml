@@ -89,12 +89,9 @@
 
 	<file name="core">
 		<file name="actions">
-			<file
-				name="cz.bliksoft.javautils.app.ui.actions.basic.AppCloseAction" />
-			<file
-				name="cz.bliksoft.javautils.app.ui.actions.basic.SaveAction" />
-			<file
-				name="cz.bliksoft.javautils.app.ui.actions.basic.CloseAction" />
+			<symlink target-id="action.AppClose" />
+			<symlink target-id="action.Save" />
+			<symlink target-id="action.Close" />
 			<file name="cz.bliksoft.meshcorecompanion.actions.ConnectAction" />
 			<file
 				name="cz.bliksoft.meshcorecompanion.actions.DisconnectAction" />

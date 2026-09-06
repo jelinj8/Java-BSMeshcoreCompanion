@@ -1,6 +1,9 @@
 package cz.bliksoft.meshcorecompanion.chat;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -134,7 +137,7 @@ public class ChatManager {
 		}, "meshcore-settime").start();
 
 		if (companion.getSelfInfo() != null) {
-			deviceHex = MeshcoreUtils.hex(companion.getSelfInfo().getPubkey());
+			setDeviceHex(MeshcoreUtils.hex(companion.getSelfInfo().getPubkey()));
 		}
 
 		messageListener = frame -> {
@@ -276,10 +279,26 @@ public class ChatManager {
 				contacts.setAll(savedContacts);
 				channels.setAll(chs);
 				if (deviceHex == null && companion.getSelfInfo() != null) {
-					deviceHex = MeshcoreUtils.hex(companion.getSelfInfo().getPubkey());
+					setDeviceHex(MeshcoreUtils.hex(companion.getSelfInfo().getPubkey()));
 				}
 			});
 		}, "meshcore-initial-load").start();
+	}
+
+	private void setDeviceHex(String hex) {
+		// Always reload (not just on first-ever assignment): authenticatedContacts is
+		// cleared on every disconnect, so a same-session reconnect to this same
+		// device needs the persisted set restored too, not just a fresh app start.
+		deviceHex = hex;
+		authenticatedContacts.clear();
+		authenticatedContacts.addAll(AuthStore.load(deviceHex));
+		if (onAuthChanged != null)
+			Platform.runLater(onAuthChanged);
+	}
+
+	private void persistAuthenticatedContacts() {
+		if (deviceHex != null)
+			AuthStore.save(deviceHex, authenticatedContacts);
 	}
 
 	private void onCompanionDisconnected(MeshcoreCompanion companion) {
@@ -781,6 +800,7 @@ public class ChatManager {
 			try {
 				c.login(contact.getPubkey(), password);
 				authenticatedContacts.add(contactKey(contact));
+				persistAuthenticatedContacts();
 				log.info("Logged in to room {}", contact.getName());
 				if (onAuthChanged != null)
 					Platform.runLater(onAuthChanged);
@@ -788,6 +808,128 @@ public class ChatManager {
 				log.error("Login to room {} failed", contact.getName(), e);
 			}
 		}, "meshcore-login").start();
+	}
+
+	// ── Remote info (telemetry / owner info) ─────────────────────────────────
+
+	public void requestTelemetry(Contact contact) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		new Thread(() -> {
+			try {
+				var resp = c.sendTelemetryReq(contact.getPubkey());
+				postInfoMessage(contact, "Telemetry:\n" + TelemetryDecoder.decode(resp.getFrameData()));
+				log.info("Fetched telemetry from {}", contact.getName());
+			} catch (Exception e) {
+				log.error("Failed to fetch telemetry from {}", contact.getName(), e);
+				postInfoMessage(contact, "Telemetry request failed: " + e.getMessage());
+			}
+		}, "meshcore-telemetry").start();
+	}
+
+	// REQ_TYPE_GET_OWNER_INFO (ACL-gated PAYLOAD_TYPE_REQ path)
+	private static final byte REQ_TYPE_GET_OWNER_INFO = 0x07;
+	// ANON_REQ_TYPE_* (unauthenticated PAYLOAD_TYPE_ANON_REQ path; repeater only,
+	// requires an already-resolved direct route — the firmware won't answer these
+	// over a flood route even though login itself is allowed to)
+	private static final int ANON_REQ_TYPE_REGIONS = 0x01;
+	private static final int ANON_REQ_TYPE_OWNER = 0x02;
+	private static final int ANON_REQ_TYPE_BASIC = 0x03;
+
+	public void requestOwnerInfo(Contact contact) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		boolean authed = isAuthenticated(contact);
+		new Thread(() -> {
+			try {
+				String text;
+				if (authed) {
+					// includes firmware version; needs prior login (guest or admin)
+					var resp = c.sendBinaryReq(contact.getPubkey(), new byte[] { REQ_TYPE_GET_OWNER_INFO });
+					text = new String(resp.getFrameData(), StandardCharsets.UTF_8);
+				} else {
+					// no login needed, but only answered over an already-resolved direct route
+					var resp = c.sendAnonReqAndWait(contact.getPubkey(), anonPayload(ANON_REQ_TYPE_OWNER));
+					text = decodeAnonText(resp.getFrameData());
+				}
+				postInfoMessage(contact, "Owner info:\n" + text);
+				log.info("Fetched owner info from {}", contact.getName());
+			} catch (Exception e) {
+				log.error("Failed to fetch owner info from {}", contact.getName(), e);
+				postInfoMessage(contact, "Owner info request failed: " + e.getMessage());
+			}
+		}, "meshcore-ownerinfo").start();
+	}
+
+	public void requestRegions(Contact contact) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		new Thread(() -> {
+			try {
+				var resp = c.sendAnonReqAndWait(contact.getPubkey(), anonPayload(ANON_REQ_TYPE_REGIONS));
+				postInfoMessage(contact, "Regions:\n" + decodeAnonText(resp.getFrameData()));
+				log.info("Fetched regions from {}", contact.getName());
+			} catch (Exception e) {
+				log.error("Failed to fetch regions from {}", contact.getName(), e);
+				postInfoMessage(contact, "Regions request failed: " + e.getMessage());
+			}
+		}, "meshcore-regions").start();
+	}
+
+	public void requestClockSync(Contact contact) {
+		MeshcoreCompanion c = currentCompanion;
+		if (c == null)
+			return;
+		new Thread(() -> {
+			try {
+				var resp = c.sendAnonReqAndWait(contact.getPubkey(), anonPayload(ANON_REQ_TYPE_BASIC));
+				byte[] fd = resp.getFrameData();
+				long remoteEpoch = readUInt32LE(fd, 0);
+				int features = fd.length > 4 ? (fd[4] & 0xFF) : 0;
+				String bridge = (features & 0x03) == 0x03 ? "ESP-NOW bridge"
+						: (features & 0x01) != 0 ? "UART bridge" : "no bridge";
+				boolean disabled = (features & 0x80) != 0;
+				long driftSecs = Instant.now().getEpochSecond() - remoteEpoch;
+				String remoteTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault())
+						.format(Instant.ofEpochSecond(remoteEpoch));
+				String text = String.format("Remote clock: %s (%+d s vs local)%n%s%s", remoteTime, driftSecs, bridge,
+						disabled ? "  (forwarding disabled)" : "");
+				postInfoMessage(contact, "Clock sync:\n" + text);
+				log.info("Fetched clock from {}", contact.getName());
+			} catch (Exception e) {
+				log.error("Failed to fetch clock from {}", contact.getName(), e);
+				postInfoMessage(contact, "Clock sync request failed: " + e.getMessage());
+			}
+		}, "meshcore-clocksync").start();
+	}
+
+	private static byte[] anonPayload(int reqType) {
+		// second byte = reply-path-len (0): rely on a single-hop / already-resolved
+		// direct route back to us — firmware only answers these anon info requests
+		// when the incoming packet itself used a direct (non-flood) route.
+		return new byte[] { (byte) reqType, 0x00 };
+	}
+
+	private static String decodeAnonText(byte[] frameData) {
+		// frameData = [4-byte remote clock][UTF-8 text]; skip the clock.
+		int off = Math.min(4, frameData.length);
+		return new String(frameData, off, frameData.length - off, StandardCharsets.UTF_8);
+	}
+
+	private static long readUInt32LE(byte[] data, int offset) {
+		return (data[offset] & 0xFFL) | ((data[offset + 1] & 0xFFL) << 8) | ((data[offset + 2] & 0xFFL) << 16)
+				| ((data[offset + 3] & 0xFFL) << 24);
+	}
+
+	private void postInfoMessage(Contact contact, String text) {
+		String key = contactKey(contact);
+		ChatMessage msg = new ChatMessage(0, Instant.now().getEpochSecond(), text, false, contact.getName(), true,
+				null);
+		msg.setTxtType("TXT_TYPE_CLI_DATA");
+		Platform.runLater(() -> appendIncoming(key, msg));
 	}
 
 	public void logoutFromRoom(Contact contact) {
@@ -799,6 +941,7 @@ public class ChatManager {
 			try {
 				c.logout(contact.getPubkey());
 				authenticatedContacts.remove(contactKey(contact));
+				persistAuthenticatedContacts();
 				log.info("Logged out from room {}", contact.getName());
 				if (onAuthChanged != null)
 					Platform.runLater(onAuthChanged);

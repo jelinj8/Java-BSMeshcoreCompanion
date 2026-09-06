@@ -531,11 +531,37 @@ public class ContactChatPane extends VBox {
 			MenuItem favItem = new MenuItem(fav ? "Unset favourite" : "Set as favourite");
 			favItem.setOnAction(e -> mgr.toggleFavourite(contact));
 
-			boolean isRoomRepeater = contact.getType() == AdvertType.ADV_TYPE_ROOM
-					|| contact.getType() == AdvertType.ADV_TYPE_REPEATER;
+			boolean isRepeater = contact.getType() == AdvertType.ADV_TYPE_REPEATER;
+			boolean isRoomRepeater = contact.getType() == AdvertType.ADV_TYPE_ROOM || isRepeater;
 			MenuItem loginItem = new MenuItem(isRoomRepeater && mgr.isAuthenticated(contact) ? "Logout" : "Login…");
 			loginItem.setVisible(isRoomRepeater);
 			loginItem.setOnAction(e -> onLoginLogout.accept(contact));
+
+			// ROOM/REPEATER telemetry & owner-info are ACL-gated by the firmware and
+			// need a prior login (even guest); plain contacts need no login at all.
+			MenuItem telemetryItem = new MenuItem("Get telemetry");
+			telemetryItem.setDisable(!mgr.isConnected() || (isRoomRepeater && !mgr.isAuthenticated(contact)));
+			telemetryItem.setOnAction(e -> mgr.requestTelemetry(contact));
+
+			// Owner info falls back to the unauthenticated ANON_REQ path when not
+			// logged in, so it only needs a connection, not prior auth.
+			MenuItem ownerInfoItem = new MenuItem("Get owner info");
+			ownerInfoItem.setVisible(isRepeater);
+			ownerInfoItem.setDisable(!mgr.isConnected());
+			ownerInfoItem.setOnAction(e -> mgr.requestOwnerInfo(contact));
+
+			// Regions & clock-sync are always unauthenticated ANON_REQ queries — never
+			// need a login, only a connection (and, per firmware, an already-resolved
+			// direct route to the repeater).
+			MenuItem regionsItem = new MenuItem("Get regions");
+			regionsItem.setVisible(isRepeater);
+			regionsItem.setDisable(!mgr.isConnected());
+			regionsItem.setOnAction(e -> mgr.requestRegions(contact));
+
+			MenuItem clockSyncItem = new MenuItem("Clock sync");
+			clockSyncItem.setVisible(isRepeater);
+			clockSyncItem.setDisable(!mgr.isConnected());
+			clockSyncItem.setOnAction(e -> mgr.requestClockSync(contact));
 
 			MenuItem resetPathItem = new MenuItem("Reset path");
 			resetPathItem.setDisable(!mgr.isConnected());
@@ -561,6 +587,9 @@ public class ContactChatPane extends VBox {
 			ContextMenu menu = new ContextMenu(favItem);
 			if (isRoomRepeater)
 				menu.getItems().add(loginItem);
+			menu.getItems().add(telemetryItem);
+			if (isRepeater)
+				menu.getItems().addAll(ownerInfoItem, regionsItem, clockSyncItem);
 			menu.getItems().addAll(new SeparatorMenuItem(), resetPathItem, resyncItem, clearHistoryItem,
 					new SeparatorMenuItem(), copyKeyItem, detailsItem);
 			return menu;
