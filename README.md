@@ -43,7 +43,7 @@ On first run, the app creates a `log/` directory next to the scripts and a confi
 | Transport | Notes |
 |---|---|
 | USB / Serial | COM port enumeration via jSerialComm; works on all platforms |
-| BLE | SimpleBLE; Windows and Linux |
+| BLE | Via [BSToolbox-BLE](https://github.com/jelinj8/Java-BSToolbox-BLE) (a Rust sidecar on `btleplug`); verified on Windows and Linux |
 | TCP | Direct IP connection |
 
 Devices can be saved by name for quick reconnection.
@@ -52,8 +52,8 @@ Devices can be saved by name for quick reconnection.
 
 ```bash
 # Clone
-git clone https://github.com/your-org/BSMeshcoreCompanion.git
-cd BSMeshcoreCompanion
+git clone https://github.com/jelinj8/Java-BSMeshcoreCompanion.git
+cd Java-BSMeshcoreCompanion
 
 # Build distributable zip
 mvn package
@@ -69,6 +69,7 @@ All dependencies are on Maven Central. The companion libraries developed alongsi
 - [Java-Meshcore](https://github.com/jelinj8/Java-Meshcore) — Meshcore protocol implementation
 - [Java-BSToolbox-jfx](https://github.com/jelinj8/Java-BSToolbox-jfx) — JavaFX application and UI framework
 - [Java-BSToolbox](https://github.com/jelinj8/Java-BSToolbox) — base utilities
+- [Java-BSToolbox-BLE](https://github.com/jelinj8/Java-BSToolbox-BLE) — cross-platform BLE client (Rust sidecar on `btleplug`)
 
 ## Contributing
 

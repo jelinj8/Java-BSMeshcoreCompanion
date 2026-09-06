@@ -4,6 +4,7 @@
 .claude
 .factorypath
 .classpath
+.settings
 .BSMeshcoreCompanion
 /log
 /.project

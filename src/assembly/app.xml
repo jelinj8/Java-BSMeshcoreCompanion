@@ -17,18 +17,6 @@
       <destName>app.jar</destName>
     </file>
     <file>
-      <source>${project.basedir}/bin/simplejavable.dll</source>
-      <outputDirectory>/</outputDirectory>
-    </file>
-    <file>
-      <source>${project.basedir}/bin/libsimplejavable.dylib</source>
-      <outputDirectory>/</outputDirectory>
-    </file>
-    <file>
-      <source>${project.basedir}/bin/libsimplejavable.so</source>
-      <outputDirectory>/</outputDirectory>
-    </file>
-    <file>
       <source>${project.basedir}/LICENSE</source>
       <outputDirectory>/</outputDirectory>
     </file>
