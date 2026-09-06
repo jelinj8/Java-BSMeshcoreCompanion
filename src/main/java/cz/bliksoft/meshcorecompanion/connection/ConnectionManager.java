@@ -313,6 +313,7 @@ public class ConnectionManager {
 
 		dialog.showAndWait();
 	}
+
 	private void pickNewBleDevice() {
 		AtomicReference<List<String>> result = new AtomicReference<>(List.of());
 		AtomicReference<IOException> error = new AtomicReference<>();
@@ -368,8 +369,12 @@ public class ConnectionManager {
 			BleMeshcoreCompanion c = null;
 			try {
 				c = new BleMeshcoreCompanion("BSMeshcoreCompanion", address);
-				// BLE connect includes an internal 5-second scan; allow extra time
-				c.awaitAvailable(12000L);
+				// Generous budget: the pre-connect scan (~5s), connect (~23.5s worst case) and
+				// subscribe (~67.5s worst case, see BlePeripheral's CONNECT_TIMEOUT_MS/
+				// DEFAULT_TIMEOUT_MS) run sequentially, on top of the companion handshake itself.
+				// Only the pathological retry case takes anywhere near this long - a healthy
+				// connect completes in a few seconds.
+				c.awaitAvailable(110000L);
 				result.set(c);
 			} catch (TimeoutException | InterruptedException e) {
 				if (c != null)
