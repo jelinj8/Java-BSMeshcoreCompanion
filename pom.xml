@@ -8,7 +8,7 @@
 	<version>${revision}</version>
 
 	<properties>
-		<revision>0.0.1-SNAPSHOT</revision>
+		<revision>0.1.0</revision>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.release>21</maven.compiler.release>
 		<main.class>cz.bliksoft.meshcorecompanion.Main</main.class>
@@ -43,7 +43,7 @@
 		<dependency>
 			<groupId>cz.bliksoft.meshcore</groupId>
 			<artifactId>meshcore-companion</artifactId>
-			<version>0.0.2</version>
+			<version>0.1.0</version>
 		</dependency>
 
 		<!-- https://github.com/Fazecast/jSerialComm -->
@@ -59,7 +59,7 @@
 		<dependency>
 			<groupId>cz.bliksoft.java</groupId>
 			<artifactId>common-java-utils-ble</artifactId>
-			<version>0.3.0-SNAPSHOT</version>
+			<version>0.3.0</version>
 		</dependency>
 
 		<dependency>
