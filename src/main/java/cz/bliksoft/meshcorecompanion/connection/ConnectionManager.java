@@ -372,12 +372,19 @@ public class ConnectionManager {
 			BleMeshcoreCompanion c = null;
 			try {
 				c = new BleMeshcoreCompanion("BSMeshcoreCompanion", address);
-				// Generous budget: the pre-connect scan (~5s), connect (~23.5s worst case) and
-				// subscribe (~67.5s worst case, see BlePeripheral's CONNECT_TIMEOUT_MS/
-				// DEFAULT_TIMEOUT_MS) run sequentially, on top of the companion handshake itself.
-				// Only the pathological retry case takes anywhere near this long - a healthy
-				// connect completes in a few seconds.
-				c.awaitAvailable(110000L);
+				// A healthy connect completes in a few seconds; this budget exists for the
+				// pathological-but-eventually-successful case (pre-connect scan ~5s, connect
+				// ~23.5s worst case, subscribe up to DEFAULT_TIMEOUT_MS - see BlePeripheral).
+				// Trimmed down from an earlier 110s: BleMeshcoreCompanion retries the whole
+				// scan-connect cycle internally on failure (e.g. an unpaired device, which will
+				// never succeed until paired via the OS's own Bluetooth settings - see
+				// BleMeshcoreCompanion's class doc), so the old budget let several full failed
+				// cycles stack up, each logging its own "needs pairing" warning, before finally
+				// timing out here. 60s still comfortably covers one worst-case successful cycle -
+				// and, on platforms where the OS pops its own interactive pairing/PIN prompt
+				// during connect (confirmed NOT the case on Windows - pairing there only happens
+				// via Bluetooth settings beforehand), leaves room to respond to it.
+				c.awaitAvailable(60000L);
 				result.set(c);
 			} catch (TimeoutException | InterruptedException e) {
 				if (c != null)
