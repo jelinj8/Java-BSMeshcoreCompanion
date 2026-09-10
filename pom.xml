@@ -52,10 +52,14 @@
 			<artifactId>jSerialComm</artifactId>
 		</dependency>
 
+		<!-- Pinned to a local 0.3.0-SNAPSHOT install (not the published 0.2.0) while BSToolbox-BLE's
+			Windows scan/discovery fixes are still unreleased - install it locally first:
+			`cd ../BSToolbox-BLE && mvn install` (or the deploy-maven-local skill). Move back to a
+			published release once those fixes ship. -->
 		<dependency>
 			<groupId>cz.bliksoft.java</groupId>
 			<artifactId>common-java-utils-ble</artifactId>
-			<version>0.2.0</version>
+			<version>0.3.0-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>

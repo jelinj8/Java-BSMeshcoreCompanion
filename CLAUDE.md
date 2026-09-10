@@ -51,7 +51,9 @@ All `cz.bliksoft.*` dependencies are published to Maven Central — no private r
 - `cz.bliksoft.java:common-java-utils:0.6-SNAPSHOT` — base utilities
 - `cz.bliksoft.java:dependency-management:1.21.1-SNAPSHOT` — BOM for transitive deps
 - `com.fazecast:jSerialComm:[2.0.0,3.0.0)` — USB serial transport
-- `cz.bliksoft.java:common-java-utils-ble:0.1.0-SNAPSHOT` — BLE transport (`../BSToolbox-BLE`)
+- `cz.bliksoft.java:common-java-utils-ble:0.3.0-SNAPSHOT` — BLE transport (`../BSToolbox-BLE`);
+  pinned to a local snapshot install rather than the published 0.2.0 while fixes for a couple of
+  Windows-only scan/discovery gaps (see BSToolbox-BLE's own history) are still unreleased
 
 ### BSToolbox-jfx Framework (`../BSToolbox-jfx`)
 
