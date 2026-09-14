@@ -3,13 +3,15 @@ package cz.bliksoft.meshcorecompanion.connection;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import com.fazecast.jSerialComm.SerialPort;
 
 import cz.bliksoft.javautils.app.ui.BSAppUI;
 import cz.bliksoft.javautils.app.ui.actions.IconBinder;
@@ -47,6 +49,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 
 public class ConnectionManager {
 
@@ -108,6 +111,27 @@ public class ConnectionManager {
 		return sizedIcon(iconKey);
 	}
 
+	/**
+	 * True if {@code device} is a "usb"/"ble" saved device whose background
+	 * availability check (see {@link #showConnectDialog}) has completed and did NOT
+	 * find it currently present. Always false before that category's check finishes
+	 * (never a false "unavailable" from missing information), for "tcp" devices
+	 * (not checked at all), and for a device with no stored port hint to compare
+	 * against.
+	 */
+	private static boolean isUnavailable(SavedDevice device, Set<String> availableUsb, Set<String> availableBle,
+			boolean usbDone, boolean bleDone) {
+		String hint = device.getPortHint();
+		if (hint == null || hint.isBlank())
+			return false;
+		String upper = hint.toUpperCase(Locale.ROOT);
+		if ("usb".equals(device.getTransport()))
+			return usbDone && !availableUsb.contains(upper);
+		if ("ble".equals(device.getTransport()))
+			return bleDone && !availableBle.contains(upper);
+		return false;
+	}
+
 	// ── Connect dialog ───────────────────────────────────────────────────────
 
 	public void openConnectDialog() {
@@ -117,19 +141,57 @@ public class ConnectionManager {
 	private void showConnectDialog(List<SavedDevice> initialDevices) {
 		ObservableList<SavedDevice> devices = FXCollections.observableArrayList(initialDevices);
 
+		// Availability state for this dialog session only - not persisted, not a
+		// SavedDevice/DeviceRegistry field. Populated in the background (see
+		// dialog.setOnShown below) and read from the cell factory's updateItem, which
+		// always runs on the FX thread - only these sets/flags cross the thread
+		// boundary, so only they need thread-safe types.
+		Set<String> availableUsbPorts = ConcurrentHashMap.newKeySet();
+		Set<String> availableBleAddresses = ConcurrentHashMap.newKeySet();
+		AtomicBoolean usbCheckDone = new AtomicBoolean(false);
+		AtomicBoolean bleCheckDone = new AtomicBoolean(false);
+
 		ListView<SavedDevice> listView = new ListView<>(devices);
 		listView.setPrefHeight(160);
 		listView.setCellFactory(lv -> new ListCell<>() {
+			// Rendered via an explicit Text node (not setText(...)) because -fx-strikethrough
+			// has no effect on ListCell/Labeled itself - confirmed by testing: a CSS class
+			// setting both -fx-opacity and -fx-strikethrough on the cell dimmed it (opacity is
+			// a plain Node property) but never struck the text through. Text.setStrikethrough(...)
+			// is the real, guaranteed-to-work API for this, so drive it directly instead of
+			// relying on CSS for it.
+			private final Text label = new Text();
+			private final HBox box = new HBox(6, label);
+
+			{
+				box.setAlignment(Pos.CENTER_LEFT);
+				// Text uses -fx-fill, not -fx-text-fill, so it won't otherwise track the
+				// selection-highlight/theme color setText(...) got automatically - bind it to
+				// the cell's own textFillProperty (which the skin/theme CSS does drive) instead
+				// of hardcoding a color.
+				label.fillProperty().bind(textFillProperty());
+			}
+
 			@Override
 			protected void updateItem(SavedDevice device, boolean empty) {
 				super.updateItem(device, empty);
 				if (empty || device == null) {
-					setText(null);
 					setGraphic(null);
+					getStyleClass().remove("saved-device-unavailable");
 					return;
 				}
-				setText(device.getName() + "  [" + device.getPubkeyHex() + "]");
-				setGraphic(transportIcon(device.getTransport()));
+				label.setText(device.getName() + "  [" + device.getPubkeyHex() + "]");
+				boolean unavailable = isUnavailable(device, availableUsbPorts, availableBleAddresses,
+						usbCheckDone.get(), bleCheckDone.get());
+				label.setStrikethrough(unavailable);
+				box.getChildren().setAll(transportIcon(device.getTransport()), label);
+				if (unavailable) {
+					if (!getStyleClass().contains("saved-device-unavailable"))
+						getStyleClass().add("saved-device-unavailable");
+				} else {
+					getStyleClass().remove("saved-device-unavailable");
+				}
+				setGraphic(box);
 			}
 		});
 
@@ -238,18 +300,72 @@ public class ConnectionManager {
 			Platform.runLater(this::pickNewBleDevice);
 		});
 
+		boolean hasUsb = devices.stream().anyMatch(d -> "usb".equals(d.getTransport()));
+		boolean hasBle = devices.stream().anyMatch(d -> "ble".equals(d.getTransport()));
+
+		// Background availability probes, kicked off once the dialog has actually
+		// painted (same setOnShown hook ContactChatPane uses for its own post-show
+		// work) - silent and best-effort, so a failure here (Bluetooth off, sidecar
+		// unavailable, ...) just leaves that category's devices unstruck rather than
+		// surfacing an error or marking everything unavailable. Two independent
+		// threads, not one sequential pass, so the near-instant COM-port result can
+		// update the list well before the multi-second BLE scan finishes.
+		dialog.setOnShown(e -> {
+			if (hasUsb) {
+				new Thread(() -> {
+					List<String> ports;
+					try {
+						ports = SerialMeshcoreCompanion.listPorts();
+					} catch (Exception ex) {
+						log.debug("Saved-device availability: listing serial ports failed", ex);
+						return;
+					}
+					for (String p : ports)
+						availableUsbPorts.add(p.split(" – ")[0].trim().toUpperCase(Locale.ROOT));
+					usbCheckDone.set(true);
+					Platform.runLater(listView::refresh);
+				}, "saved-device-usb-availability").start();
+			}
+			if (hasBle) {
+				new Thread(() -> {
+					List<String> found;
+					try {
+						// Same duration as pickNewBleDevice's user-initiated scan - a shorter probe
+						// (previously 3000ms) missed devices that were actually in range and
+						// advertising, likely due to normal BLE advertisement-interval/duty-cycle
+						// variance; this runs silently in the background so the extra couple of
+						// seconds before a result lands doesn't cost the user anything.
+						found = BleMeshcoreCompanion.scanForNusDevices(5000);
+					} catch (Exception ex) {
+						log.debug("Saved-device availability: BLE scan failed", ex);
+						return;
+					}
+					for (String s : found) {
+						String addr = s.contains(" ") ? s.substring(0, s.indexOf(' ')).trim() : s.trim();
+						availableBleAddresses.add(addr.toUpperCase(Locale.ROOT));
+					}
+					bleCheckDone.set(true);
+					Platform.runLater(listView::refresh);
+				}, "saved-device-ble-availability").start();
+			}
+		});
+
 		dialog.showAndWait();
 	}
 
 	private void pickNewSerialPort() {
 		new Thread(() -> {
-			SerialPort[] ports = SerialPort.getCommPorts();
+			// SerialMeshcoreCompanion.listPorts() (not jSerialComm's SerialPort directly)
+			// keeps this class from depending on jSerialComm itself - same reasoning as
+			// the BLE side (see pickNewBleDevice): Meshcore is meant to stay usable
+			// without forcing every transport-specific dependency on every consumer.
+			List<String> ports = SerialMeshcoreCompanion.listPorts();
 			Platform.runLater(() -> showPortSelectionDialog(ports));
 		}, "serial-port-scan").start();
 	}
 
-	private void showPortSelectionDialog(SerialPort[] ports) {
-		if (ports.length == 0) {
+	private void showPortSelectionDialog(List<String> ports) {
+		if (ports.isEmpty()) {
 			Alert alert = new Alert(Alert.AlertType.WARNING);
 			alert.setTitle("Connect");
 			alert.setHeaderText("No serial ports found");
@@ -258,12 +374,7 @@ public class ConnectionManager {
 			return;
 		}
 
-		String[] portNames = new String[ports.length];
-		for (int i = 0; i < ports.length; i++) {
-			portNames[i] = ports[i].getSystemPortName() + " – " + ports[i].getDescriptivePortName();
-		}
-
-		ChoiceDialog<String> dialog = new ChoiceDialog<>(portNames[0], portNames);
+		ChoiceDialog<String> dialog = new ChoiceDialog<>(ports.get(0), ports);
 		dialog.setTitle("New USB connection");
 		dialog.setHeaderText("Select serial port");
 		dialog.setContentText("Port:");
@@ -318,12 +429,19 @@ public class ConnectionManager {
 	}
 
 	private void pickNewBleDevice() {
-		AtomicReference<List<String>> result = new AtomicReference<>(List.of());
+		AtomicReference<BleMeshcoreCompanion.NusScanResult> result = new AtomicReference<>();
 		AtomicReference<IOException> error = new AtomicReference<>();
 
 		BSAppUI.executeWaiting(() -> {
 			try {
-				result.set(BleMeshcoreCompanion.scanForNusDevices(5000));
+				// Not try-with-resources: kept open so a picked device can connect on this
+				// same adapter below instead of opening a second sidecar process and
+				// re-scanning for an address this scan already found - see
+				// showBleDeviceSelectionDialog/connectBle. NusScanResult (not BleAdapter
+				// directly) keeps this class from depending on BSToolbox-BLE itself - the
+				// Meshcore library is meant to stay usable (e.g. TCP-only) without forcing
+				// that dependency on every consumer.
+				result.set(BleMeshcoreCompanion.scanForNusDevicesKeepingAdapter(5000));
 			} catch (IOException e) {
 				error.set(e);
 			}
@@ -332,7 +450,13 @@ public class ConnectionManager {
 		showBleDeviceSelectionDialog(result.get(), error.get());
 	}
 
-	private void showBleDeviceSelectionDialog(List<String> devices, IOException scanError) {
+	/**
+	 * @param scan handle for the scan that ran, or {@code null} if it failed before
+	 *             producing one. Handed off to {@link #connectBle} if the user
+	 *             picks a device; closed here in every other outcome (no devices
+	 *             found, or the user cancels).
+	 */
+	private void showBleDeviceSelectionDialog(BleMeshcoreCompanion.NusScanResult scan, IOException scanError) {
 		if (scanError != null) {
 			Alert alert = new Alert(Alert.AlertType.ERROR);
 			alert.setTitle("BLE Scan");
@@ -342,7 +466,9 @@ public class ConnectionManager {
 			alert.showAndWait();
 			return;
 		}
+		List<String> devices = scan.getDevices();
 		if (devices.isEmpty()) {
+			scan.close();
 			Alert alert = new Alert(Alert.AlertType.WARNING);
 			alert.setTitle("BLE Scan");
 			alert.setHeaderText("No BLE devices found");
@@ -357,21 +483,36 @@ public class ConnectionManager {
 		dialog.setContentText("Device:");
 		dialog.initOwner(BSAppUI.getStage());
 
-		dialog.showAndWait().ifPresent(choice -> {
+		dialog.showAndWait().ifPresentOrElse(choice -> {
 			// format: "AA:BB:CC:DD:EE:FF (name)"
 			String address = choice.contains(" ") ? choice.substring(0, choice.indexOf(' ')).trim() : choice.trim();
-			connectBle(address);
-		});
+			connectBle(address, scan);
+		}, scan::close);
 	}
 
+	/**
+	 * Reconnects to a previously saved device - opens its own adapter and scans.
+	 */
 	private void connectBle(String address) {
+		connectBle(address, null);
+	}
+
+	/**
+	 * @param scan a handle from a scan that already found {@code address} (see
+	 *             {@link #pickNewBleDevice}), reused via
+	 *             {@link BleMeshcoreCompanion.NusScanResult#connect} instead of
+	 *             opening a new adapter and scanning again; or {@code null} to do
+	 *             that as usual.
+	 */
+	private void connectBle(String address, BleMeshcoreCompanion.NusScanResult scan) {
 		AtomicReference<BleMeshcoreCompanion> result = new AtomicReference<>();
 		AtomicReference<Exception> error = new AtomicReference<>();
 
 		BSAppUI.executeWaiting(() -> {
 			BleMeshcoreCompanion c = null;
 			try {
-				c = new BleMeshcoreCompanion("BSMeshcoreCompanion", address);
+				c = scan != null ? scan.connect("BSMeshcoreCompanion", address)
+						: new BleMeshcoreCompanion("BSMeshcoreCompanion", address);
 				// A healthy connect completes in a few seconds; this budget exists for the
 				// pathological-but-eventually-successful case (pre-connect scan ~5s, connect
 				// ~23.5s worst case, subscribe up to DEFAULT_TIMEOUT_MS - see BlePeripheral).
@@ -380,9 +521,11 @@ public class ConnectionManager {
 				// never succeed until paired via the OS's own Bluetooth settings - see
 				// BleMeshcoreCompanion's class doc), so the old budget let several full failed
 				// cycles stack up, each logging its own "needs pairing" warning, before finally
-				// timing out here. 60s still comfortably covers one worst-case successful cycle -
+				// timing out here. 60s still comfortably covers one worst-case successful cycle
+				// -
 				// and, on platforms where the OS pops its own interactive pairing/PIN prompt
-				// during connect (confirmed NOT the case on Windows - pairing there only happens
+				// during connect (confirmed NOT the case on Windows - pairing there only
+				// happens
 				// via Bluetooth settings beforehand), leaves room to respond to it.
 				c.awaitAvailable(60000L);
 				result.set(c);
@@ -552,11 +695,16 @@ public class ConnectionManager {
 		Context.getCurrentContext().remove(MeshcoreCompanion.class);
 		BSAppUI.showStatusMessage("Disconnected");
 		log.info("Disconnected");
-		// c.close() can block for several seconds on a BLE round-trip to the sidecar (see
-		// BlePeripheral's CONNECT_TIMEOUT_MS) - disconnect() is often called on the FX thread
-		// (including app shutdown via AppClosedEvent), so run the close off-thread rather than
-		// freezing the UI on it. Daemon so it can't hold up JVM exit either; the sidecar process
-		// exits on its own once the JVM's end of its stdin pipe closes, even if this doesn't
+		// c.close() can block for several seconds on a BLE round-trip to the sidecar
+		// (see
+		// BlePeripheral's CONNECT_TIMEOUT_MS) - disconnect() is often called on the FX
+		// thread
+		// (including app shutdown via AppClosedEvent), so run the close off-thread
+		// rather than
+		// freezing the UI on it. Daemon so it can't hold up JVM exit either; the
+		// sidecar process
+		// exits on its own once the JVM's end of its stdin pipe closes, even if this
+		// doesn't
 		// finish first.
 		Thread closer = new Thread(() -> {
 			try {

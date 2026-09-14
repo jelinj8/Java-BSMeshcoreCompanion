@@ -105,7 +105,10 @@ public class ChatManager {
 		this.onAuthChanged = callback;
 	}
 
-	/** Concise "message — caused by: message — caused by: ..." summary of an exception chain. */
+	/**
+	 * Concise "message — caused by: message — caused by: ..." summary of an
+	 * exception chain.
+	 */
 	private static String causeChain(Throwable t) {
 		StringBuilder sb = new StringBuilder();
 		for (Throwable cur = t; cur != null; cur = cur.getCause()) {

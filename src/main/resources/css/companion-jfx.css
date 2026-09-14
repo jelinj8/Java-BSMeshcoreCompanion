@@ -234,3 +234,12 @@
 .button.settings-danger-btn:focused {
     -fx-border-color: derive(-danger-color, -25%);
 }
+
+/* =====================================================================
+   CONNECT DIALOG — SAVED DEVICE LIST
+   ===================================================================== */
+
+.saved-device-unavailable {
+    -fx-strikethrough: true;
+    -fx-opacity: 0.5;
+}
