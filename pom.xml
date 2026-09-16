@@ -37,14 +37,9 @@
 		<dependency>
 			<groupId>cz.bliksoft.java</groupId>
 			<artifactId>common-java-utils-jfx</artifactId>
-			<version>0.2</version>
+			<version>0.3</version>
 		</dependency>
 
-		<!-- Pinned to a local 0.2.0-SNAPSHOT install (not the published 0.1.0) for the BLE fixes
-			made alongside common-java-utils-ble 0.5.0-SNAPSHOT above (ScanFilter address/name
-			matching, Windows GATT discovery warm-up, BleAdapter-reuse constructor/scan overload) -
-			install it locally first: `cd ../Meshcore && mvn install`. Move back to a published
-			release once these ship. -->
 		<dependency>
 			<groupId>cz.bliksoft.meshcore</groupId>
 			<artifactId>meshcore-companion</artifactId>
@@ -60,7 +55,7 @@
 		<dependency>
 			<groupId>cz.bliksoft.java</groupId>
 			<artifactId>common-java-utils-ble</artifactId>
-			<version>0.5.0</version>
+			<version>0.6.0</version>
 		</dependency>
 
 		<dependency>
