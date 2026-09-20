@@ -43,7 +43,7 @@
 		<dependency>
 			<groupId>cz.bliksoft.meshcore</groupId>
 			<artifactId>meshcore-companion</artifactId>
-			<version>0.2.0</version>
+			<version>0.3.0</version>
 		</dependency>
 
 		<!-- https://github.com/Fazecast/jSerialComm -->
@@ -55,7 +55,7 @@
 		<dependency>
 			<groupId>cz.bliksoft.java</groupId>
 			<artifactId>common-java-utils-ble</artifactId>
-			<version>0.6.0</version>
+			<version>0.7.0</version>
 		</dependency>
 
 		<dependency>

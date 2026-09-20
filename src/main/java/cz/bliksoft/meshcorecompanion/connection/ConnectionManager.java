@@ -46,6 +46,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -486,47 +487,63 @@ public class ConnectionManager {
 		dialog.showAndWait().ifPresentOrElse(choice -> {
 			// format: "AA:BB:CC:DD:EE:FF (name)"
 			String address = choice.contains(" ") ? choice.substring(0, choice.indexOf(' ')).trim() : choice.trim();
-			connectBle(address, scan);
+			// Asked up front here - only for a brand-new device found via scan, never on a
+			// reconnect to an already-saved one (see connectBle(String) below) - a device
+			// that requires bonding gets exactly one chance to have the right PIN offered,
+			// since BleMeshcoreCompanion only ever attempts pairing on this same first
+			// connect (see its class doc). Pre-filled with the factory default; cleared by
+			// the user it means "don't pair at all" (e.g. already paired manually, or known
+			// not to need it) - either way still goes through, not a validation failure.
+			TextInputDialog pinDialog = new TextInputDialog(BleMeshcoreCompanion.DEFAULT_BLE_PIN);
+			pinDialog.setTitle("BLE Pairing");
+			pinDialog.setHeaderText("Pair with " + address);
+			pinDialog.setContentText("PIN (leave blank to skip pairing):");
+			pinDialog.initOwner(BSAppUI.getStage());
+			pinDialog.showAndWait().ifPresentOrElse(pin -> connectBle(address, scan, pin), scan::close);
 		}, scan::close);
 	}
 
 	/**
 	 * Reconnects to a previously saved device - opens its own adapter and scans.
+	 * Never offers a pairing PIN: an already-saved device was already paired (if
+	 * it needed to be) the first time it was added via {@link #pickNewBleDevice}.
 	 */
 	private void connectBle(String address) {
-		connectBle(address, null);
+		connectBle(address, null, null);
 	}
 
 	/**
-	 * @param scan a handle from a scan that already found {@code address} (see
-	 *             {@link #pickNewBleDevice}), reused via
-	 *             {@link BleMeshcoreCompanion.NusScanResult#connect} instead of
-	 *             opening a new adapter and scanning again; or {@code null} to do
-	 *             that as usual.
+	 * @param scan    a handle from a scan that already found {@code address} (see
+	 *                {@link #pickNewBleDevice}), reused via
+	 *                {@link BleMeshcoreCompanion.NusScanResult#connect} instead of
+	 *                opening a new adapter and scanning again; or {@code null} to
+	 *                do that as usual (a reconnect - {@code pairPin} is expected
+	 *                {@code null} too in that case, see {@link #connectBle(String)}).
+	 * @param pairPin PIN to pair with automatically right after connecting (see
+	 *                {@link #showBleDeviceSelectionDialog}, which is the only
+	 *                caller that ever supplies a non-null one), or
+	 *                {@code null}/blank to skip pairing.
 	 */
-	private void connectBle(String address, BleMeshcoreCompanion.NusScanResult scan) {
+	private void connectBle(String address, BleMeshcoreCompanion.NusScanResult scan, String pairPin) {
 		AtomicReference<BleMeshcoreCompanion> result = new AtomicReference<>();
 		AtomicReference<Exception> error = new AtomicReference<>();
 
 		BSAppUI.executeWaiting(() -> {
 			BleMeshcoreCompanion c = null;
 			try {
-				c = scan != null ? scan.connect("BSMeshcoreCompanion", address)
+				c = scan != null ? scan.connect("BSMeshcoreCompanion", address, pairPin)
 						: new BleMeshcoreCompanion("BSMeshcoreCompanion", address);
 				// A healthy connect completes in a few seconds; this budget exists for the
 				// pathological-but-eventually-successful case (pre-connect scan ~5s, connect
 				// ~23.5s worst case, subscribe up to DEFAULT_TIMEOUT_MS - see BlePeripheral).
 				// Trimmed down from an earlier 110s: BleMeshcoreCompanion retries the whole
-				// scan-connect cycle internally on failure (e.g. an unpaired device, which will
-				// never succeed until paired via the OS's own Bluetooth settings - see
-				// BleMeshcoreCompanion's class doc), so the old budget let several full failed
-				// cycles stack up, each logging its own "needs pairing" warning, before finally
-				// timing out here. 60s still comfortably covers one worst-case successful cycle
-				// -
-				// and, on platforms where the OS pops its own interactive pairing/PIN prompt
-				// during connect (confirmed NOT the case on Windows - pairing there only
-				// happens
-				// via Bluetooth settings beforehand), leaves room to respond to it.
+				// scan-connect cycle internally on failure, so the old budget let several full
+				// failed cycles stack up before timing out here. 60s still comfortably covers one
+				// worst-case successful cycle. A device needing bonding now pairs automatically on
+				// this first (scan-based) connect - see BleMeshcoreCompanion's class doc and
+				// DEFAULT_BLE_PIN - rather than requiring the OS's own Bluetooth settings first;
+				// this only used a fallback path (macOS - no programmatic-pairing API exists there
+				// at all - or a device whose PIN was changed from the default) still needs that.
 				c.awaitAvailable(60000L);
 				result.set(c);
 			} catch (TimeoutException | InterruptedException e) {
