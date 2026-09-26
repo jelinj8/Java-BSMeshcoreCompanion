@@ -27,8 +27,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build Commands
 
 ```bash
-# Build distributable zip (output: target/bsmeshcorecompanion-desktop-<version>.zip)
+# Build distributable zip for this machine's platform
+# (output: target/bsmeshcorecompanion-desktop-<version>-<platform>.zip)
 mvn package
+# ... or for another one (win, linux, linux-aarch64, mac, mac-aarch64)
+mvn package -Djavafx.platform=linux
+# ... or for all of them at once (release; attached with the platform as classifier)
+mvn package -Pdist
 
 # Run during development (no zip needed)
 mvn javafx:run
@@ -37,7 +42,15 @@ mvn javafx:run
 mvn test -Dtest=ClassName#methodName
 ```
 
-Distribution zip contains `run.bat` (Windows, no console window), `run.sh` (Linux), `run-mac.sh` (macOS), plus `lib/`, `config/`, `icons/`.
+The zip is per platform: JavaFX jars carry the natives of one platform (`javafx.platform`, the
+OpenJFX classifier; `platform-*` profiles pick the build machine's). It contains `run.bat` (Windows,
+no console window) and `run.sh` (Linux/macOS), plus `lib/` and `config/`. Both scripts change to the
+app directory first: `config/`, `data/` and `log/` are resolved against the working directory.
+`lib/` comes from the assembly's dependencySet, not a copied folder, so jars of earlier builds
+can't leak in. Assembly layout: `src/assembly/component.xml` (app.jar, scripts, config - shared),
+`app.xml` (default build), `dist/<platform>.xml` (`-Pdist`: all non-JavaFX dependencies plus the
+JavaFX jars of that platform, which the dist profile copies to `target/dist/<platform>/lib` as the
+classifier variants of the resolved `org.openjfx` dependencies).
 
 All `cz.bliksoft.*` dependencies are published to Maven Central — no private repository needed.
 

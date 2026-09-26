@@ -13,6 +13,12 @@
 		<maven.compiler.release>21</maven.compiler.release>
 		<main.class>cz.bliksoft.meshcorecompanion.Main</main.class>
 		<skipGitInfo>false</skipGitInfo>
+		<!-- Target platform of the distribution zip = JavaFX's native classifier, which the OpenJFX
+		     poms pick from the build machine; the platform-* profiles below mirror that for the zip
+		     name. For another platform override it (the OpenJFX poms read the same property):
+		       mvn package -Djavafx.platform=linux
+		     (win, linux, linux-aarch64, mac, mac-aarch64). -->
+		<javafx.platform>win</javafx.platform>
 	</properties>
 
 	<dependencyManagement>
@@ -100,27 +106,6 @@
 				</configuration>
 			</plugin>
 
-			<!-- copy runtime dependencies to target/app/lib -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<version>3.6.1</version>
-				<executions>
-					<execution>
-						<id>copy-runtime-deps</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy-dependencies</goal>
-						</goals>
-						<configuration>
-							<includeScope>runtime</includeScope>
-							<outputDirectory>${project.build.directory}/app/lib</outputDirectory>
-							<excludeTypes>pom</excludeTypes>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
 			<!-- assemble distributable zip: app.jar + lib + scripts + config + icons -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -135,6 +120,7 @@
 						</goals>
 						<configuration>
 							<appendAssemblyId>false</appendAssemblyId>
+							<finalName>${project.artifactId}-${project.version}-${javafx.platform}</finalName>
 							<descriptors>
 								<descriptor>src/assembly/app.xml</descriptor>
 							</descriptors>
@@ -218,4 +204,158 @@
 			</plugin>
 		</plugins>
 	</build>
+	<profiles>
+		<!-- javafx.platform of the build machine (see the property); -Djavafx.platform wins -->
+		<profile>
+			<id>platform-linux</id>
+			<activation>
+				<os>
+					<name>linux</name>
+					<arch>amd64</arch>
+				</os>
+			</activation>
+			<properties>
+				<javafx.platform>linux</javafx.platform>
+			</properties>
+		</profile>
+		<profile>
+			<id>platform-linux-aarch64</id>
+			<activation>
+				<os>
+					<name>linux</name>
+					<arch>aarch64</arch>
+				</os>
+			</activation>
+			<properties>
+				<javafx.platform>linux-aarch64</javafx.platform>
+			</properties>
+		</profile>
+		<profile>
+			<id>platform-mac</id>
+			<activation>
+				<os>
+					<family>mac</family>
+					<arch>x86_64</arch>
+				</os>
+			</activation>
+			<properties>
+				<javafx.platform>mac</javafx.platform>
+			</properties>
+		</profile>
+		<profile>
+			<id>platform-mac-aarch64</id>
+			<activation>
+				<os>
+					<family>mac</family>
+					<arch>aarch64</arch>
+				</os>
+			</activation>
+			<properties>
+				<javafx.platform>mac-aarch64</javafx.platform>
+			</properties>
+		</profile>
+		<!-- mvn package -Pdist: a zip for every platform (for a release) instead of just
+		     javafx.platform's - one build, the JavaFX jars of each platform copied next to it
+		     (the classifier variants of the resolved org.openjfx dependencies). -->
+		<profile>
+			<id>dist</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-dependency-plugin</artifactId>
+						<version>3.6.1</version>
+						<configuration>
+							<includeScope>runtime</includeScope>
+							<includeGroupIds>org.openjfx</includeGroupIds>
+						</configuration>
+						<executions>
+						<execution>
+							<id>javafx-win</id>
+							<phase>prepare-package</phase>
+							<goals>
+								<goal>copy-dependencies</goal>
+							</goals>
+							<configuration>
+								<classifier>win</classifier>
+								<outputDirectory>${project.build.directory}/dist/win/lib</outputDirectory>
+							</configuration>
+						</execution>
+						<execution>
+							<id>javafx-linux</id>
+							<phase>prepare-package</phase>
+							<goals>
+								<goal>copy-dependencies</goal>
+							</goals>
+							<configuration>
+								<classifier>linux</classifier>
+								<outputDirectory>${project.build.directory}/dist/linux/lib</outputDirectory>
+							</configuration>
+						</execution>
+						<execution>
+							<id>javafx-linux-aarch64</id>
+							<phase>prepare-package</phase>
+							<goals>
+								<goal>copy-dependencies</goal>
+							</goals>
+							<configuration>
+								<classifier>linux-aarch64</classifier>
+								<outputDirectory>${project.build.directory}/dist/linux-aarch64/lib</outputDirectory>
+							</configuration>
+						</execution>
+						<execution>
+							<id>javafx-mac</id>
+							<phase>prepare-package</phase>
+							<goals>
+								<goal>copy-dependencies</goal>
+							</goals>
+							<configuration>
+								<classifier>mac</classifier>
+								<outputDirectory>${project.build.directory}/dist/mac/lib</outputDirectory>
+							</configuration>
+						</execution>
+						<execution>
+							<id>javafx-mac-aarch64</id>
+							<phase>prepare-package</phase>
+							<goals>
+								<goal>copy-dependencies</goal>
+							</goals>
+							<configuration>
+								<classifier>mac-aarch64</classifier>
+								<outputDirectory>${project.build.directory}/dist/mac-aarch64/lib</outputDirectory>
+							</configuration>
+						</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>make-zip</id>
+								<phase>none</phase>
+							</execution>
+							<execution>
+								<id>make-dist-zips</id>
+								<phase>package</phase>
+								<goals>
+									<goal>single</goal>
+								</goals>
+								<configuration>
+									<finalName>${project.artifactId}-${project.version}</finalName>
+									<descriptors>
+								<descriptor>src/assembly/dist/win.xml</descriptor>
+								<descriptor>src/assembly/dist/linux.xml</descriptor>
+								<descriptor>src/assembly/dist/linux-aarch64.xml</descriptor>
+								<descriptor>src/assembly/dist/mac.xml</descriptor>
+								<descriptor>src/assembly/dist/mac-aarch64.xml</descriptor>
+									</descriptors>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

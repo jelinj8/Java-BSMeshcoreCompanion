@@ -24,6 +24,8 @@ Open-source desktop companion app for [Meshcore](https://github.com/ripplebiz/Me
 - Windows 10+, Linux, or macOS
 
 No additional installation needed — JavaFX and all dependencies are bundled in the distribution zip.
+Download the zip for your platform (`-win`, `-linux`, `-linux-aarch64`, `-mac`, `-mac-aarch64`):
+JavaFX's native libraries differ per platform.
 
 ## Running
 
@@ -33,10 +35,11 @@ No additional installation needed — JavaFX and all dependencies are bundled in
 | Platform | Command |
 |---|---|
 | Windows | double-click `run.bat` |
-| Linux | `./run.sh` |
-| macOS | `./run-mac.sh` |
+| Linux, macOS | `./run.sh` |
 
-On first run, the app creates a `log/` directory next to the scripts and a config folder in your home directory (`~/.BSMeshcoreCompanion/`).
+On first run, the app creates `log/`, `data/` and a local `.BSMeshcoreCompanion/` configuration
+folder next to the scripts (wherever it is started from), and the global configuration folder
+`~/.BSMeshcoreCompanion/` in your home directory.
 
 ## Connection types
 
@@ -62,10 +65,15 @@ through macOS's own Bluetooth settings before connecting from the app.
 git clone https://github.com/jelinj8/Java-BSMeshcoreCompanion.git
 cd Java-BSMeshcoreCompanion
 
-# Build distributable zip
+# Build distributable zip for this machine's platform
 mvn package
+# Output: target/bsmeshcorecompanion-desktop-<version>-<platform>.zip
 
-# Output: target/bsmeshcorecompanion-desktop-<version>.zip
+# ... or for another platform (win, linux, linux-aarch64, mac, mac-aarch64)
+mvn package -Djavafx.platform=linux
+
+# ... or for all platforms at once (release)
+mvn package -Pdist
 
 # Run during development (no zip needed)
 mvn javafx:run

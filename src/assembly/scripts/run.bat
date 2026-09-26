@@ -2,6 +2,8 @@
 setlocal
 set "DIR=%~dp0"
 if "%DIR:~-1%"=="\" set "DIR=%DIR:~0,-1%"
+rem config\, data\ and log\ are resolved against the app directory
+cd /d "%DIR%"
 
 start "" javaw ^
   --module-path "%DIR%\lib" ^
