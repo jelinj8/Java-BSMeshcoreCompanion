@@ -204,6 +204,18 @@
 			<attribute name="comment" value="D-Bus library built into the Linux BLE bridge" />
 			<attribute name="licence" value="AFL21,GPL2" />
 		</file>
+		<file name="bstoolbox-ble">
+			<attribute name="name" value="BSToolbox-BLE" />
+			<attribute name="url" value="https://github.com/jelinj8/Java-BSToolbox-BLE" />
+			<attribute name="comment" value="Bluetooth LE client library (with the native BLE bridge)" />
+			<attribute name="licence" value="LGPL21" />
+		</file>
+		<file name="meshcore">
+			<attribute name="name" value="Java-Meshcore" />
+			<attribute name="url" value="https://github.com/jelinj8/Java-Meshcore" />
+			<attribute name="comment" value="MeshCore companion protocol library" />
+			<attribute name="licence" value="LGPL21" />
+		</file>
 	</file>
 
 </root>
