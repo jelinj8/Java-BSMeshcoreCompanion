@@ -42,6 +42,11 @@ mvn javafx:run
 mvn test -Dtest=ClassName#methodName
 ```
 
+No `javafx-web` (+ `javafx-media`, ~37 MB): optional in common-java-utils-jfx (0.6+), whose About
+dialog (Alt+F1) is WebView-free. Its Credits tab lists the shipped third-party libraries; the ones
+beyond common-java-utils-jfx are in `lib_credits` of `BSMeshcoreCompanionModule.xml` - keep it in
+step with the dependencies.
+
 The zip is per platform: JavaFX jars carry the natives of one platform (`javafx.platform`, the
 OpenJFX classifier; `platform-*` profiles pick the build machine's). It contains `run.bat` (Windows,
 no console window) and `run.sh` (Linux/macOS), plus `lib/` and `config/`. Both scripts change to the
@@ -52,7 +57,8 @@ can't leak in. Assembly layout: `src/assembly/component.xml` (app.jar, scripts, 
 JavaFX jars of that platform, which the dist profile copies to `target/dist/<platform>/lib` as the
 classifier variants of the resolved `org.openjfx` dependencies).
 
-All `cz.bliksoft.*` dependencies are published to Maven Central — no private repository needed.
+All `cz.bliksoft.*` dependencies are published to Maven Central — no private repository needed —
+except common-java-utils-jfx 0.6-SNAPSHOT until its release (Bliksoft snapshot repository).
 
 ## Architecture Overview
 

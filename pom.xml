@@ -43,7 +43,10 @@
 		<dependency>
 			<groupId>cz.bliksoft.java</groupId>
 			<artifactId>common-java-utils-jfx</artifactId>
-			<version>0.4</version>
+			<!-- 0.6-SNAPSHOT until its release (resolves from the Bliksoft snapshot repository, not
+			     Central): WebView-free About dialog with the lib_credits of the dependencies,
+			     javafx-web optional, JUnit only in test scope. -->
+			<version>0.6-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>

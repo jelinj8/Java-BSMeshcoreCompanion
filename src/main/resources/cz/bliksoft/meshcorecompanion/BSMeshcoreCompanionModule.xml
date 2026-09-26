@@ -149,4 +149,61 @@
 
 	<include path="config/settings.xml" />
 
+	<!-- About dialog (BSToolbox-jfx HelpAboutPane): application info and the credits of the
+	     third-party libraries this application ships beyond those of common-java-utils-jfx
+	     (BaseAppModule.xml) and common-java-utils-resources -->
+	<file name="core">
+		<file name="ui">
+			<file name="about">
+				<attribute name="description" value="Desktop companion application for MeshCore mesh radios" />
+				<attribute name="copyright" value="Jakub Jelínek, © 2026 - GNU Lesser General Public License 2.1" />
+				<attribute name="url" value="https://github.com/jelinj8/Java-BSMeshcoreCompanion" />
+			</file>
+		</file>
+	</file>
+
+	<file name="licences">
+		<file name="AFL21">
+			<attribute name="name" value="Academic Free License 2.1" />
+			<attribute name="url" value="https://spdx.org/licenses/AFL-2.1.html" />
+		</file>
+		<file name="GPL2">
+			<attribute name="name" value="GNU General Public License, version 2 or later" />
+			<attribute name="url" value="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html" />
+		</file>
+	</file>
+
+	<file name="lib_credits" sorted="true">
+		<file name="jserialcomm">
+			<attribute name="name" value="jSerialComm" />
+			<attribute name="url" value="https://fazecast.github.io/jSerialComm/" />
+			<attribute name="comment" value="serial port access" />
+			<attribute name="licence" value="APACHE2,LGPL3" />
+		</file>
+		<file name="jackson">
+			<attribute name="name" value="Jackson" />
+			<attribute name="url" value="https://github.com/FasterXML/jackson" />
+			<attribute name="comment" value="JSON processing" />
+			<attribute name="licence" value="APACHE2" />
+		</file>
+		<file name="btleplug">
+			<attribute name="name" value="btleplug" />
+			<attribute name="url" value="https://github.com/deviceplug/btleplug" />
+			<attribute name="comment" value="Bluetooth LE library of the BLE bridge (native helper program)" />
+			<attribute name="licence" value="MIT,APACHE2,BSD3" />
+		</file>
+		<file name="rust crates">
+			<attribute name="name" value="Rust crates: Tokio, Serde, futures, uuid, dbus-rs, windows-rs" />
+			<attribute name="url" value="https://crates.io/" />
+			<attribute name="comment" value="Rust libraries of the BLE bridge" />
+			<attribute name="licence" value="MIT,APACHE2" />
+		</file>
+		<file name="libdbus">
+			<attribute name="name" value="libdbus (D-Bus)" />
+			<attribute name="url" value="https://www.freedesktop.org/wiki/Software/dbus/" />
+			<attribute name="comment" value="D-Bus library built into the Linux BLE bridge" />
+			<attribute name="licence" value="AFL21,GPL2" />
+		</file>
+	</file>
+
 </root>
