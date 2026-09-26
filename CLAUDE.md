@@ -57,8 +57,7 @@ can't leak in. Assembly layout: `src/assembly/component.xml` (app.jar, scripts, 
 JavaFX jars of that platform, which the dist profile copies to `target/dist/<platform>/lib` as the
 classifier variants of the resolved `org.openjfx` dependencies).
 
-All `cz.bliksoft.*` dependencies are published to Maven Central — no private repository needed —
-except common-java-utils-jfx 0.6-SNAPSHOT until its release (Bliksoft snapshot repository).
+All `cz.bliksoft.*` dependencies are published to Maven Central — no private repository needed.
 
 ## Architecture Overview
 
