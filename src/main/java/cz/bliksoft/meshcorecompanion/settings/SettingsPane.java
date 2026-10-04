@@ -66,7 +66,7 @@ public class SettingsPane extends VBox implements IContextProvider, IClose, ISav
 		VBox content = new VBox(12, appSection, new Separator(), radioSection, new Separator(), locationSection,
 				new Separator(), behaviourSection, new Separator(), autoaddSection, new Separator(), tuningSection,
 				new Separator(), securitySection, new Separator(), floodScopeSection, new Separator(),
-				buildBackupSection(), new Separator(), buildDangerZoneSection());
+				new TrafficLogSection(), new Separator(), buildBackupSection(), new Separator(), buildDangerZoneSection());
 		content.setPadding(new Insets(16));
 
 		ScrollPane scroll = new ScrollPane(content);

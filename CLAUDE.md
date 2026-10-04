@@ -16,6 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ChatManager: full lifecycle, message persistence (`ChatStore`, JSON per device/conversation), `setLogFramePairing(true)` for SNR/RSSI pairing
 - Settings: theme (Default/System/Light/Dark), log history size, radio config (freq/BW/SF/CR/TX power/repeat), flood scope / regions (persisted default scope, session override, force-unscoped), backup/restore
 - Log window: live PUSH frame stream
+- Traffic log: per device + transport checkbox in settings, one JSON per frame / BLE sidecar message in `log/traffic` (`connection/TrafficLogging`)
 
 **Pending:**
 - Device time sync on connect
@@ -64,14 +65,14 @@ All `cz.bliksoft.*` dependencies are published to Maven Central — no private r
 ### Dependencies and Java Version
 
 - **Java 21**, JavaFX 21.0.9
-- `cz.bliksoft.meshcore:meshcore-companion:0.0.2-SNAPSHOT` — radio protocol library (`../Meshcore`)
+- `cz.bliksoft.meshcore:meshcore-companion:0.4.0-SNAPSHOT` — radio protocol library (`../Meshcore`)
 - `cz.bliksoft.java:common-java-utils-jfx:0.1-SNAPSHOT` — application/GUI framework (`../BSToolbox-jfx`)
 - `cz.bliksoft.java:common-java-utils:0.6-SNAPSHOT` — base utilities
 - `cz.bliksoft.java:dependency-management:1.21.1-SNAPSHOT` — BOM for transitive deps
 - `com.fazecast:jSerialComm:[2.0.0,3.0.0)` — USB serial transport
-- `cz.bliksoft.java:common-java-utils-ble:0.3.0-SNAPSHOT` — BLE transport (`../BSToolbox-BLE`);
-  pinned to a local snapshot install rather than the published 0.2.0 while fixes for a couple of
-  Windows-only scan/discovery gaps (see BSToolbox-BLE's own history) are still unreleased
+- `cz.bliksoft.java:common-java-utils-ble:0.10.0-SNAPSHOT` — BLE transport (`../BSToolbox-BLE`);
+  local snapshot installs of both until the traffic log (`setTrafficLogDir` / `BleAdapter.setLogDir`)
+  is released
 
 ### BSToolbox-jfx Framework (`../BSToolbox-jfx`)
 

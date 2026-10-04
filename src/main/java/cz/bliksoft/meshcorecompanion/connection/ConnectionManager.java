@@ -531,8 +531,14 @@ public class ConnectionManager {
 		BSAppUI.executeWaiting(() -> {
 			BleMeshcoreCompanion c = null;
 			try {
-				c = scan != null ? scan.connect("BSMeshcoreCompanion", address, pairPin)
-						: new BleMeshcoreCompanion("BSMeshcoreCompanion", address);
+				// set as default so the traffic log (if on for this device) covers the handshake
+				MeshcoreCompanionBase.setDefaultTrafficLogDir(TrafficLogging.dirForHint("ble", address));
+				try {
+					c = scan != null ? scan.connect("BSMeshcoreCompanion", address, pairPin)
+							: new BleMeshcoreCompanion("BSMeshcoreCompanion", address);
+				} finally {
+					MeshcoreCompanionBase.setDefaultTrafficLogDir(null);
+				}
 				// A healthy connect completes in a few seconds; this budget exists for the
 				// pathological-but-eventually-successful case (pre-connect scan ~5s, connect
 				// ~23.5s worst case, subscribe up to DEFAULT_TIMEOUT_MS - see BlePeripheral).
@@ -590,7 +596,13 @@ public class ConnectionManager {
 		new Thread(() -> {
 			MeshcoreCompanionBase created = null;
 			try {
-				TCPMeshcoreCompanion c = new TCPMeshcoreCompanion("BSMeshcoreCompanion", host, port);
+				MeshcoreCompanionBase.setDefaultTrafficLogDir(TrafficLogging.dirForHint("tcp", host + ":" + port));
+				TCPMeshcoreCompanion c;
+				try {
+					c = new TCPMeshcoreCompanion("BSMeshcoreCompanion", host, port);
+				} finally {
+					MeshcoreCompanionBase.setDefaultTrafficLogDir(null);
+				}
 				created = c;
 				c.awaitAvailable(2000L);
 				c.addAvailabilityListener(new MeshcoreCompanionBase.AvailabilityListener() {
@@ -637,7 +649,13 @@ public class ConnectionManager {
 		new Thread(() -> {
 			MeshcoreCompanionBase created = null;
 			try {
-				SerialMeshcoreCompanion c = new SerialMeshcoreCompanion("BSMeshcoreCompanion", portName, baud);
+				MeshcoreCompanionBase.setDefaultTrafficLogDir(TrafficLogging.dirForHint("usb", portName));
+				SerialMeshcoreCompanion c;
+				try {
+					c = new SerialMeshcoreCompanion("BSMeshcoreCompanion", portName, baud);
+				} finally {
+					MeshcoreCompanionBase.setDefaultTrafficLogDir(null);
+				}
 				created = c;
 				c.awaitAvailable(2000L);
 				c.addAvailabilityListener(new MeshcoreCompanionBase.AvailabilityListener() {
@@ -686,6 +704,8 @@ public class ConnectionManager {
 		String nodeName = si.getNodeName();
 		String name = (nodeName != null && !nodeName.isBlank()) ? nodeName : pubHex;
 		DeviceRegistry.addOrUpdate(new SavedDevice(name, pubHex, hint, transport));
+		// the port hint guessed before connecting may have belonged to another device
+		TrafficLogging.apply(c);
 		log.info("Device saved: {} [{}] via {} on {}", name, pubHex, transport, hint);
 	}
 
