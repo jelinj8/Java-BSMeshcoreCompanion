@@ -108,6 +108,45 @@
 				</configuration>
 			</plugin>
 
+			<!-- application icon for shortcuts of the run script: the main window's iconBase
+			(BSMeshcoreCompanionModule.xml) rendered into target/BSMeshcoreCompanion.ico.
+			IcoGenerator is new in common-java-utils 0.12, so that comes in as a plugin dependency
+			(ahead of the project's own, older one on the exec classpath) - build time only, the
+			zip's lib/ is unaffected. jsvg for the .svg comes from the project classpath. -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>3.5.0</version>
+				<executions>
+					<execution>
+						<id>app-icon</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<mainClass>cz.bliksoft.javautils.images.ico.IcoGenerator</mainClass>
+							<includePluginDependencies>true</includePluginDependencies>
+							<arguments>
+								<argument>--xml</argument>
+								<argument>/cz/bliksoft/meshcorecompanion/BSMeshcoreCompanionModule.xml</argument>
+								<argument>--attribute</argument>
+								<argument>iconBase</argument>
+								<argument>${project.build.directory}/BSMeshcoreCompanion.ico</argument>
+							</arguments>
+							<cleanupDaemonThreads>false</cleanupDaemonThreads>
+						</configuration>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>cz.bliksoft.java</groupId>
+						<artifactId>common-java-utils</artifactId>
+						<version>0.12-SNAPSHOT</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+
 			<!-- assemble distributable zip: app.jar + lib + scripts + config + icons -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
