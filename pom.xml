@@ -108,15 +108,21 @@
 				</configuration>
 			</plugin>
 
-			<!-- application icon for shortcuts of the run script: the main window's iconBase
-			(BSMeshcoreCompanionModule.xml) rendered into target/BSMeshcoreCompanion.ico.
-			IcoGenerator is new in common-java-utils 0.12, so that comes in as a plugin dependency
-			(ahead of the project's own, older one on the exec classpath) - build time only, the
-			zip's lib/ is unaffected. jsvg for the .svg comes from the project classpath. -->
+			<!-- application icons: the main window's iconBase (BSMeshcoreCompanionModule.xml) rendered
+			into target/BSMeshcoreCompanion.ico (16-256 px, shortcuts of run.bat) and
+			target/BSMeshcoreCompanion.png (256 px, Linux .desktop launchers). IcoGenerator is new in
+			common-java-utils 0.12, so that comes in as a plugin dependency (ahead of the project's
+			own, older one on the exec classpath) - build time only, the zip's lib/ is unaffected.
+			jsvg for the .svg comes from the project classpath. -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
 				<version>3.5.0</version>
+				<configuration>
+					<mainClass>cz.bliksoft.javautils.images.ico.IcoGenerator</mainClass>
+					<includePluginDependencies>true</includePluginDependencies>
+					<cleanupDaemonThreads>false</cleanupDaemonThreads>
+				</configuration>
 				<executions>
 					<execution>
 						<id>app-icon</id>
@@ -125,8 +131,6 @@
 							<goal>java</goal>
 						</goals>
 						<configuration>
-							<mainClass>cz.bliksoft.javautils.images.ico.IcoGenerator</mainClass>
-							<includePluginDependencies>true</includePluginDependencies>
 							<arguments>
 								<argument>--xml</argument>
 								<argument>/cz/bliksoft/meshcorecompanion/BSMeshcoreCompanionModule.xml</argument>
@@ -134,7 +138,22 @@
 								<argument>iconBase</argument>
 								<argument>${project.build.directory}/BSMeshcoreCompanion.ico</argument>
 							</arguments>
-							<cleanupDaemonThreads>false</cleanupDaemonThreads>
+						</configuration>
+					</execution>
+					<execution>
+						<id>app-icon-png</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<arguments>
+								<argument>--xml</argument>
+								<argument>/cz/bliksoft/meshcorecompanion/BSMeshcoreCompanionModule.xml</argument>
+								<argument>--attribute</argument>
+								<argument>iconBase</argument>
+								<argument>${project.build.directory}/BSMeshcoreCompanion.png</argument>
+							</arguments>
 						</configuration>
 					</execution>
 				</executions>

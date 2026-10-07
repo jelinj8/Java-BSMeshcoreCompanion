@@ -14,6 +14,11 @@
       <source>${project.build.directory}/BSMeshcoreCompanion.ico</source>
       <outputDirectory>/</outputDirectory>
     </file>
+    <!-- the same icon as PNG, for Linux .desktop launchers of run.sh (app-icon-png) -->
+    <file>
+      <source>${project.build.directory}/BSMeshcoreCompanion.png</source>
+      <outputDirectory>/</outputDirectory>
+    </file>
     <file>
       <source>${project.basedir}/LICENSE</source>
       <outputDirectory>/</outputDirectory>

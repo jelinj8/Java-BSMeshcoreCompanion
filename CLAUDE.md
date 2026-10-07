@@ -50,11 +50,12 @@ step with the dependencies.
 
 The zip is per platform: JavaFX jars carry the natives of one platform (`javafx.platform`, the
 OpenJFX classifier; `platform-*` profiles pick the build machine's). It contains `run.bat` (Windows,
-no console window) and `run.sh` (Linux/macOS), plus `BSMeshcoreCompanion.ico`, `lib/` and `config/`.
-`BSMeshcoreCompanion.ico` (16–256 px, for shortcuts to `run.bat`) is generated in `prepare-package` by
+no console window) and `run.sh` (Linux/macOS), plus `BSMeshcoreCompanion.ico`/`.png`, `lib/` and `config/`.
+`BSMeshcoreCompanion.ico` (16–256 px, for shortcuts to `run.bat`) and `BSMeshcoreCompanion.png`
+(256 px, Linux `.desktop` launchers) are generated in `prepare-package` by
 BSToolbox's `images.ico.IcoGenerator` (exec-maven-plugin) from the main window's `iconBase` iconspec in
 `BSMeshcoreCompanionModule.xml` — change the icon there, not in a committed file. `IcoGenerator` needs
-common-java-utils 0.12 (a plugin dependency of that execution only; the app itself still ships 0.10). Both scripts change to the
+common-java-utils 0.12 (a plugin dependency of those executions only; the app itself still ships 0.10). Both scripts change to the
 app directory first: `config/`, `data/` and `log/` are resolved against the working directory.
 `lib/` comes from the assembly's dependencySet, not a copied folder, so jars of earlier builds
 can't leak in. Assembly layout: `src/assembly/component.xml` (app.jar, scripts, config - shared),
