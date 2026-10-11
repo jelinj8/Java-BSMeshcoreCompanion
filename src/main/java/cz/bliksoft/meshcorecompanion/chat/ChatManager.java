@@ -105,50 +105,14 @@ public class ChatManager {
 		this.onAuthChanged = callback;
 	}
 
-	/**
-	 * Concise "message — caused by: message — caused by: ..." summary of an
-	 * exception chain.
-	 */
-	private static String causeChain(Throwable t) {
-		StringBuilder sb = new StringBuilder();
-		for (Throwable cur = t; cur != null; cur = cur.getCause()) {
-			if (sb.length() > 0)
-				sb.append(" — caused by: ");
-			sb.append(cur.getMessage() != null ? cur.getMessage() : cur.getClass().getSimpleName());
-		}
-		return sb.toString();
-	}
-
 	// ── Connection lifecycle ─────────────────────────────────────────────────
 
 	private void onCompanionConnected(MeshcoreCompanion companion) {
 		this.currentCompanion = companion;
 		companion.setLogFramePairing(true);
 
-		// Set device clock only when it differs from system time by more than 2 hours
-		// (covers DST; avoids firmware rejecting a timestamp older than its current
-		// time).
-		new Thread(() -> {
-			try {
-				if (companion != currentCompanion)
-					return;
-				long deviceTime = companion.getConfig().getDeviceTime().getTimestamp();
-				if (companion != currentCompanion)
-					return;
-				long systemTime = Instant.now().getEpochSecond();
-				long diff = Math.abs(systemTime - deviceTime);
-				if (diff > 7200) {
-					companion.getConfig().setDeviceTime(null);
-					log.info("Device time set (was off by {} s)", diff);
-				} else {
-					log.debug("Device time within 2 h of system time, skipping ({} s off)", diff);
-				}
-			} catch (IllegalStateException e) {
-				log.debug("Device time check aborted — disconnected mid-flight");
-			} catch (Exception e) {
-				log.warn("Failed to check/set device time: {}", causeChain(e));
-			}
-		}, "meshcore-settime").start();
+		// The device clock is set by the Meshcore library itself during init, before
+		// the contacts sync - see MeshcoreCompanionConfig.init().
 
 		if (companion.getSelfInfo() != null) {
 			setDeviceHex(MeshcoreUtils.hex(companion.getSelfInfo().getPubkey()));
