@@ -5,7 +5,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -37,6 +39,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonBase;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
@@ -55,6 +58,14 @@ import javafx.scene.text.Text;
 public class ConnectionManager {
 
 	private static final Logger log = LogManager.getLogger(ConnectionManager.class);
+
+	/**
+	 * Whether the app pairs BLE radios itself (PIN dialog, Re-pair). Not on macOS:
+	 * CoreBluetooth has no API to supply a PIN - macOS shows its own pairing
+	 * prompt.
+	 */
+	private static final boolean APP_PAIRING = !System.getProperty("os.name", "").toLowerCase(Locale.ROOT)
+			.startsWith("mac");
 
 	private static final ConnectionManager INSTANCE = new ConnectionManager();
 
@@ -483,10 +494,29 @@ public class ConnectionManager {
 		dialog.setHeaderText("Select BLE device");
 		dialog.setContentText("Device:");
 		dialog.initOwner(BSAppUI.getStage());
+		// Removes the stored pairing and pairs again - for a radio that lost its bond
+		// (e.g. a reset), which the stored pairing can't reach anymore.
+		ButtonType repairButton = new ButtonType("Re-pair", ButtonBar.ButtonData.OTHER);
+		if (APP_PAIRING)
+			dialog.getDialogPane().getButtonTypes().add(repairButton);
+		AtomicBoolean repair = new AtomicBoolean();
+		dialog.setResultConverter(button -> {
+			repair.set(button == repairButton);
+			return button == ButtonType.OK || button == repairButton ? dialog.getSelectedItem() : null;
+		});
 
 		dialog.showAndWait().ifPresentOrElse(choice -> {
 			// format: "AA:BB:CC:DD:EE:FF (name)"
 			String address = choice.contains(" ") ? choice.substring(0, choice.indexOf(' ')).trim() : choice.trim();
+			if (repair.get()) {
+				// The PIN is asked once the radio is found and connected again.
+				connectBle(address, scan, null, true);
+				return;
+			}
+			if (!APP_PAIRING) {
+				connectBle(address, scan, null);
+				return;
+			}
 			// Asked up front here - only for a brand-new device found via scan, never on a
 			// reconnect to an already-saved one (see connectBle(String) below) - a device
 			// that requires bonding gets exactly one chance to have the right PIN offered,
@@ -525,6 +555,17 @@ public class ConnectionManager {
 	 *                {@code null}/blank to skip pairing.
 	 */
 	private void connectBle(String address, BleMeshcoreCompanion.NusScanResult scan, String pairPin) {
+		connectBle(address, scan, pairPin, false);
+	}
+
+	/**
+	 * @param repair {@code true} to remove the stored pairing first and pair again,
+	 *               asking for the PIN once the radio is connected again
+	 *               ({@code pairPin} is ignored) - see
+	 *               {@link BleMeshcoreCompanion.NusScanResult#repair}; needs
+	 *               {@code scan}
+	 */
+	private void connectBle(String address, BleMeshcoreCompanion.NusScanResult scan, String pairPin, boolean repair) {
 		AtomicReference<BleMeshcoreCompanion> result = new AtomicReference<>();
 		AtomicReference<Exception> error = new AtomicReference<>();
 
@@ -534,8 +575,12 @@ public class ConnectionManager {
 				// set as default so the traffic log (if on for this device) covers the handshake
 				MeshcoreCompanionBase.setDefaultTrafficLogDir(TrafficLogging.dirForHint("ble", address));
 				try {
-					c = scan != null ? scan.connect("BSMeshcoreCompanion", address, pairPin)
-							: new BleMeshcoreCompanion("BSMeshcoreCompanion", address);
+					if (scan == null)
+						c = new BleMeshcoreCompanion("BSMeshcoreCompanion", address);
+					else if (repair)
+						c = scan.repair("BSMeshcoreCompanion", address, pinWhenConnected(address));
+					else
+						c = scan.connect("BSMeshcoreCompanion", address, pairPin);
 				} finally {
 					MeshcoreCompanionBase.setDefaultTrafficLogDir(null);
 				}
@@ -550,7 +595,7 @@ public class ConnectionManager {
 				// DEFAULT_BLE_PIN - rather than requiring the OS's own Bluetooth settings first;
 				// this only used a fallback path (macOS - no programmatic-pairing API exists there
 				// at all - or a device whose PIN was changed from the default) still needs that.
-				c.awaitAvailable(60000L);
+				awaitAvailableOrPairing(c);
 				result.set(c);
 			} catch (TimeoutException | InterruptedException e) {
 				if (c != null)
@@ -558,6 +603,25 @@ public class ConnectionManager {
 				error.set(e);
 			}
 		}, null, "Connecting…", address);
+
+		// The radio rejected the stored pairing (lost it, e.g. on a reset) - asked here, outside
+		// the waiting dialog, then waited for again.
+		while (error.get() == null && result.get().isPairingRequired()) {
+			BleMeshcoreCompanion c = result.get();
+			if (!confirmPairAgain(address)) {
+				new Thread(c::close, "meshcore-ble-close").start();
+				return;
+			}
+			c.repair(pinWhenConnected(address));
+			BSAppUI.executeWaiting(() -> {
+				try {
+					awaitAvailableOrPairing(c);
+				} catch (TimeoutException | InterruptedException e) {
+					c.close();
+					error.set(e);
+				}
+			}, null, "Pairing…", address);
+		}
 
 		Exception e = error.get();
 		if (e != null) {
@@ -572,6 +636,15 @@ public class ConnectionManager {
 		}
 
 		BleMeshcoreCompanion c = result.get();
+		// Same as above, for an automatic reconnect of the established connection.
+		c.setPairingRequiredListener(pc -> Platform.runLater(() -> {
+			if (companion != pc)
+				return;
+			if (confirmPairAgain(address))
+				pc.repair(pinWhenConnected(address));
+			else
+				disconnect();
+		}));
 		c.addAvailabilityListener(new MeshcoreCompanionBase.AvailabilityListener() {
 			public void onAvailable(MeshcoreCompanionBase companion) {
 				Platform.runLater(() -> reconnecting.set(false));
@@ -590,6 +663,71 @@ public class ConnectionManager {
 		Context.getCurrentContext().put(MeshcoreCompanion.class, c);
 		BSAppUI.showStatusMessage("Connected to " + address);
 		log.info("BLE connected to {}", address);
+	}
+
+	/**
+	 * {@link MeshcoreCompanionBase#awaitAvailable} with a 60s budget that stops
+	 * counting while the radio waits for {@link BleMeshcoreCompanion#repair} -
+	 * returns early then, see {@link BleMeshcoreCompanion#isPairingRequired()}.
+	 */
+	private static void awaitAvailableOrPairing(BleMeshcoreCompanion c)
+			throws TimeoutException, InterruptedException {
+		// The waiting dialog shows the current step (searching, pairing, ...).
+		c.setStatusListener((companion, status) -> BSAppUI.setWorkingWheelMessage(status + "…"));
+		BSAppUI.setWorkingWheelMessage(c.getStatus() + "…");
+		try {
+			long deadline = System.currentTimeMillis() + 60000L;
+			while (true) {
+				try {
+					c.awaitAvailable(500L);
+					return;
+				} catch (TimeoutException e) {
+					if (c.isPairingRequired())
+						return;
+					if (System.currentTimeMillis() > deadline)
+						throw e;
+				}
+			}
+		} finally {
+			c.setStatusListener(null);
+		}
+	}
+
+	/**
+	 * Asks whether to pair again with a radio that rejected the stored pairing, or
+	 * whose re-pairing was cancelled.
+	 */
+	private static boolean confirmPairAgain(String address) {
+		Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+		alert.setTitle("BLE Pairing");
+		alert.setHeaderText(address + " is not paired - it rejected the stored pairing (lost it, e.g. on a reset?)"
+				+ " or pairing was cancelled.\nPair again?");
+		alert.initOwner(BSAppUI.getStage());
+		return alert.showAndWait().filter(ButtonType.OK::equals).isPresent();
+	}
+
+	/**
+	 * Asks for the PIN once the radio is found and connected again, right before
+	 * pairing - it may show a new one by then. Blocks the calling (BLE reader)
+	 * thread until answered; {@code null} if cancelled or left blank.
+	 */
+	private static BleMeshcoreCompanion.PinProvider pinWhenConnected(String address) {
+		return c -> {
+			CompletableFuture<String> pin = new CompletableFuture<>();
+			Platform.runLater(() -> {
+				TextInputDialog pinDialog = new TextInputDialog(BleMeshcoreCompanion.DEFAULT_BLE_PIN);
+				pinDialog.setTitle("BLE Pairing");
+				pinDialog.setHeaderText(address + " found - enter the PIN it uses now to pair:");
+				pinDialog.setContentText("PIN:");
+				pinDialog.initOwner(BSAppUI.getStage());
+				pin.complete(pinDialog.showAndWait().map(String::trim).filter(p -> !p.isEmpty()).orElse(null));
+			});
+			try {
+				return pin.get();
+			} catch (ExecutionException e) {
+				return null;
+			}
+		};
 	}
 
 	private void connectTcp(String host, int port) {

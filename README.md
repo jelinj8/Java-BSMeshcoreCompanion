@@ -54,9 +54,16 @@ Devices can be saved by name for quick reconnection.
 Connecting to a BLE device from a scan result prompts for a pairing PIN up front (prefilled with
 MeshCore's default `123456`) — leave it blank to skip pairing. It's only needed the first time you
 connect to a given device; reconnecting to an already-paired device needs no PIN, since the OS
-keeps the bond. **macOS:** this PIN prompt has no effect there — CoreBluetooth has no public API
-for supplying a pairing PIN programmatically, a permanent platform limitation. Pair the device
-through macOS's own Bluetooth settings before connecting from the app.
+keeps the bond.
+
+A radio that lost its pairing (e.g. after a reset) can't be reached with the one the OS still
+keeps. **Re-pair** in the device selection dialog removes the stored pairing, finds the radio again
+and only then asks for its PIN — a radio may show a new one by then. On Linux the app also notices
+a rejected pairing by itself and offers to pair again.
+
+**macOS:** no PIN prompt and no Re-pair — CoreBluetooth has no public API for supplying a pairing
+PIN programmatically, a permanent platform limitation. Pair the device through macOS's own
+Bluetooth settings before connecting from the app.
 
 ## Building from source
 
