@@ -513,12 +513,14 @@ public class ConnectionManager {
 				connectBle(address, scan, null, true);
 				return;
 			}
-			if (!APP_PAIRING) {
+			// Already paired (e.g. added before, or paired via the OS) - no PIN to ask for; a
+			// radio that has lost that pairing is caught on connect and offered Re-pair.
+			if (!APP_PAIRING || scan.isPaired(address)) {
 				connectBle(address, scan, null);
 				return;
 			}
-			// Asked up front here - only for a brand-new device found via scan, never on a
-			// reconnect to an already-saved one (see connectBle(String) below) - a device
+			// Asked up front here - only for a device found via scan that isn't paired yet,
+			// never on a reconnect to an already-saved one (see connectBle(String) below) - a device
 			// that requires bonding gets exactly one chance to have the right PIN offered,
 			// since BleMeshcoreCompanion only ever attempts pairing on this same first
 			// connect (see its class doc). Pre-filled with the factory default; cleared by
@@ -700,8 +702,8 @@ public class ConnectionManager {
 	private static boolean confirmPairAgain(String address) {
 		Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
 		alert.setTitle("BLE Pairing");
-		alert.setHeaderText(address + " is not paired - it rejected the stored pairing (lost it, e.g. on a reset?)"
-				+ " or pairing was cancelled.\nPair again?");
+		alert.setHeaderText(address + " is not paired - it rejected the stored pairing (lost it, e.g. on a reset,"
+				+ " or it was made without the PIN?) or pairing was cancelled.\nPair again?");
 		alert.initOwner(BSAppUI.getStage());
 		return alert.showAndWait().filter(ButtonType.OK::equals).isPresent();
 	}
