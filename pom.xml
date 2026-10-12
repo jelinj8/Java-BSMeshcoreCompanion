@@ -26,7 +26,7 @@
 			<dependency>
 				<groupId>cz.bliksoft.java</groupId>
 				<artifactId>dependency-management</artifactId>
-				<version>1.21.3-SNAPSHOT</version>
+				<version>1.21.3</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
