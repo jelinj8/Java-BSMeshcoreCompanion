@@ -234,9 +234,12 @@ public class GroupChatPane extends VBox {
 				cc.putString(cz.bliksoft.meshcore.utils.MeshcoreUtils.hex(item.getPubkey()));
 				javafx.scene.input.Clipboard.getSystemClipboard().setContent(cc);
 			});
+			javafx.scene.control.MenuItem shareItem = new javafx.scene.control.MenuItem("Share");
+			shareItem.setOnAction(e -> cz.bliksoft.meshcorecompanion.controls.ShareDialog.show("Share group",
+					item.getName(), cz.bliksoft.meshcore.utils.ShareLinks.channel(item)));
 			javafx.scene.control.MenuItem clearItem = new javafx.scene.control.MenuItem("Clear history");
 			clearItem.setOnAction(e -> onClearHistory.accept(item));
-			setContextMenu(new javafx.scene.control.ContextMenu(copyKeyItem,
+			setContextMenu(new javafx.scene.control.ContextMenu(copyKeyItem, shareItem,
 					new javafx.scene.control.SeparatorMenuItem(), clearItem));
 		}
 

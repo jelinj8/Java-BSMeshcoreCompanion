@@ -66,6 +66,12 @@
 			<version>0.12.0</version>
 		</dependency>
 
+		<!-- QR codes of the Share dialog (QRLabel); optional in common-java-utils-jfx -->
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>core</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>

@@ -12,6 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Connection: USB/serial (`SerialMeshcoreCompanion`), BLE (`BleMeshcoreCompanion`), TCP (`TCPMeshcoreCompanion`); saved device registry; connect dialog
 - Contact chat: unread indicators, favourites, add by pubkey or from advert frames, remove, ROOM/REPEATER login
 - Group chat: Public / Hash / Private groups; unread indicators, add/remove
+- Share: "Share" in the contact, group and connection status label context menus shows a `meshcore://contact|channel/add` link as QR (`controls/ShareDialog`, links built by Meshcore's `utils.ShareLinks`)
 - ChatView: message list + compose bar; send modes (Async/Sync/Retry); outgoing status indicators; SNR/RSSI from paired `LOG_RX_DATA`
 - ChatManager: full lifecycle, message persistence (`ChatStore`, JSON per device/conversation), `setLogFramePairing(true)` for SNR/RSSI pairing
 - Settings: theme (Default/System/Light/Dark), log history size, radio config (freq/BW/SF/CR/TX power/repeat), official radio presets (`settings/RadioPresets`: bundled `radio-presets.json`, Refresh downloads from `/core/radio/presets@url` of the XML FS to `data/radio-presets.json`; a preset's path hash size goes to the tuning section), flood scope / regions (persisted default scope, session override, force-unscoped), backup/restore
@@ -22,7 +23,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Device time sync on connect
 - Reply-to message (quote + message hash from LOG_RX_DATA)
 - Log window frame type filter
-- QR code for contact sharing
 - ROOM/REPEATER remote admin (command line, telemetry)
 
 ## Build Commands

@@ -17,6 +17,8 @@ import cz.bliksoft.meshcore.frames.FrameConstants.ContactFlags;
 import cz.bliksoft.meshcore.frames.FrameConstants.MessageTextType;
 import cz.bliksoft.meshcore.frames.push.NewAdvertPush;
 import cz.bliksoft.meshcore.frames.resp.Contact;
+import cz.bliksoft.meshcore.utils.ShareLinks;
+import cz.bliksoft.meshcorecompanion.controls.ShareDialog;
 import cz.bliksoft.meshcore.utils.MeshcoreUtils;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.input.KeyCode;
@@ -581,6 +583,10 @@ public class ContactChatPane extends VBox {
 				Clipboard.getSystemClipboard().setContent(cc);
 			});
 
+			MenuItem shareItem = new MenuItem("Share");
+			shareItem.setOnAction(
+					e -> ShareDialog.show("Share contact", contact.getName(), ShareLinks.contact(contact)));
+
 			MenuItem detailsItem = new MenuItem("Show details");
 			detailsItem.setOnAction(e -> onDetails.accept(contact));
 
@@ -591,7 +597,7 @@ public class ContactChatPane extends VBox {
 			if (isRepeater)
 				menu.getItems().addAll(ownerInfoItem, regionsItem, clockSyncItem);
 			menu.getItems().addAll(new SeparatorMenuItem(), resetPathItem, resyncItem, clearHistoryItem,
-					new SeparatorMenuItem(), copyKeyItem, detailsItem);
+					new SeparatorMenuItem(), copyKeyItem, shareItem, detailsItem);
 			return menu;
 		}
 	}

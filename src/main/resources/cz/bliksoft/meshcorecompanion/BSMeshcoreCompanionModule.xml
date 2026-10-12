@@ -181,6 +181,12 @@
 	</file>
 
 	<file name="lib_credits" sorted="true">
+		<file name="zxing">
+			<attribute name="name" value="ZXing" />
+			<attribute name="url" value="https://github.com/zxing/zxing" />
+			<attribute name="comment" value="QR code generation" />
+			<attribute name="licence" value="APACHE2" />
+		</file>
 		<file name="jserialcomm">
 			<attribute name="name" value="jSerialComm" />
 			<attribute name="url" value="https://fazecast.github.io/jSerialComm/" />
