@@ -25,6 +25,10 @@ public class AdvertMenuButton extends MenuButton {
 		Node icon = ImageUtils.getIconNode(IconspecUtils.getIconspec("action/advert"));
 		IconBinder.enforceIconSize(icon, IconspecUtils.getIconspecSize("toolbar-size", 24));
 		setGraphic(icon);
+		// the themed .button has more padding + a border than a MenuButton; fill the
+		// toolbar row height instead of the (smaller) own preferred height
+		setMaxHeight(Double.MAX_VALUE);
+		setFocusTraversable(false);
 		MenuItem single = new MenuItem("Single hop");
 		MenuItem flood = new MenuItem("Flood");
 		getItems().addAll(single, flood);
