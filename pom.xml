@@ -45,7 +45,7 @@
 			<artifactId>common-java-utils-jfx</artifactId>
 			<!-- 0.6: WebView-free About dialog with the lib_credits of the dependencies,
 			     javafx-web optional, JUnit only in test scope. -->
-			<version>0.8-SNAPSHOT</version>
+			<version>0.8</version>
 		</dependency>
 
 		<dependency>

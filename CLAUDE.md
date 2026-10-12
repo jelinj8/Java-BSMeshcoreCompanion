@@ -72,7 +72,7 @@ All `cz.bliksoft.*` dependencies are published to Maven Central — no private r
 
 - **Java 21**, JavaFX from the BOM (`org.openjfx-javafx-version`, 21.0.x on the java-21 line)
 - `cz.bliksoft.meshcore:meshcore-companion:0.7.0-SNAPSHOT` — radio protocol library (`../Meshcore`)
-- `cz.bliksoft.java:common-java-utils-jfx:0.8-SNAPSHOT` — application/GUI framework (`../BSToolbox-jfx`)
+- `cz.bliksoft.java:common-java-utils-jfx:0.8` — application/GUI framework (`../BSToolbox-jfx`)
 - `cz.bliksoft.java:common-java-utils:0.6-SNAPSHOT` — base utilities
 - `cz.bliksoft.java:dependency-management:1.21.3-SNAPSHOT` — BOM for transitive deps (`../BSDependencies`, java-21 branch)
 - `com.google.zxing:core` — QR codes of the Share dialog (optional in common-java-utils-jfx)
