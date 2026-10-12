@@ -167,7 +167,7 @@
 					<dependency>
 						<groupId>cz.bliksoft.java</groupId>
 						<artifactId>common-java-utils</artifactId>
-						<version>0.12-SNAPSHOT</version>
+						<version>0.13</version>
 					</dependency>
 				</dependencies>
 			</plugin>

@@ -54,8 +54,8 @@ no console window) and `run.sh` (Linux/macOS), plus `BSMeshcoreCompanion.ico`/`.
 `BSMeshcoreCompanion.ico` (16–256 px, for shortcuts to `run.bat`) and `BSMeshcoreCompanion.png`
 (256 px, Linux `.desktop` launchers) are generated in `prepare-package` by
 BSToolbox's `images.ico.IcoGenerator` (exec-maven-plugin) from the main window's `iconBase` iconspec in
-`BSMeshcoreCompanionModule.xml` — change the icon there, not in a committed file. `IcoGenerator` needs
-common-java-utils 0.12 (a plugin dependency of those executions only; the app itself still ships 0.10). Both scripts change to the
+`BSMeshcoreCompanionModule.xml` — change the icon there, not in a committed file. `IcoGenerator` comes from
+common-java-utils (0.13, a plugin dependency of those executions only, not shipped). Both scripts change to the
 app directory first: `config/`, `data/` and `log/` are resolved against the working directory.
 `lib/` comes from the assembly's dependencySet, not a copied folder, so jars of earlier builds
 can't leak in; the platform jars that `-Pdist` copies to `target/dist` are cleared first
@@ -73,13 +73,15 @@ All `cz.bliksoft.*` dependencies are published to Maven Central — no private r
 - **Java 21**, JavaFX from the BOM (`org.openjfx-javafx-version`, 21.0.x on the java-21 line)
 - `cz.bliksoft.meshcore:meshcore-companion:0.7.0` — radio protocol library (`../Meshcore`)
 - `cz.bliksoft.java:common-java-utils-jfx:0.8` — application/GUI framework (`../BSToolbox-jfx`)
-- `cz.bliksoft.java:common-java-utils:0.6-SNAPSHOT` — base utilities
-- `cz.bliksoft.java:dependency-management:1.21.3-SNAPSHOT` — BOM for transitive deps (`../BSDependencies`, java-21 branch)
+- `cz.bliksoft.java:common-java-utils` (0.13, via common-java-utils-jfx) — base utilities
+- `cz.bliksoft.java:dependency-management:1.21.3` — BOM for transitive deps (`../BSDependencies`, java-21 branch)
 - `com.google.zxing:core` — QR codes of the Share dialog (optional in common-java-utils-jfx)
 - `com.fazecast:jSerialComm:[2.0.0,3.0.0)` — USB serial transport
-- `cz.bliksoft.java:common-java-utils-ble:0.10.0-SNAPSHOT` — BLE transport (`../BSToolbox-BLE`);
-  local snapshot installs of both until the traffic log (`setTrafficLogDir` / `BleAdapter.setLogDir`)
-  is released
+- `cz.bliksoft.java:common-java-utils-ble:0.12.0` — BLE transport (`../BSToolbox-BLE`)
+
+Only released versions (no `-SNAPSHOT`, including build plugin dependencies): a library change
+the app needs is released first, then the app moves to the new version - local snapshot builds
+are for development only, not for commits.
 
 ### BSToolbox-jfx Framework (`../BSToolbox-jfx`)
 
