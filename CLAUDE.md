@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Group chat: Public / Hash / Private groups; unread indicators, add/remove
 - ChatView: message list + compose bar; send modes (Async/Sync/Retry); outgoing status indicators; SNR/RSSI from paired `LOG_RX_DATA`
 - ChatManager: full lifecycle, message persistence (`ChatStore`, JSON per device/conversation), `setLogFramePairing(true)` for SNR/RSSI pairing
-- Settings: theme (Default/System/Light/Dark), log history size, radio config (freq/BW/SF/CR/TX power/repeat), flood scope / regions (persisted default scope, session override, force-unscoped), backup/restore
+- Settings: theme (Default/System/Light/Dark), log history size, radio config (freq/BW/SF/CR/TX power/repeat), official radio presets (`settings/RadioPresets`: bundled `radio-presets.json`, Refresh downloads from `/core/radio/presets@url` of the XML FS to `data/radio-presets.json`; a preset's path hash size goes to the tuning section), flood scope / regions (persisted default scope, session override, force-unscoped), backup/restore
 - Log window: live PUSH frame stream
 - Traffic log: per device + transport checkbox in settings, one JSON per frame / BLE sidecar message in `log/traffic` (`connection/TrafficLogging`)
 

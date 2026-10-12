@@ -1,6 +1,7 @@
 package cz.bliksoft.meshcorecompanion.settings;
 
 import java.util.Locale;
+import java.util.function.IntPredicate;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,6 +11,8 @@ import cz.bliksoft.javautils.context.Context;
 import cz.bliksoft.javautils.context.ContextChangedEvent;
 import cz.bliksoft.meshcore.companion.MeshcoreCompanion;
 import cz.bliksoft.meshcore.frames.resp.SelfInfo;
+import cz.bliksoft.meshcorecompanion.settings.RadioPresets.Preset;
+import cz.bliksoft.meshcorecompanion.settings.RadioPresets.PresetList;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -18,9 +21,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -41,18 +47,23 @@ class RadioConfigSection extends VBox {
 	private final CheckBox repeatBox = new CheckBox("Client repeat");
 	private final Label statusLabel = new Label("Not connected");
 	private final Button readBtn = new Button("Read from device");
+	private final MenuButton presetBtn = new MenuButton("Apply preset");
+	private final Button refreshPresetsBtn = new Button("Refresh presets");
 
 	private final ReadOnlyBooleanWrapper connected = new ReadOnlyBooleanWrapper(false);
 
 	private MeshcoreCompanion currentCompanion;
 	private Runnable onModified;
+	/** applies a preset's path hash size (bytes) elsewhere; false = not supported */
+	private final IntPredicate onPathHashSize;
 	private boolean dirty = false;
 	private final Label titleLabel = new Label("Radio configuration:");
 
 	private int maxTxPower = 22;
 
-	RadioConfigSection(Runnable onModified) {
+	RadioConfigSection(Runnable onModified, IntPredicate onPathHashSize) {
 		this.onModified = onModified;
+		this.onPathHashSize = onPathHashSize;
 
 		setPadding(new Insets(0));
 		setSpacing(8);
@@ -65,7 +76,10 @@ class RadioConfigSection extends VBox {
 		GridPane grid = buildGrid();
 
 		readBtn.setOnAction(e -> readFromDevice());
-		HBox btnBar = new HBox(readBtn);
+		refreshPresetsBtn.setOnAction(e -> refreshPresets());
+		refreshPresetsBtn.setTooltip(new Tooltip("Download the current preset list from " + RadioPresets.getUrl()));
+		setPresets(RadioPresets.load());
+		HBox btnBar = new HBox(8, readBtn, presetBtn, refreshPresetsBtn);
 
 		getChildren().addAll(titleLabel, statusLabel, grid, btnBar);
 		setDisable(true);
@@ -218,6 +232,58 @@ class RadioConfigSection extends VBox {
 		dirty = false;
 		titleLabel.setText("Radio configuration:");
 		onModified.run();
+	}
+
+	private void setPresets(PresetList list) {
+		presetBtn.getItems().clear();
+		for (Preset p : list.presets()) {
+			MenuItem item = new MenuItem(p.description().isBlank() ? p.title() : p.title() + " — " + p.description());
+			item.setOnAction(e -> applyPreset(p));
+			presetBtn.getItems().add(item);
+		}
+		presetBtn.setTooltip(new Tooltip(list.presets().size() + " official presets (" + list.source() + ")"));
+	}
+
+	private void applyPreset(Preset p) {
+		int bwIdx = -1;
+		for (int i = 0; i < BW_OPTIONS_HZ.length; i++) {
+			if (BW_OPTIONS_HZ[i] == p.bwHz()) {
+				bwIdx = i;
+				break;
+			}
+		}
+		if (bwIdx < 0) {
+			statusLabel.setText("Preset '" + p.title() + "' not applied: unsupported bandwidth " + p.bwHz() / 1000.0 + " kHz");
+			return;
+		}
+		freqField.setText(String.format(Locale.ROOT, "%.4f", p.freqHz() / 1_000_000.0));
+		bwBox.setValue(BW_LABELS[bwIdx]);
+		sfSpinner.getValueFactory().setValue(p.sf());
+		crSpinner.getValueFactory().setValue(p.cr());
+
+		String status = "Preset '" + p.title() + "' applied — Save to write to device";
+		if (p.pathHashSize() != null && !onPathHashSize.test(p.pathHashSize()))
+			status += " (path hash size not supported by firmware)";
+		statusLabel.setText(status);
+	}
+
+	private void refreshPresets() {
+		refreshPresetsBtn.setDisable(true);
+		statusLabel.setText("Downloading presets…");
+		new Thread(() -> {
+			try {
+				PresetList list = RadioPresets.refresh();
+				Platform.runLater(() -> {
+					setPresets(list);
+					statusLabel.setText(list.presets().size() + " presets downloaded");
+				});
+			} catch (Exception e) {
+				log.warn("Radio presets download failed", e);
+				Platform.runLater(() -> statusLabel.setText("Presets download failed: " + e.getMessage()));
+			} finally {
+				Platform.runLater(() -> refreshPresetsBtn.setDisable(false));
+			}
+		}, "radio-presets").start();
 	}
 
 	void writeToDevice() throws Exception {

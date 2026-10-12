@@ -55,11 +55,11 @@ public class SettingsPane extends VBox implements IContextProvider, IClose, ISav
 
 	public SettingsPane() {
 		appSection = new AppSettingsSection(this::markModified);
-		radioSection = new RadioConfigSection(this::markModified);
+		tuningSection = new TuningSection(this::markModified);
+		radioSection = new RadioConfigSection(this::markModified, tuningSection::setPathHashSize);
 		locationSection = new AdvertLocationSection(this::markModified);
 		behaviourSection = new ContactBehaviourSection(this::markModified);
 		autoaddSection = new AutoaddSection(this::markModified);
-		tuningSection = new TuningSection(this::markModified);
 		securitySection = new SecuritySection();
 		floodScopeSection = new FloodScopeSection();
 

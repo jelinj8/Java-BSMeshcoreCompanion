@@ -145,6 +145,13 @@
 				</file>
 			</file>
 		</file>
+		<!-- official radio presets (settings / Radio configuration / Refresh presets);
+		     before the config/settings.xml include, so a config import can override the url -->
+		<file name="radio">
+			<file name="presets">
+				<attribute name="url" value="https://api.meshcore.nz/api/v1/config" />
+			</file>
+		</file>
 	</file>
 
 	<include path="config/settings.xml" />

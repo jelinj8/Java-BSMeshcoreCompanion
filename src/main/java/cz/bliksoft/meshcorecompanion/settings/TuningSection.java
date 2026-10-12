@@ -176,6 +176,18 @@ class TuningSection extends VBox {
 		}
 	}
 
+	/**
+	 * Selects the path hash size (bytes per hop, 1-3), e.g. from a radio preset.
+	 *
+	 * @return false when the firmware has no path hash mode or the size is out of range
+	 */
+	boolean setPathHashSize(int bytes) {
+		if (!pathHashSupported || bytes < 1 || bytes > PATH_HASH_LABELS.length)
+			return false;
+		pathHashModeBox.setValue(PATH_HASH_LABELS[bytes - 1]);
+		return true;
+	}
+
 	boolean isDirty() {
 		return dirty;
 	}
