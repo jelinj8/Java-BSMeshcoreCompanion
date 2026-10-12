@@ -58,7 +58,8 @@ BSToolbox's `images.ico.IcoGenerator` (exec-maven-plugin) from the main window's
 common-java-utils 0.12 (a plugin dependency of those executions only; the app itself still ships 0.10). Both scripts change to the
 app directory first: `config/`, `data/` and `log/` are resolved against the working directory.
 `lib/` comes from the assembly's dependencySet, not a copied folder, so jars of earlier builds
-can't leak in. Assembly layout: `src/assembly/component.xml` (app.jar, scripts, config - shared),
+can't leak in; the platform jars that `-Pdist` copies to `target/dist` are cleared first
+(`clean-dist` execution). Assembly layout: `src/assembly/component.xml` (app.jar, scripts, config - shared),
 `app.xml` (default build), `dist/<platform>.xml` (`-Pdist`: all non-JavaFX dependencies plus the
 JavaFX jars of that platform, which the dist profile copies to `target/dist/<platform>/lib` as the
 classifier variants of the resolved `org.openjfx` dependencies).

@@ -321,6 +321,31 @@
 			<id>dist</id>
 			<build>
 				<plugins>
+					<!-- target/dist holds copied classifier jars (not regenerated like the assembly's
+					     dependencySet): clear it first, so jars of earlier builds (other versions) can't
+					     leak into the zips without a mvn clean -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-clean-plugin</artifactId>
+						<version>3.4.0</version>
+						<executions>
+							<execution>
+								<id>clean-dist</id>
+								<phase>initialize</phase>
+								<goals>
+									<goal>clean</goal>
+								</goals>
+								<configuration>
+									<excludeDefaultDirectories>true</excludeDefaultDirectories>
+									<filesets>
+										<fileset>
+											<directory>${project.build.directory}/dist</directory>
+										</fileset>
+									</filesets>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-dependency-plugin</artifactId>
