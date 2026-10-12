@@ -79,9 +79,8 @@ All `cz.bliksoft.*` dependencies are published to Maven Central — no private r
 - `com.fazecast:jSerialComm:[2.0.0,3.0.0)` — USB serial transport
 - `cz.bliksoft.java:common-java-utils-ble:0.12.0` — BLE transport (`../BSToolbox-BLE`)
 
-Only released versions (no `-SNAPSHOT`, including build plugin dependencies): a library change
-the app needs is released first, then the app moves to the new version - local snapshot builds
-are for development only, not for commits.
+Library snapshots are fine during development; an app release must depend only on released
+versions (no `-SNAPSHOT`, including build plugin dependencies) - release the libraries it needs first.
 
 ### BSToolbox-jfx Framework (`../BSToolbox-jfx`)
 
