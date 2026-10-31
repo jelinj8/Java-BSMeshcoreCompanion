@@ -35,6 +35,12 @@
       <fileMode>0755</fileMode>
     </fileSet>
 
+    <!-- the native launcher's settings; the launcher binary itself is per platform -->
+    <fileSet>
+      <directory>src/assembly/launcher</directory>
+      <outputDirectory>/</outputDirectory>
+    </fileSet>
+
     <fileSet>
       <directory>src/main/config</directory>
       <outputDirectory>/config</outputDirectory>

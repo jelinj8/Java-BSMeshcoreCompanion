@@ -34,6 +34,12 @@
       <directory>${project.build.directory}/dist/linux-aarch64/lib</directory>
       <outputDirectory>/lib</outputDirectory>
     </fileSet>
+    <!-- the native launcher, copied by the dist profile -->
+    <fileSet>
+      <directory>${project.build.directory}/dist/linux-aarch64/launcher</directory>
+      <outputDirectory>/</outputDirectory>
+      <fileMode>0755</fileMode>
+    </fileSet>
   </fileSets>
 
 </assembly>

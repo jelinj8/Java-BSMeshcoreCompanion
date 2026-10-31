@@ -19,6 +19,8 @@
 		       mvn package -Djavafx.platform=linux
 		     (win, linux, linux-aarch64, mac, mac-aarch64). -->
 		<javafx.platform>win</javafx.platform>
+		<!-- The native launcher: its plugin follows javafx.platform and bundles all platforms. -->
+		<bsnative.launcher.version>0.3.0</bsnative.launcher.version>
 	</properties>
 
 	<dependencyManagement>
@@ -170,6 +172,25 @@
 						<version>0.13</version>
 					</dependency>
 				</dependencies>
+			</plugin>
+
+			<!-- native launcher, so the app runs as BSMeshcoreCompanion rather than java/javaw -->
+			<plugin>
+				<groupId>cz.bliksoft.java</groupId>
+				<artifactId>bsnative-launcher-maven-plugin</artifactId>
+				<version>${bsnative.launcher.version}</version>
+				<executions>
+					<execution>
+						<id>copy-launcher</id>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<name>BSMeshcoreCompanion</name>
+							<platform>${javafx.platform}</platform>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 
 			<!-- assemble distributable zip: app.jar + lib + scripts + config + icons -->
@@ -416,6 +437,28 @@
 								<outputDirectory>${project.build.directory}/dist/mac-aarch64/lib</outputDirectory>
 							</configuration>
 						</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>cz.bliksoft.java</groupId>
+						<artifactId>bsnative-launcher-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>copy-launcher</id>
+								<goals>
+									<goal>copy</goal>
+								</goals>
+								<configuration>
+									<platforms>
+										<platform>win</platform>
+										<platform>linux</platform>
+										<platform>linux-aarch64</platform>
+										<platform>mac</platform>
+										<platform>mac-aarch64</platform>
+									</platforms>
+									<outputDirectory>${project.build.directory}/dist/{platform}/launcher</outputDirectory>
+								</configuration>
+							</execution>
 						</executions>
 					</plugin>
 					<plugin>

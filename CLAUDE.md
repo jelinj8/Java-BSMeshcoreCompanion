@@ -49,7 +49,7 @@ beyond common-java-utils-jfx are in `lib_credits` of `BSMeshcoreCompanionModule.
 step with the dependencies.
 
 The zip is per platform: JavaFX jars carry the natives of one platform (`javafx.platform`, the
-OpenJFX classifier; `platform-*` profiles pick the build machine's). It contains `run.bat` (Windows,
+OpenJFX classifier; `platform-*` profiles pick the build machine's). It also holds the native launcher (`BSMeshcoreCompanion`/`.exe`, from `cz.bliksoft.java:bsnative-launcher-maven-plugin`) with `BSMeshcoreCompanion.ini` (`src/assembly/launcher`), which starts the app under its own process name; keep the ini in step with the run scripts. It contains `run.bat` (Windows,
 no console window) and `run.sh` (Linux/macOS), plus `BSMeshcoreCompanion.ico`/`.png`, `lib/` and `config/`.
 `BSMeshcoreCompanion.ico` (16–256 px, for shortcuts to `run.bat`) and `BSMeshcoreCompanion.png`
 (256 px, Linux `.desktop` launchers) are generated in `prepare-package` by
